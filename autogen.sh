@@ -11,7 +11,7 @@ OUT=Makefile.am
 touch NEWS AUTHORS ChangeLog
 echo > $OUT
 
-PROGS="ccr-keygen-rs ccr-encrypt ccr-decrypt"
+PROGS="ccr-keygen ccr-encrypt ccr-decrypt ccr-info"
 DISTDIRS=""
 
 echo "AUTOMAKE_OPTIONS = subdir-objects" >>$OUT
