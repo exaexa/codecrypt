@@ -11,7 +11,6 @@ OUT=Makefile.am
 touch NEWS AUTHORS ChangeLog
 echo > $OUT
 
-PROGS="ccr-keygen ccr-encrypt ccr-decrypt ccr-info"
 DISTDIRS=""
 
 echo "AUTOMAKE_OPTIONS = subdir-objects" >>$OUT
@@ -28,20 +27,15 @@ echo "libcodecrypt_la_LDFLAGS = ${COMMON_LDFLAGS}" >>$OUT
 #echo "libcodecrypt_la_LDADD = ${COMMON_LDADD} " >>$OUT
 [ -f "lib/Makefile.am.extra" ] && cat "lib/Makefile.am.extra" >>$OUT
 
-echo "bin_PROGRAMS = $PROGS" >>$OUT
-for i in $PROGS 
-do 
-	name=`echo $i |tr '-' '_'`
-	dir="src/${i#ccr-}"
-	echo "${name}dir = $dir/" >>$OUT
-	echo "${name}_SOURCES = `( find $dir/ -type f -name \*.c ; find $dir/ -type f -name \*.cpp ) |tr \"\n\" \" \" ` " >>$OUT
-	echo "noinst_HEADERS += `find $dir/ -type f -name \*.h |tr \"\n\" \" \" `" >>$OUT
-	echo "${name}_CPPFLAGS = -I\$(srcdir)/$i/ ${COMMON_CPPFLAGS}" >>$OUT
-	echo "${name}_CFLAGS = ${COMMON_CFLAGS}" >>$OUT
-	echo "${name}_LDFLAGS = ${COMMON_LDFLAGS}" >>$OUT
-	echo "${name}_LDADD = libcodecrypt.la ${COMMON_LDADD} " >>$OUT
-	[ -f "$dir/Makefile.am.extra" ] && cat "$dir/Makefile.am.extra" >>$OUT
-done
+echo "bin_PROGRAMS = ccr" >>$OUT
+echo "ccrdir = src/" >>$OUT
+echo "ccr_SOURCES = `( find src/ -type f -name \*.c ; find src/ -type f -name \*.cpp ) |tr \"\n\" \" \" ` " >>$OUT
+echo "noinst_HEADERS += `find src/ -type f -name \*.h |tr \"\n\" \" \" `" >>$OUT
+echo "ccr_CPPFLAGS = -I\$(srcdir)/$i/ ${COMMON_CPPFLAGS}" >>$OUT
+echo "ccr_CFLAGS = ${COMMON_CFLAGS}" >>$OUT
+echo "ccr_LDFLAGS = ${COMMON_LDFLAGS}" >>$OUT
+echo "ccr_LDADD = libcodecrypt.la ${COMMON_LDADD} " >>$OUT
+[ -f "src/Makefile.am.extra" ] && cat "src/Makefile.am.extra" >>$OUT
 
 libtoolize --force && aclocal && autoconf && automake --add-missing
 
