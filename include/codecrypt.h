@@ -8,9 +8,11 @@ extern "C" {
 
 	/* codecrypt matrix/vector/whatever type */
 	typedef char* ccr_mtx;
+	/* permutation as a list of transpositions */
+	typedef int* ccr_perm;
 
 	/* macros for faster allocation/accessing */
-#define ccr_mtx_alloc_size(veclen,nvec) ((((veclen)+7)/8)*(nvec))
+#define ccr_mtx_alloc_size(veclen,nvec) ((1+(((veclen)-1)/8))*(nvec))
 #define ccr_mtx_vec_offset ccr_mtx_alloc_size
 
 	struct ccr_mce_pubkey {
@@ -28,8 +30,11 @@ extern "C" {
 		/* goppa polynomial of degree t */
 		ccr_mtx poly;
 
-		/* inverses of P and S matrices */
-		ccr_mtx pinv, sinv;
+		/* inverse of S matrix */
+		ccr_mtx sinv;
+
+		/* inverse of P permutation */
+		ccr_perm pinv;
 
 		/* parity check matrix */
 		ccr_mtx h;
@@ -50,8 +55,11 @@ extern "C" {
 		/* goppa polynomial of degree t */
 		ccr_mtx poly;
 
-		/* inverses of P and S matrices */
-		ccr_mtx pinv, sinv;
+		/* inverse of S matrix */
+		ccr_mtx sinv;
+
+		/* inverse of P permutation */
+		ccr_perm pinv;
 	};
 
 	int ccr_mce_gen (struct ccr_mce_pubkey*, struct ccr_mce_privkey*);
