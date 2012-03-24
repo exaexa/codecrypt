@@ -38,6 +38,9 @@ extern "C" {
 
 		/* parity check matrix */
 		ccr_mtx h;
+
+		/* TODO: also consider storing the squareroot-mod-poly mtx,
+		 * although it's derivable from poly. */
 	};
 
 	struct ccr_nd_pubkey {
@@ -62,6 +65,7 @@ extern "C" {
 		ccr_perm pinv;
 	};
 
+	/* actual functions */
 	int ccr_mce_gen (struct ccr_mce_pubkey*, struct ccr_mce_privkey*);
 	int ccr_mce_encrypt (struct ccr_mce_pubkey*, const char*, char*);
 	int ccr_mce_decrypt (struct ccr_mce_privkey*, const char*, char*);
