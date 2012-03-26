@@ -2,15 +2,15 @@
 #include "codecrypt.h"
 #include "log.h"
 
-typedef void(*)(const char*) logfunc;
+static void (*global_log) (const char*) = NULL;
 
-static logfunc global_log=NULL;
-
-//TODO export
-void ccr_set_log_func(logfunc x) {
-	global_log=x;
+void ccr_set_log_func (void (*x) (const char*) )
+{
+	global_log = x;
 }
 
-void ccr_log(const char*, ...) {
-
+void ccr_log (const char* fmt, ...)
+{
+	if (!global_log) return;
+	//TODO
 }
