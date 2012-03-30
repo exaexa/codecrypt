@@ -27,7 +27,7 @@ extern "C" {
 	};
 
 	struct ccr_mce_privkey {
-		/* params */
+		/* params, n and t are input params */
 		int n, k, t;
 
 		/* goppa polynomial of degree t */
@@ -39,11 +39,11 @@ extern "C" {
 		/* inverse of P permutation */
 		ccr_perm pinv;
 
+		/* systematic form permutation (inv.) */
+		ccr_perm psys;
+
 		/* parity check matrix */
 		ccr_mtx h;
-
-		/* TODO: also consider storing the squareroot-mod-poly mtx,
-		 * although it's derivable from poly. */
 	};
 
 	struct ccr_nd_pubkey {
