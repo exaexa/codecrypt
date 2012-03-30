@@ -15,7 +15,7 @@ namespace ccr {
 
 	};
 
-	class permutation : public vector<unsigned int> {
+	class permutation : public std::vector<unsigned int> {
 
 	};
 
@@ -26,7 +26,14 @@ namespace ccr {
 	namespace mce {
 		class privkey {
 		public:
-			matrix 
+			matrix Sinv;
+			permutation Pinv;
+
+			matrix h;
+			permutation hsys;
+
+			polynomial g;
+			matrix sqInv; //"cache"
 
 			int decrypt(const bvector&, bvector&);
 		};
