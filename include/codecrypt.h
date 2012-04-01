@@ -15,6 +15,10 @@ typedef unsigned int uint;
  */
 class bvector : public std::vector<bool>
 {
+	//STL wraparound, because writing (*this)[i] is clumsy
+	inline reference item (size_type n) {
+		return (*this) [n];
+	}
 public:
 	uint hamming_weight();
 };
@@ -35,6 +39,9 @@ public:
  */
 class matrix : public std::vector<bvector>
 {
+	inline reference item (size_type n) {
+		return (*this) [n];
+	}
 public:
 	matrix operator* (const matrix&);
 
@@ -50,11 +57,16 @@ public:
  */
 class permutation : public std::vector<uint>
 {
+	inline reference item (size_type n) {
+		return (*this) [n];
+	}
+public:
 	void compute_inversion (permutation&);
 
 	void generate_random (uint n, prng&);
+	void permute (const bvector&, bvector&);
+	void permute (const matrix&, matrix&);
 	void permute_rows (const matrix&, matrix&);
-	void permute_cols (const matrix&, matrix&);
 };
 
 /*
@@ -63,6 +75,10 @@ class permutation : public std::vector<uint>
  */
 class polynomial : public bvector
 {
+	inline reference item (size_type n) {
+		return (*this) [n];
+	}
+public:
 	bool is_irreducible();
 
 	void generate_random_irreducible (uint n, prng&);
