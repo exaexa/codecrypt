@@ -86,6 +86,7 @@ public:
 	matrix sqInv; //"cache"
 
 	int decrypt (const bvector&, bvector&);
+	int sign (const bvector&, bvector&, uint, prng&);
 };
 
 class pubkey
@@ -94,6 +95,7 @@ public:
 	matrix G;
 	uint t;
 	int encrypt (const bvector&, bvector&, prng&);
+	int verify (const bvector&, const bvector&, uint);
 };
 
 int generate (pubkey&, privkey&, prng&);
@@ -107,9 +109,10 @@ namespace nd
 class privkey
 {
 public:
-	/*todo stuff*/
+	// TODO
 
 	int decrypt (const bvector&, bvector&);
+	int sign (const bvector&hash, bvector&sig, uint, prng&);
 };
 
 class pubkey
@@ -119,6 +122,7 @@ public:
 	uint t;
 
 	int encrypt (const bvector&, bvector&, prng&);
+	int verify (const bvector&sig, const bvector&hash, uint);
 };
 
 int generate (pubkey&, privkey&, prng&);
