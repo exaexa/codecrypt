@@ -4,70 +4,127 @@
 
 #include <vector>
 
-namespace ccr {
+namespace ccr
+{
 
-	typedef std::vector<bool> bvector;
-	//for broken/old/weird STL uncomment this:
-	//typedef std::bit_vector bvector;
-	//TODO ifdef
-	
-	class matrix : public std::vector<bvector> {
+typedef unsigned int uint;
 
-	};
+/*
+ * vector over GF(2). We rely on STL's vector<bool> == bit_vector
+ * specialization for efficiency.
+ */
+class bvector : public std::vector<bool>
+{
+public:
+	uint hamming_weight();
+};
 
-	class permutation : public std::vector<unsigned int> {
+/*
+ * pseudorandom number generator. Meant to be inherited and
+ * instantiated by the user
+ */
+class prng
+{
+public:
+	virtual int random (uint) = 0;
+	virtual void request_seed (uint) = 0;
+};
 
-	};
+/*
+ * matrix over GF(2) is a vector of columns
+ */
+class matrix : public std::vector<bvector>
+{
+public:
+	matrix operator* (const matrix&);
 
-	class polynomial : public bvector {
+	bool compute_inversion (matrix&);
+	void generate_random_invertible (uint, prng&);
+	void unit (uint);
+	void compute_transpose (matrix&);
+};
 
-	};
+/*
+ * permutation is stored as transposition table ordered from zero
+ * e.g. (13)(2) is [2,1,0]
+ */
+class permutation : public std::vector<uint>
+{
+	void compute_inversion (permutation&);
 
-	namespace mce {
-		class privkey {
-		public:
-			matrix Sinv;
-			permutation Pinv;
+	void generate_random (uint n, prng&);
+	void permute_rows (const matrix&, matrix&);
+	void permute_cols (const matrix&, matrix&);
+};
 
-			matrix h;
-			permutation hsys;
+/*
+ * polynomial over GF(2) is effectively a vector with a_n binary values
+ * with some added operations.
+ */
+class polynomial : public bvector
+{
+	bool is_irreducible();
 
-			polynomial g;
-			matrix sqInv; //"cache"
+	void generate_random_irreducible (uint n, prng&);
+};
 
-			int decrypt(const bvector&, bvector&);
-		};
+/*
+ * classical McEliece
+ */
+namespace mce
+{
+class privkey
+{
+public:
+	matrix Sinv;
+	permutation Pinv;
 
-		class pubkey {
-		public:
-			matrix G;
-			int t;
-			int encrypt(const bvector&, bvector&);
-		};
+	matrix h;
+	permutation hsys;
 
-		int generate(pubkey&,privkey&);
-	}
+	polynomial g;
+	matrix sqInv; //"cache"
 
-	namespace nd {
-		class privkey {
+	int decrypt (const bvector&, bvector&);
+};
 
-			int decrypt(const bvector&, bvector&);
-		};
+class pubkey
+{
+public:
+	matrix G;
+	uint t;
+	int encrypt (const bvector&, bvector&, prng&);
+};
 
-		class pubkey {
-		public:
-			matrix H;
-			int t;
+int generate (pubkey&, privkey&, prng&);
+}
 
-			int encrypt(const bvector&, bvector&);
-		};
+/*
+ * classical Niederreiter
+ */
+namespace nd
+{
+class privkey
+{
+public:
+	/*todo stuff*/
 
-		int generate(pubkey&,privkey&);
-	}
+	int decrypt (const bvector&, bvector&);
+};
 
-	//TODO entropy sources
+class pubkey
+{
+public:
+	matrix H;
+	uint t;
 
-} //namespace CCR
+	int encrypt (const bvector&, bvector&, prng&);
+};
+
+int generate (pubkey&, privkey&, prng&);
+}
+
+} //namespace ccr
 
 #endif // _CODECRYPT_H_
 
