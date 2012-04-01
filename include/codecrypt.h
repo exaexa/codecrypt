@@ -35,8 +35,8 @@ public:
 class prng
 {
 public:
-	virtual int random (uint) = 0;
-	virtual void request_seed (uint) = 0;
+	virtual uint random (uint) = 0;
+	virtual void seed (uint) = 0;
 };
 
 /*
@@ -80,7 +80,8 @@ class polynomial : public bvector
 {
 public:
 	void strip();
-	uint degree() const;
+	int degree() const;
+	bool zero() const;
 	void add (const polynomial&);
 	void mod (const polynomial&);
 	void mult (const polynomial&);

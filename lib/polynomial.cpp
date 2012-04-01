@@ -3,9 +3,19 @@
 
 using namespace ccr;
 
-uint polynomial::degree() const
+#if 0
+#include <iostream>
+using namespace std;
+void dump (const polynomial&t)
 {
-	uint r = -1;
+	for (uint i = 0; i < t.size(); ++i) cout << t[i];
+	cout << endl;
+}
+#endif
+
+int polynomial::degree() const
+{
+	int r = -1;
 	for (uint i = 0; i < size(); ++i) if (item (i) ) r = i;
 	return r;
 }
@@ -15,20 +25,26 @@ void polynomial::strip()
 	resize (degree() + 1);
 }
 
+bool polynomial::zero() const
+{
+	for (uint i = 0; i < size(); ++i) if (item (i) ) return false;
+	return true;
+}
+
 void polynomial::add (const polynomial&f)
 {
-	uint df = f.degree();
+	int df = f.degree();
 	if (df > degree() ) resize (df + 1);
-	for (uint i = 0; i <= df; ++i) item (i) = item (i) ^ f[i];
+	for (int i = 0; i <= df; ++i) item (i) = item (i) ^ f[i];
 }
 
 void polynomial::mod (const polynomial&f)
 {
-	uint df = f.degree();
-	uint d;
+	int df = f.degree();
+	int d;
 	// while there's place to substract, reduce by x^(d-df)-multiply of f
 	while ( (d = degree() ) >= df) {
-		for (uint i = 0; i <= df; ++i)
+		for (int i = 0; i <= df; ++i)
 			item (i + d - df) = item (i + d - df) ^ f[i];
 	}
 	strip();
@@ -54,9 +70,9 @@ polynomial polynomial::gcd (polynomial b)
 	//eukleides
 	if (a.degree() < 0) return b;
 	for (;;) {
-		if (b.degree() < 0) return a;
+		if (b.zero() ) return a;
 		a.mod (b);
-		if (a.degree() < 0) return b;
+		if (a.zero() ) return b;
 		b.mod (a);
 	}
 	//unreachable
@@ -69,15 +85,17 @@ bool polynomial::is_irreducible()
 	polynomial xi; //x^(2^i) in our case
 	polynomial xmodf, t;
 
-	xmodf.resize (2); //precompute (x mod f)
+	xmodf.resize (2); //precompute (x mod f) although it is usually just x
 	xmodf[0] = 0;
 	xmodf[1] = 1; //x
+	xi = xmodf;
 	xmodf.mod (*this); //mod f
 
 	uint n = degree();
 	for (uint i = 1; i <= n / 2; ++i) {
 		t = xi;
 		t.mult (xi); //because mult would destroy xi on xi.mult(xi)
+		t.mod(*this);
 		xi = t;
 		t.add (xmodf);
 
