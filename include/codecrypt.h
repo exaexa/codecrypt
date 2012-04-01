@@ -4,6 +4,13 @@
 
 #include <vector>
 
+//STL wraparound, because writing (*this)[i] everywhere is clumsy
+#define _ccr_declare_vector_item \
+	inline reference item(size_type n) \
+		{ return (*this)[n]; }; \
+	inline const_reference item(size_type n) const \
+		{ return (*this)[n]; };
+
 namespace ccr
 {
 
@@ -15,10 +22,8 @@ typedef unsigned int uint;
  */
 class bvector : public std::vector<bool>
 {
-	//STL wraparound, because writing (*this)[i] is clumsy
-	inline reference item (size_type n) {
-		return (*this) [n];
-	}
+protected:
+	_ccr_declare_vector_item
 public:
 	uint hamming_weight();
 };
@@ -39,9 +44,8 @@ public:
  */
 class matrix : public std::vector<bvector>
 {
-	inline reference item (size_type n) {
-		return (*this) [n];
-	}
+protected:
+	_ccr_declare_vector_item
 public:
 	matrix operator* (const matrix&);
 
@@ -57,9 +61,8 @@ public:
  */
 class permutation : public std::vector<uint>
 {
-	inline reference item (size_type n) {
-		return (*this) [n];
-	}
+protected:
+	_ccr_declare_vector_item
 public:
 	void compute_inversion (permutation&);
 
@@ -75,13 +78,16 @@ public:
  */
 class polynomial : public bvector
 {
-	inline reference item (size_type n) {
-		return (*this) [n];
-	}
 public:
+	void strip();
+	uint degree() const;
+	void add (const polynomial&);
+	void mod (const polynomial&);
+	void mult (const polynomial&);
+	polynomial gcd (polynomial);
 	bool is_irreducible();
-
 	void generate_random_irreducible (uint n, prng&);
+	vector operator<< (uint);
 };
 
 /*
