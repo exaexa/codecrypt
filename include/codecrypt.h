@@ -121,7 +121,7 @@ public:
 	matrix sqInv; //"cache"
 
 	int decrypt (const bvector&, bvector&);
-	int sign (const bvector&, bvector&, uint, prng&);
+	int sign (const bvector&, bvector&, uint, uint, prng&);
 };
 
 class pubkey
@@ -130,7 +130,7 @@ public:
 	matrix G;
 	uint t;
 	int encrypt (const bvector&, bvector&, prng&);
-	int verify (const bvector&, const bvector&, uint);
+	int verify (const bvector&, const bvector&, uint, uint);
 };
 
 int generate (pubkey&, privkey&, prng&);
@@ -147,7 +147,7 @@ public:
 	// TODO
 
 	int decrypt (const bvector&, bvector&);
-	int sign (const bvector&hash, bvector&sig, uint, prng&);
+	int sign (const bvector&hash, bvector&sig, uint, uint, prng&);
 };
 
 class pubkey
@@ -157,7 +157,7 @@ public:
 	uint t;
 
 	int encrypt (const bvector&, bvector&, prng&);
-	int verify (const bvector&sig, const bvector&hash, uint);
+	int verify (const bvector&sig, const bvector&hash, uint, uint);
 };
 
 int generate (pubkey&, privkey&, prng&);
