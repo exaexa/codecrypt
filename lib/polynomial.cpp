@@ -118,3 +118,20 @@ void polynomial::generate_random_irreducible (uint s, prng & rng)
 	}
 }
 
+void polynomial::compute_mod_squaring_matrix (matrix&r)
+{
+	int d = degree();
+	if (d < 0) return;
+	r.resize (d);
+	polynomial col, t;
+	for (int i = 0; i < d; ++i) {
+		col.clear();
+		col.resize (i + 1, 0);
+		col[i] = 1;
+		t = col;
+		col.mult (t);
+		col.mod (*this);
+		col.resize (d, 0);
+		r[i] = col;
+	}
+}

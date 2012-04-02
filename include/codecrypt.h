@@ -100,7 +100,7 @@ public:
 	polynomial gcd (polynomial);
 	bool is_irreducible();
 	void generate_random_irreducible (uint n, prng&);
-	vector operator<< (uint);
+	void compute_mod_squaring_matrix (matrix&);
 };
 
 /*
