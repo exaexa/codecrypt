@@ -26,6 +26,8 @@ protected:
 	_ccr_declare_vector_item
 public:
 	uint hamming_weight();
+	void add (const bvector&);
+	bool operator* (const bvector&); //dot product
 };
 
 /*
@@ -47,12 +49,22 @@ class matrix : public std::vector<bvector>
 protected:
 	_ccr_declare_vector_item
 public:
-	matrix operator* (const matrix&);
+	uint width() const {
+		return size();
+	}
 
+	uint height() const {
+		if (size() ) return item (0).size();
+		return 0;
+	}
+
+	matrix operator* (const matrix&);
+	void mult (const matrix&);
+
+	void compute_transpose (matrix&);
 	bool compute_inversion (matrix&);
 	void generate_random_invertible (uint, prng&);
 	void unit (uint);
-	void compute_transpose (matrix&);
 };
 
 /*

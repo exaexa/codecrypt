@@ -95,7 +95,7 @@ bool polynomial::is_irreducible()
 	for (uint i = 1; i <= n / 2; ++i) {
 		t = xi;
 		t.mult (xi); //because mult would destroy xi on xi.mult(xi)
-		t.mod(*this);
+		t.mod (*this);
 		xi = t;
 		t.add (xmodf);
 
