@@ -126,7 +126,7 @@ public:
 	polynomial gcd (polynomial, gf2m&);
 	bool is_irreducible (gf2m&);
 	void generate_random_irreducible (uint s, gf2m&, prng&);
-	void compute_square_root_matrix (std::vector<polynomial>&, gf2m&);
+	bool compute_square_root_matrix (std::vector<polynomial>&, gf2m&);
 };
 
 /*

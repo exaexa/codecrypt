@@ -74,10 +74,8 @@ polynomial polynomial::gcd (polynomial b, gf2m&fld)
 	if (a.degree() < 0) return b;
 	for (;;) {
 		if (b.zero() ) return a;
-		dump (a);
 		a.mod (b, fld);
 		if (a.zero() ) return b;
-		dump (b);
 		b.mod (a, fld);
 	}
 	//unreachable
@@ -117,20 +115,20 @@ void polynomial::generate_random_irreducible (uint s, gf2m&fld, prng& rng)
 	item (s) = 1; //degree s
 	item (0) = 1 + rng.random (fld.n - 1); //not divisible by x^1
 	for (uint i = 1; i < s; ++i) item (i) = rng.random (fld.n);
-	dump (*this);
 	while (!is_irreducible (fld) ) {
-		dump (*this);
 		uint pos = rng.random (s);
 		item (pos) = pos == 0 ?
 		             (1 + rng.random (fld.n - 1) ) : rng.random (fld.n);
 	}
 }
 
-void polynomial::compute_square_root_matrix (vector<polynomial>&r, gf2m&fld)
+bool polynomial::compute_square_root_matrix (vector<polynomial>&r, gf2m&fld)
 {
+	// step 1, generate a square matrix of squares mod poly.
 	int d = degree();
-	if (d < 0) return;
-	r.resize (d);
+	if (d < 0) return false;
+	vector<polynomial>l;
+	l.resize (d);
 	polynomial col, t;
 	for (int i = 0; i < d; ++i) {
 		col.clear();
@@ -140,8 +138,56 @@ void polynomial::compute_square_root_matrix (vector<polynomial>&r, gf2m&fld)
 		col.mult (t, fld);
 		col.mod (*this, fld);
 		col.resize (d, 0);
-		r[i] = col;
+		l[i] = col;
+	}
+	// step 2, gauss-jordan inverse to unit matrix
+	r.resize(d);
+	for(int i=0;i<d;++i) {
+		r[i].clear();
+		r[i].resize(d,0);
+		r[i][i]=1;
 	}
 
-	//TODO gauss
+
+#define add_row_mult(from,to,coeff) \
+for(int c=0;c<d;++c) { \
+	l[c][to]=fld.add(l[c][to],fld.mult(l[c][from],coeff));\
+	r[c][to]=fld.add(r[c][to],fld.mult(r[c][from],coeff));\
+}
+
+#define row_mult(row,coeff) \
+for(int c=0;c<d;++c) {\
+	l[c][row]=fld.mult(l[c][row],coeff);\
+	r[c][row]=fld.mult(r[c][row],coeff);\
+}
+	
+	//gauss
+	uint a;
+	int i,j;
+	for(i=0;i<d;++i) {
+		if(l[i][i]==0) {
+			//find nonzero
+			for(j=i+1;j<d;++j) if(l[i][j]!=0) {
+				add_row_mult(j,i,1);
+				break;
+			}
+			if(j==d) return false;
+			a=fld.inv(l[i][i]); //normalize
+			row_mult(i,a);
+			//zero the col
+			for(j=i+1;j<d;++j) if(l[i][j]!=0) {
+				a=l[i][j]; //"minus". luckily on GF(2^m) x+x=0.
+				add_row_mult(i,j,a);
+			}
+		}
+	}
+
+	//jordan
+	for(i=d-1;i>=0;--i)
+		for(j=0;j<i;++j) {
+			a=l[i][j];
+			if(a==0) continue;
+			add_row_mult(i,j,a);
+		}
+	return true;
 }

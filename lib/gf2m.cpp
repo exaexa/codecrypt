@@ -3,9 +3,6 @@
 
 using namespace ccr;
 
-#include <iostream>
-using namespace std;
-
 /*
  * helpful stuff for arithmetic in GF(2^m) - polynomials over GF(2).
  */
@@ -20,13 +17,6 @@ int gf2p_degree (uint p)
 inline uint gf2p_add (uint a, uint b)
 {
 	return a ^ b;
-}
-
-void outbin (const char*n, uint x)
-{
-	cout << n << " = ";
-	for (int i = 31; i >= 0; --i) cout << (1 & (x>>i) );
-	cout << endl;
 }
 
 uint gf2p_mod (uint a, uint p)
