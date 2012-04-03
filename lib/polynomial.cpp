@@ -1,17 +1,16 @@
 
+#if 0
 #include "codecrypt.h"
 
 using namespace ccr;
 
-#if 0
 #include <iostream>
 using namespace std;
 void dump (const polynomial&t)
 {
-	for (uint i = 0; i < t.size(); ++i) cout << t[i];
+	for (uint i = 0; i < t.size(); ++i) cout << t[i] << ' ';
 	cout << endl;
 }
-#endif
 
 int polynomial::degree() const
 {
@@ -31,26 +30,37 @@ bool polynomial::zero() const
 	return true;
 }
 
-void polynomial::add (const polynomial&f)
+void polynomial::add (const polynomial&f, gf2m&fld)
 {
 	int df = f.degree();
 	if (df > degree() ) resize (df + 1);
 	for (int i = 0; i <= df; ++i) item (i) = item (i) ^ f[i];
 }
 
-void polynomial::mod (const polynomial&f)
+void polynomial::mod (const polynomial&f, gf2m&fld)
 {
 	int df = f.degree();
 	int d;
+	uint hi = fld.inv (f[df]);
+	cout << "mod by inv " << hi << endl;
+	dump (*this);
+	dump (f);
 	// while there's place to substract, reduce by x^(d-df)-multiply of f
-	while ( (d = degree() ) >= df) {
-		for (int i = 0; i <= df; ++i)
-			item (i + d - df) = item (i + d - df) ^ f[i];
-	}
+	for (d = degree(); d >= df; --d)
+		if (item (d) ) {
+			uint t = fld.mult (item (d), hi);
+			cout << "mult " << t << endl;
+			for (int i = 0; i <= df; ++i)
+				item (i + d - df) = fld.add (item (i + d - df)
+				                             , fld.mult (t, f[i]) );
+			cout << "now ";
+			dump (*this);
+		}
+	cout << "end mod" << endl;
 	strip();
 }
 
-void polynomial::mult (const polynomial&b)
+void polynomial::mult (const polynomial&b, gf2m&fld)
 {
 	polynomial a = *this;
 	clear();
@@ -60,10 +70,11 @@ void polynomial::mult (const polynomial&b)
 	resize (da + db + 1, 0);
 	for (i = 0; i <= da; ++i)
 		if (a[i]) for (j = 0; j <= db; ++j)
-				item (i + j) = item (i + j) ^ b[j];
+				item (i + j) = fld.add (item (i + j),
+				                        fld.mult (a[i], b[j]) );
 }
 
-polynomial polynomial::gcd (polynomial b)
+polynomial polynomial::gcd (polynomial b, gf2m&fld)
 {
 	polynomial a = *this;
 
@@ -71,15 +82,17 @@ polynomial polynomial::gcd (polynomial b)
 	if (a.degree() < 0) return b;
 	for (;;) {
 		if (b.zero() ) return a;
-		a.mod (b);
+		dump (a);
+		a.mod (b, fld);
 		if (a.zero() ) return b;
-		b.mod (a);
+		dump (b);
+		b.mod (a, fld);
 	}
 	//unreachable
 	return polynomial();
 }
 
-bool polynomial::is_irreducible()
+bool polynomial::is_irreducible (gf2m&fld)
 {
 	//Ben-Or irreducibility test
 	polynomial xi; //x^(2^i) in our case
@@ -89,36 +102,41 @@ bool polynomial::is_irreducible()
 	xmodf[0] = 0;
 	xmodf[1] = 1; //x
 	xi = xmodf;
-	xmodf.mod (*this); //mod f
+	xmodf.mod (*this, fld); //mod f
 
-	uint n = degree();
-	for (uint i = 1; i <= n / 2; ++i) {
+	uint d = degree();
+	for (uint i = 1; i <= d / 2; ++i) {
 		t = xi;
-		t.mult (xi); //because mult would destroy xi on xi.mult(xi)
-		t.mod (*this);
+		t.mult (xi, fld); //because mult would destroy xi on xi.mult(xi)
+		t.mod (*this, fld);
 		xi = t;
-		t.add (xmodf);
+		t.add (xmodf, fld);
 
-		t = t.gcd (*this);
+		t = t.gcd (*this, fld);
 		if (t.degree() != 0) //gcd(f,x^2^i - x mod f) != 1
 			return false;
 	}
 	return true;
 }
 
-void polynomial::generate_random_irreducible (uint s, prng & rng)
+void polynomial::generate_random_irreducible (uint s, gf2m&fld, prng & rng)
 {
 	resize (s + 1);
 	item (s) = 1; //degree s
-	item (0) = 1; //not divisible by x^1
-	for (uint i = 1; i < s; ++i) item (i) = rng.random (2);
-	while (!is_irreducible() ) {
-		uint pos = 1 + rng.random (s - 1);
-		item (pos) = !item (pos);
+	item (0) = 1 + rng.random (fld.n - 1); //not divisible by x^1
+	for (uint i = 1; i < s; ++i) item (i) = rng.random (fld.n);
+	cout << "start ";
+	dump (*this);
+	while (!is_irreducible (fld) ) {
+		cout << "retry ";
+		dump (*this);
+		uint pos = rng.random (s);
+		item (pos) = pos == 0 ?
+		             (1 + rng.random (fld.n - 1) ) : rng.random (fld.n);
 	}
 }
 
-void polynomial::compute_mod_squaring_matrix (matrix&r)
+void polynomial::compute_square_root_matrix (vector<polynomial>&r, gf2m&fld)
 {
 	int d = degree();
 	if (d < 0) return;
@@ -129,9 +147,12 @@ void polynomial::compute_mod_squaring_matrix (matrix&r)
 		col.resize (i + 1, 0);
 		col[i] = 1;
 		t = col;
-		col.mult (t);
-		col.mod (*this);
+		col.mult (t, fld);
+		col.mod (*this, fld);
 		col.resize (d, 0);
 		r[i] = col;
 	}
+
+	//TODO gauss
 }
+#endif

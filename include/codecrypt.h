@@ -14,7 +14,13 @@
 namespace ccr
 {
 
+/*
+ * typedefs. uint and sint should be able to comfortably hold the field
+ * elements of underlying calculations (esp. with polynomials. Switching to
+ * 64bits is adviseable when computing with n=64K and larger.
+ */
 typedef unsigned int uint;
+typedef int sint;
 
 /*
  * vector over GF(2). We rely on STL's vector<bool> == bit_vector
@@ -85,22 +91,42 @@ public:
 };
 
 /*
- * polynomial over GF(2) is effectively a vector with a_n binary values
+ * galois field of 2^m elements. Stored in an integer, for convenience.
+ */
+
+class gf2m
+{
+public:
+	uint poly;
+	uint n, m;
+
+	bool create (uint m);
+
+	uint add (uint, uint);
+	uint mult (uint, uint);
+	uint exp (uint, int);
+	uint inv (uint);
+};
+
+/*
+ * polynomial over GF(2^m) is effectively a vector with a_n binary values
  * with some added operations.
  */
-class polynomial : public bvector
+class polynomial : public std::vector<uint>
 {
+protected:
+	_ccr_declare_vector_item
 public:
 	void strip();
 	int degree() const;
 	bool zero() const;
-	void add (const polynomial&);
-	void mod (const polynomial&);
-	void mult (const polynomial&);
-	polynomial gcd (polynomial);
-	bool is_irreducible();
-	void generate_random_irreducible (uint n, prng&);
-	void compute_mod_squaring_matrix (matrix&);
+	void add (const polynomial&, gf2m&);
+	void mod (const polynomial&, gf2m&);
+	void mult (const polynomial&, gf2m&);
+	polynomial gcd (polynomial, gf2m&);
+	bool is_irreducible (gf2m&);
+	void generate_random_irreducible (uint s, gf2m&, prng&);
+	void compute_square_root_matrix (std::vector<polynomial>&, gf2m&);
 };
 
 /*
