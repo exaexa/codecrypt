@@ -1,5 +1,4 @@
 
-#if 0
 #include "codecrypt.h"
 
 using namespace ccr;
@@ -34,7 +33,7 @@ void polynomial::add (const polynomial&f, gf2m&fld)
 {
 	int df = f.degree();
 	if (df > degree() ) resize (df + 1);
-	for (int i = 0; i <= df; ++i) item (i) = item (i) ^ f[i];
+	for (int i = 0; i <= df; ++i) item (i) = fld.add (item (i), f[i]);
 }
 
 void polynomial::mod (const polynomial&f, gf2m&fld)
@@ -42,21 +41,14 @@ void polynomial::mod (const polynomial&f, gf2m&fld)
 	int df = f.degree();
 	int d;
 	uint hi = fld.inv (f[df]);
-	cout << "mod by inv " << hi << endl;
-	dump (*this);
-	dump (f);
 	// while there's place to substract, reduce by x^(d-df)-multiply of f
 	for (d = degree(); d >= df; --d)
 		if (item (d) ) {
 			uint t = fld.mult (item (d), hi);
-			cout << "mult " << t << endl;
 			for (int i = 0; i <= df; ++i)
-				item (i + d - df) = fld.add (item (i + d - df)
-				                             , fld.mult (t, f[i]) );
-			cout << "now ";
-			dump (*this);
+				item (i + d - df) = fld.add (item (i + d - df),
+				                             fld.mult (t, f[i]) );
 		}
-	cout << "end mod" << endl;
 	strip();
 }
 
@@ -119,16 +111,14 @@ bool polynomial::is_irreducible (gf2m&fld)
 	return true;
 }
 
-void polynomial::generate_random_irreducible (uint s, gf2m&fld, prng & rng)
+void polynomial::generate_random_irreducible (uint s, gf2m&fld, prng& rng)
 {
 	resize (s + 1);
 	item (s) = 1; //degree s
 	item (0) = 1 + rng.random (fld.n - 1); //not divisible by x^1
 	for (uint i = 1; i < s; ++i) item (i) = rng.random (fld.n);
-	cout << "start ";
 	dump (*this);
 	while (!is_irreducible (fld) ) {
-		cout << "retry ";
 		dump (*this);
 		uint pos = rng.random (s);
 		item (pos) = pos == 0 ?
@@ -155,4 +145,3 @@ void polynomial::compute_square_root_matrix (vector<polynomial>&r, gf2m&fld)
 
 	//TODO gauss
 }
-#endif

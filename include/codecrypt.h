@@ -104,7 +104,7 @@ public:
 
 	uint add (uint, uint);
 	uint mult (uint, uint);
-	uint exp (uint, int);
+	uint exp (uint, sint);
 	uint inv (uint);
 };
 

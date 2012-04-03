@@ -17,12 +17,25 @@ int gf2p_degree (uint p)
 	return r;
 }
 
+inline uint gf2p_add (uint a, uint b)
+{
+	return a ^ b;
+}
+
+void outbin (const char*n, uint x)
+{
+	cout << n << " = ";
+	for (int i = 31; i >= 0; --i) cout << (1 & (x>>i) );
+	cout << endl;
+}
+
 uint gf2p_mod (uint a, uint p)
 {
 	if (!p) return 0;
 	int t, degp = gf2p_degree (p);
-	while ( (t = gf2p_degree (a) ) >= degp)
+	while ( (t = gf2p_degree (a) ) >= degp) {
 		a ^= p << (t - degp);
+	}
 	return a;
 }
 
@@ -48,7 +61,7 @@ uint gf2p_modmult (uint a, uint b, uint p)
 		if (a & 1) r ^= b;
 		a >>= 1;
 		b <<= 1;
-		if (b <= d) b ^= p;
+		if (b >= d) b ^= p;
 	}
 	return r;
 }
@@ -81,38 +94,36 @@ bool gf2m::create (uint M)
 	return false;
 }
 
-/*
-uint gfn_mult(uint a, uint b, uint n)
+uint gf2m::add (uint a, uint b)
 {
-	uint irp=0;
-	while(n) { irp=(irp<<1)|1; n>>=1;}
-	uint r=a*b;
-	//TODO probably move this to own file
+	return gf2p_add (a, b);
 }
 
-uint gfn_inv (uint a, uint n);
+uint gf2m::mult (uint a, uint b)
+{
+	return gf2p_modmult (a, b, poly);
+}
 
-uint gfn_exp (uint a, sint k, uint n)
+uint gf2m::exp (uint a, sint k)
 {
 	if (!a) return 0;
 	if (a == 1) return 1;
 	if (k < 0) {
-		a = gfn_inv (a, n);
+		a = inv (a);
 		k = -k;
 	}
 	uint r = 1;
 	while (k) {
-		if (k & 1) r=gfn_mult(r,a,n);
-		a=gfn_mult(a,a,n);
-		k >>= 2;
+		if (k & 1) r = mult (r, a);
+		a = mult (a, a);
+		k >>= 1;
 	}
 	return r;
 }
 
-uint gfn_inv (uint a, uint n)
+uint gf2m::inv (uint a)
 {
 	if (n == 2) return a;
-	return gfn_exp (a, ( (sint) n) - 2, n);
+	return exp (a, n - 2);
 }
 
-*/
