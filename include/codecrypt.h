@@ -120,13 +120,15 @@ public:
 	void strip();
 	int degree() const;
 	bool zero() const;
+	uint eval (uint, gf2m&) const;
 	void add (const polynomial&, gf2m&);
 	void mod (const polynomial&, gf2m&);
 	void mult (const polynomial&, gf2m&);
 	polynomial gcd (polynomial, gf2m&);
-	bool is_irreducible (gf2m&);
+	bool is_irreducible (gf2m&) const;
 	void generate_random_irreducible (uint s, gf2m&, prng&);
 	bool compute_square_root_matrix (std::vector<polynomial>&, gf2m&);
+	void compute_goppa_check_matrix (matrix&, gf2m&);
 };
 
 /*

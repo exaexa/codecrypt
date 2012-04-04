@@ -3,14 +3,6 @@
 
 using namespace ccr;
 
-#include <iostream>
-using namespace std;
-void dump (const polynomial&t)
-{
-	for (uint i = 0; i < t.size(); ++i) cout << t[i] << ' ';
-	cout << endl;
-}
-
 int polynomial::degree() const
 {
 	int r = -1;
@@ -45,6 +37,7 @@ void polynomial::mod (const polynomial&f, gf2m&fld)
 	for (d = degree(); d >= df; --d)
 		if (item (d) ) {
 			uint t = fld.mult (item (d), hi);
+
 			for (int i = 0; i <= df; ++i)
 				item (i + d - df) = fld.add (item (i + d - df),
 				                             fld.mult (t, f[i]) );
@@ -82,7 +75,7 @@ polynomial polynomial::gcd (polynomial b, gf2m&fld)
 	return polynomial();
 }
 
-bool polynomial::is_irreducible (gf2m&fld)
+bool polynomial::is_irreducible (gf2m&fld) const
 {
 	//Ben-Or irreducibility test
 	polynomial xi; //x^(2^i) in our case
@@ -103,7 +96,7 @@ bool polynomial::is_irreducible (gf2m&fld)
 		t.add (xmodf, fld);
 
 		t = t.gcd (*this, fld);
-		if (t.degree() != 0) //gcd(f,x^2^i - x mod f) != 1
+		if (t.degree() > 0) //gcd(f,x^2^i - x mod f) is polynomial
 			return false;
 	}
 	return true;
@@ -141,11 +134,11 @@ bool polynomial::compute_square_root_matrix (vector<polynomial>&r, gf2m&fld)
 		l[i] = col;
 	}
 	// step 2, gauss-jordan inverse to unit matrix
-	r.resize(d);
-	for(int i=0;i<d;++i) {
+	r.resize (d);
+	for (int i = 0; i < d; ++i) {
 		r[i].clear();
-		r[i].resize(d,0);
-		r[i][i]=1;
+		r[i].resize (d, 0);
+		r[i][i] = 1;
 	}
 
 
@@ -160,34 +153,76 @@ for(int c=0;c<d;++c) {\
 	l[c][row]=fld.mult(l[c][row],coeff);\
 	r[c][row]=fld.mult(r[c][row],coeff);\
 }
-	
+
 	//gauss
 	uint a;
-	int i,j;
-	for(i=0;i<d;++i) {
-		if(l[i][i]==0) {
+	int i, j;
+	for (i = 0; i < d; ++i) {
+		if (l[i][i] == 0) {
 			//find nonzero
-			for(j=i+1;j<d;++j) if(l[i][j]!=0) {
-				add_row_mult(j,i,1);
-				break;
-			}
-			if(j==d) return false;
-			a=fld.inv(l[i][i]); //normalize
-			row_mult(i,a);
+			for (j = i + 1; j < d; ++j) if (l[i][j] != 0) {
+					add_row_mult (j, i, 1);
+					break;
+				}
+			if (j == d) return false;
+			a = fld.inv (l[i][i]); //normalize
+			row_mult (i, a);
 			//zero the col
-			for(j=i+1;j<d;++j) if(l[i][j]!=0) {
-				a=l[i][j]; //"minus". luckily on GF(2^m) x+x=0.
-				add_row_mult(i,j,a);
-			}
+			for (j = i + 1; j < d; ++j) if (l[i][j] != 0) {
+					a = l[i][j]; //"minus". luckily on GF(2^m) x+x=0.
+					add_row_mult (i, j, a);
+				}
 		}
 	}
 
 	//jordan
-	for(i=d-1;i>=0;--i)
-		for(j=0;j<i;++j) {
-			a=l[i][j];
-			if(a==0) continue;
-			add_row_mult(i,j,a);
+	for (i = d - 1; i >= 0; --i)
+		for (j = 0; j < i; ++j) {
+			a = l[i][j];
+			if (a == 0) continue;
+			add_row_mult (i, j, a);
 		}
 	return true;
+}
+
+uint polynomial::eval (uint x, gf2m&fld) const
+{
+	uint r = 0;
+	//horner
+	for (int i = degree(); i >= 0; --i)
+		r = fld.add (item (i), fld.mult (r, x) );
+	return r;
+}
+
+void polynomial::compute_goppa_check_matrix (matrix&r, gf2m&fld)
+{
+	if (degree() < 0) return; //wrongly initialized polynomial
+	uint t = degree();
+	vector<vector<uint> > yz, h;
+	uint i, j, k;
+	yz.resize (t);
+	h.resize (t);
+	for (i = 0; i < t; ++i) {
+		yz[i].resize (fld.n);
+		h[i].resize (fld.n, 0);
+	}
+	//create Y*Z
+	for (i = 0; i < fld.n; ++i) yz[0][i] = fld.inv (eval (i, fld) );
+	for (i = 1; i < t; ++i) for (j = 0; j < fld.n; ++j)
+			yz[i][j] = fld.mult (yz[i-1][j], j);
+	//X*Y*Z = h
+	for (i = 0; i < t; ++i)
+		for (j = 0; j < fld.n; ++j)
+			for (k = 0; k <= i; ++k)
+				h[i][j] = fld.add (h[i][j], fld.mult
+				                   (yz[k][j],
+				                    item (t + k - i) ) );
+
+	//now convert to binary
+	r.resize (fld.n);
+	for (i = 0; i < fld.n; ++i) {
+		r[i].resize (fld.m * t, 0);
+		for (j = 0; j < fld.m * t; ++j)
+			r[i][j] = (h[j/fld.m][i] >> (j % fld.m) ) & 1;
+	}
 }
