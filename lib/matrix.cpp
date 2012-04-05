@@ -109,3 +109,34 @@ void matrix::generate_random_invertible (uint size, prng & rng)
 	p.permute (lt, *this);
 }
 
+bool matrix::get_left_square (matrix&r)
+{
+	uint h = height();
+	if (width() < h) return false;
+	r.resize (h);
+	for (uint i = 0; i < h; ++i) r[i] = item (i);
+	return true;
+}
+
+bool matrix::strip_left_square (matrix&r)
+{
+	uint h = height(), w = width();
+	if (w < h) return false;
+	r.resize (w - h);
+	for (uint i = 0; i < w - h; ++i) r[i] = item (h + i);
+	return true;
+}
+
+bool matrix::goppa_systematic_form (matrix&m, permutation&p, prng&rng)
+{
+	matrix t, sinv, s;
+
+	p.generate_random (width(), rng);
+	p.permute (*this, t);
+	t.get_left_square (sinv);
+	if (!sinv.compute_inversion (s) ) return false; //meant to be retried.
+
+	s.mult (t);
+	s.strip_left_square (m);
+	return 0;
+}

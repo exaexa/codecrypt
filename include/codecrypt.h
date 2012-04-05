@@ -50,6 +50,7 @@ public:
 /*
  * matrix over GF(2) is a vector of columns
  */
+class permutation;
 class matrix : public std::vector<bvector>
 {
 protected:
@@ -71,6 +72,9 @@ public:
 	bool compute_inversion (matrix&);
 	void generate_random_invertible (uint, prng&);
 	void unit (uint);
+	bool get_left_square (matrix&);
+	bool strip_left_square (matrix&);
+	bool goppa_systematic_form (matrix&, permutation&, prng&);
 };
 
 /*
@@ -141,12 +145,12 @@ class privkey
 public:
 	matrix Sinv;
 	permutation Pinv;
-
-	matrix h;
-	permutation hsys;
-
 	polynomial g;
-	matrix sqInv; //"cache"
+
+	// derivable things not needed in actual key
+	matrix h;
+	permutation hperm;
+	matrix sqInv;
 
 	int decrypt (const bvector&, bvector&);
 	int sign (const bvector&, bvector&, uint, uint, prng&);
