@@ -46,8 +46,25 @@ int ccr::mce::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
 
 int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 {
+	uint s = cipher_size();
+	if (t > s) return 1;
+	if (in.size() != plain_size() ) return 2;
 
-	return -1; //TODO
+	//make a codeword
+	G.mult_vecT_left (in, out);
+
+	//add error vector
+	bvector e;
+	e.resize (s, 0);
+	for (uint n = t; n > 0;) {
+		uint p = rng.random (s);
+		if (!e[p]) {
+			e[p] = 1;
+			--n;
+		}
+	}
+	out.add (e);
+	return 0;
 }
 
 int privkey::decrypt (const bvector&in, bvector&out)
