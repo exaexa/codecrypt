@@ -77,6 +77,9 @@ public:
 	void extend_left_compact (matrix&);
 	bool create_goppa_generator (matrix&, permutation&, prng&);
 	bool create_goppa_generator (matrix&, const permutation&);
+
+	bool mult_vecT_left (const bvector&, bvector&);
+	bool mult_vec_right (const bvector&, bvector&);
 };
 
 /*
@@ -158,6 +161,13 @@ public:
 	int prepare();
 	int decrypt (const bvector&, bvector&);
 	int sign (const bvector&, bvector&, uint, uint, prng&);
+
+	uint cipher_size() {
+		return Pinv.size();
+	}
+	uint plain_size() {
+		return Sinv.width();
+	}
 };
 
 class pubkey
@@ -168,6 +178,13 @@ public:
 
 	int encrypt (const bvector&, bvector&, prng&);
 	int verify (const bvector&, const bvector&, uint, uint);
+
+	uint cipher_size() {
+		return G.width();
+	}
+	uint plain_size() {
+		return G.height();
+	}
 };
 
 int generate (pubkey&, privkey&, prng&, uint m, uint t);

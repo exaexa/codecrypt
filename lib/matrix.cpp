@@ -161,3 +161,31 @@ bool matrix::create_goppa_generator (matrix&g, const permutation&p)
 	s.extend_left_compact (g);
 	return true;
 }
+
+bool matrix::mult_vecT_left (const bvector&a, bvector&r)
+{
+	uint w = width(), h = height();
+	if (a.size() != h) return false;
+	r.resize (w, 0);
+	for (uint i = 0; i < w; ++i) {
+		bool t = 0;
+		for (uint j = 0; j < h; ++j)
+			t ^= item (i) [j] & a[j];
+		r[i] = t;
+	}
+	return true;
+}
+
+bool matrix::mult_vec_right (const bvector&a, bvector&r)
+{
+	uint w = width(), h = height();
+	if (a.size() != w) return false;
+	r.resize (h, 0);
+	for (uint i = 0; i < h; ++i) {
+		bool t = 0;
+		for (uint j = 0; j < w; ++j)
+			t ^= item (j) [i] & a[j];
+		r[i] = t;
+	}
+	return true;
+}
