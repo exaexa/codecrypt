@@ -141,13 +141,13 @@ void matrix::extend_left_compact (matrix&r)
 	}
 }
 
-bool matrix::goppa_systematic_form (matrix&g, permutation&p, prng&rng)
+bool matrix::create_goppa_generator (matrix&g, permutation&p, prng&rng)
 {
 	p.generate_random (width(), rng);
-	return goppa_systematic_form (g, p);
+	return create_goppa_generator (g, p);
 }
 
-bool matrix::goppa_systematic_form (matrix&g, const permutation&p)
+bool matrix::create_goppa_generator (matrix&g, const permutation&p)
 {
 	matrix t, sinv, s;
 

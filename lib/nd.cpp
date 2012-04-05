@@ -4,7 +4,7 @@
 using namespace ccr;
 using namespace ccr::nd;
 
-int generate (pubkey&pub, privkey&priv, prng&rng)
+int nd::generate (pubkey&pub, privkey&priv, prng&rng)
 {
 
 	return -1; //TODO

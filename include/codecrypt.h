@@ -75,8 +75,8 @@ public:
 	bool get_left_square (matrix&);
 	bool strip_left_square (matrix&);
 	void extend_left_compact (matrix&);
-	bool goppa_systematic_form (matrix&, permutation&, prng&);
-	bool goppa_systematic_form (matrix&, const permutation&);
+	bool create_goppa_generator (matrix&, permutation&, prng&);
+	bool create_goppa_generator (matrix&, const permutation&);
 };
 
 /*
@@ -148,12 +148,14 @@ public:
 	matrix Sinv;
 	permutation Pinv;
 	polynomial g;
+	permutation hperm;
+	gf2m fld;
 
 	// derivable things not needed in actual key
 	matrix h;
-	permutation hperm;
-	matrix sqInv;
+	std::vector<polynomial> sqInv;
 
+	int prepare();
 	int decrypt (const bvector&, bvector&);
 	int sign (const bvector&, bvector&, uint, uint, prng&);
 };
@@ -163,11 +165,12 @@ class pubkey
 public:
 	matrix G;
 	uint t;
+
 	int encrypt (const bvector&, bvector&, prng&);
 	int verify (const bvector&, const bvector&, uint, uint);
 };
 
-int generate (pubkey&, privkey&, prng&);
+int generate (pubkey&, privkey&, prng&, uint m, uint t);
 }
 
 /*
