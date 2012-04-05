@@ -74,7 +74,9 @@ public:
 	void unit (uint);
 	bool get_left_square (matrix&);
 	bool strip_left_square (matrix&);
+	void extend_left_compact (matrix&);
 	bool goppa_systematic_form (matrix&, permutation&, prng&);
+	bool goppa_systematic_form (matrix&, const permutation&);
 };
 
 /*
@@ -86,12 +88,12 @@ class permutation : public std::vector<uint>
 protected:
 	_ccr_declare_vector_item
 public:
-	void compute_inversion (permutation&);
+	void compute_inversion (permutation&) const;
 
 	void generate_random (uint n, prng&);
-	void permute (const bvector&, bvector&);
-	void permute (const matrix&, matrix&);
-	void permute_rows (const matrix&, matrix&);
+	void permute (const bvector&, bvector&) const;
+	void permute (const matrix&, matrix&) const;
+	void permute_rows (const matrix&, matrix&) const;
 };
 
 /*

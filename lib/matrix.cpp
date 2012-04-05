@@ -127,16 +127,37 @@ bool matrix::strip_left_square (matrix&r)
 	return true;
 }
 
-bool matrix::goppa_systematic_form (matrix&m, permutation&p, prng&rng)
+void matrix::extend_left_compact (matrix&r)
+{
+	uint i;
+	uint h = height(), w = width();
+	r.resize (h + w);
+	for (i = 0; i < h; ++i) {
+		r[i].resize (h, 0);
+		r[i][i] = 1;
+	}
+	for (i = 0; i < w; ++i) {
+		r[h+i] = item (i);
+	}
+}
+
+bool matrix::goppa_systematic_form (matrix&g, permutation&p, prng&rng)
+{
+	p.generate_random (width(), rng);
+	return goppa_systematic_form (g, p);
+}
+
+bool matrix::goppa_systematic_form (matrix&g, const permutation&p)
 {
 	matrix t, sinv, s;
 
-	p.generate_random (width(), rng);
 	p.permute (*this, t);
 	t.get_left_square (sinv);
 	if (!sinv.compute_inversion (s) ) return false; //meant to be retried.
 
 	s.mult (t);
-	s.strip_left_square (m);
-	return 0;
+	s.strip_left_square (t); //matrix pingpong. optimize it.
+	t.compute_transpose (s);
+	s.extend_left_compact (g);
+	return true;
 }
