@@ -26,6 +26,8 @@ typedef int sint;
  * vector over GF(2). We rely on STL's vector<bool> == bit_vector
  * specialization for efficiency.
  */
+class polynomial;
+class gf2m;
 class bvector : public std::vector<bool>
 {
 protected:
@@ -34,6 +36,8 @@ public:
 	uint hamming_weight();
 	void add (const bvector&);
 	bool operator* (const bvector&); //dot product
+	bool zero() const;
+	void to_poly (polynomial&, gf2m&);
 };
 
 /*
@@ -115,6 +119,7 @@ public:
 	uint mult (uint, uint);
 	uint exp (uint, sint);
 	uint inv (uint);
+	uint sq_root (uint);
 };
 
 /*
@@ -129,13 +134,26 @@ public:
 	void strip();
 	int degree() const;
 	bool zero() const;
+	void shift (uint);
+
 	uint eval (uint, gf2m&) const;
 	void add (const polynomial&, gf2m&);
-	void mod (const polynomial&, gf2m&);
 	void mult (const polynomial&, gf2m&);
+	void add_mult (const polynomial&, uint mult, gf2m&);
+	void mod (const polynomial&, gf2m&);
+	void div (polynomial&, polynomial&, gf2m&);
+	void divmod (polynomial&, polynomial&, polynomial&, gf2m&);
+	void square (gf2m&);
+	void inv (polynomial&, gf2m&);
+	void make_monic (gf2m&);
+
+	void sqrt (vector<polynomial>&, gf2m&);
 	polynomial gcd (polynomial, gf2m&);
+	void mod_to_fracton (polynomial&, polynomial&, polynomial&, gf2m&);
+
 	bool is_irreducible (gf2m&) const;
 	void generate_random_irreducible (uint s, gf2m&, prng&);
+
 	bool compute_square_root_matrix (std::vector<polynomial>&, gf2m&);
 	void compute_goppa_check_matrix (matrix&, gf2m&);
 };

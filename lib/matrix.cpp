@@ -62,8 +62,8 @@ bool matrix::compute_inversion (matrix&res)
 		if (m[i][i] != 1) {
 			for (j = i + 1; j < s; ++j) if (m[j][i] == 1) break;
 			if (j == s) return false; //noninvertible
-			m[i].add (m[j]);
-			r[i].add (r[j]);
+			m[i].swap (m[j]);
+			r[i].swap (r[j]);
 		}
 		//remove 1's below
 		for (j = i + 1; j < s; ++j) if (m[j][i]) {

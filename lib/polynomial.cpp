@@ -28,6 +28,14 @@ void polynomial::add (const polynomial&f, gf2m&fld)
 	for (int i = 0; i <= df; ++i) item (i) = fld.add (item (i), f[i]);
 }
 
+void polynomial::add_mult (const polynomial&f, uint mult, gf2m&fld)
+{
+	int df = f.degree();
+	if (df > degree() ) resize (df + 1);
+	for (int i = 0; i <= df; ++i)
+		item (i) = fld.add (item (i), fld.mult (mult, f[i]) );
+}
+
 void polynomial::mod (const polynomial&f, gf2m&fld)
 {
 	int df = f.degree();
@@ -225,4 +233,104 @@ void polynomial::compute_goppa_check_matrix (matrix&r, gf2m&fld)
 		for (j = 0; j < fld.m * t; ++j)
 			r[i][j] = (h[j/fld.m][i] >> (j % fld.m) ) & 1;
 	}
+}
+
+void polynomial::make_monic (gf2m&fld)
+{
+	int d = degree();
+	if (d < 0) return;
+	uint m = fld.inv (item (d) );
+	for (uint i = 0; i <= d; ++i) item (i) = fld.mult (item (i), m);
+}
+
+void polynomial::shift (uint n)
+{
+	if (degree() < 0) return;
+	insert (begin(), n, 0);
+}
+
+void polynomial::square (gf2m&fld)
+{
+	polynomial a = *this;
+	this->mult (a, fld);
+}
+
+void polynomial::sqrt (vector<polynomial>& sqInv, gf2m&fld)
+{
+	polynomial a = *this;
+	clear();
+	for (uint i = 0; i < a.size(); ++i) add_mult (sqInv[i], a[i], fld);
+	for (uint i = 0; i < size(); ++i) item (i) = fld.sq_root (item (i) );
+}
+
+void polynomial::div (polynomial&p, polynomial&m, gf2m&fld)
+{
+	int degp = p.degree();
+	if (degp < 0) return;
+
+	uint headInv = fld.inv (p[degp]);
+	polynomial A = *this;
+	A.mod (m, fld);
+	clear();
+	int da;
+	while ( (da = A.degree() ) >= degp) {
+		int rp = da - degp;
+		if (size() < rp + 1) resize (rp + 1, 0);
+		item (rp) = fld.mult (headInv, A[da]);
+		for (uint i = 0; i <= degp; ++i)
+			A[i+rp] = fld.add (A[i+rp], fld.mult (item (rp), p[i]) );
+	}
+}
+
+void polynomial::divmod (polynomial&d, polynomial&res, polynomial&rem, gf2m&fld)
+{
+	int degd = d.degree();
+	if (degd < 0) return;
+
+	uint headInv = fld.inv (d[degd]);
+	rem = *this;
+	res.clear();
+	int t;
+	while ( (t = rem.degree() ) >= degd) {
+		int rp = t - degd;
+		if (res.size() < rp + 1) res.resize (rp + 1, 0);
+		res[rp] = fld.mult (headInv, rem[t]);
+		for (uint i = 0; i <= degd; ++i)
+			rem[i+rp] = fld.add (rem[i+rp], fld.mult (res[rp], d[i]) );
+	}
+}
+
+void polynomial::inv (polynomial&m, gf2m&fld)
+{
+	polynomial a = *this;
+	this->resize (2);
+	item (0) = 0;
+	item (1) = 1;
+	div (a, m, fld);
+}
+
+void polynomial::mod_to_fracton (polynomial&a, polynomial&b, polynomial&m, gf2m&fld)
+{
+	int deg = m.degree() / 2;
+	polynomial a0, a1, b0, b1, t1, t2;
+	a0 = m;
+	a0.make_monic (fld);
+	a1 = *this;
+	a1.mod (m, fld);
+	b0.resize (1, 0);
+	b1.resize (1, 1);
+	while (a1.degree() > deg) {
+
+		a0.divmod (a1, t1, t2, fld);
+		a0.swap (a1);
+		a1.swap (t2);
+
+		t1.mult (b1);
+		t1.mod (m);
+		t1.add (b0);
+		b0.swap (b1);
+		b1.swap (t1);
+	}
+	a = a1;
+	b = b1;
 }

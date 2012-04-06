@@ -69,7 +69,6 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 
 int privkey::decrypt (const bvector&in, bvector&out)
 {
-
 	return -1; //TODO
 }
 

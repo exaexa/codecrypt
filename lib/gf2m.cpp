@@ -117,3 +117,9 @@ uint gf2m::inv (uint a)
 	return exp (a, n - 2);
 }
 
+uint gf2m::sq_root (uint a)
+{
+	for (uint i = 0; i < m; ++i)
+		a = mult (a, a);
+	return a;
+}
