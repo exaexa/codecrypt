@@ -4,6 +4,8 @@
 using namespace ccr;
 using namespace ccr::mce;
 
+#include "decoding.h"
+
 int ccr::mce::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
 {
 	//finite field
@@ -69,7 +71,39 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 
 int privkey::decrypt (const bvector&in, bvector&out)
 {
-	return -1; //TODO
+	//remove the P permutation
+	bvector not_permuted;
+	Pinv.permute (in, not_permuted);
+
+	//prepare for decoding
+	permutation hpermInv;
+	hperm.compute_inversion (hpermInv);
+	bvector canonical, syndrome;
+	hperm.permute (not_permuted, canonical);
+	h.mult_vec_right (canonical, syndrome);
+
+	//decode
+	bvector ev;
+	syndrome_decode (syndrome, fld, g, sqInv, ev);
+
+	std::cout << "ERRORS " << ev;
+	//check the error vector. It should have exactly t == deg(g) errors
+	if ( (int) ev.hamming_weight() != g.degree() )
+		return 1;
+
+	//correct the errors
+	canonical.add (ev);
+
+	//shuffle back into systematic order
+	hpermInv.permute (canonical, not_permuted);
+
+	//get rid of redundancy bits
+	not_permuted.resize (Sinv.size() );
+
+	//unscramble the result
+	Sinv.mult_vec_right (not_permuted, out);
+
+	return 0;
 }
 
 int privkey::prepare ()

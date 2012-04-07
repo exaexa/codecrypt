@@ -57,9 +57,15 @@ void polynomial::mult (const polynomial&b, gf2m&fld)
 {
 	polynomial a = *this;
 	clear();
-	uint i, j, da, db;
+	uint i, j;
+	int da, db;
 	da = a.degree();
 	db = b.degree();
+	if ( (da < 0) || (db < 0) ) { //multiply by zero
+		clear();
+		return;
+	}
+
 	resize (da + db + 1, 0);
 	for (i = 0; i <= da; ++i)
 		if (a[i]) for (j = 0; j <= db; ++j)
@@ -325,9 +331,9 @@ void polynomial::mod_to_fracton (polynomial&a, polynomial&b, polynomial&m, gf2m&
 		a0.swap (a1);
 		a1.swap (t2);
 
-		t1.mult (b1);
-		t1.mod (m);
-		t1.add (b0);
+		t1.mult (b1, fld);
+		t1.mod (m, fld);
+		t1.add (b0, fld);
 		b0.swap (b1);
 		b1.swap (t1);
 	}

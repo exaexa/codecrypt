@@ -237,5 +237,17 @@ int generate (pubkey&, privkey&, prng&);
 
 } //namespace ccr
 
+//global overload for iostream operators
+#include <iostream>
+
+std::ostream& operator<< (std::ostream&o, const ccr::polynomial&);
+std::ostream& operator<< (std::ostream&o, const ccr::permutation&);
+std::ostream& operator<< (std::ostream&o, const ccr::gf2m&);
+std::ostream& operator<< (std::ostream&o, const ccr::matrix&);
+std::ostream& operator<< (std::ostream&o, const ccr::bvector&);
+
+
+
+
 #endif // _CODECRYPT_H_
 
