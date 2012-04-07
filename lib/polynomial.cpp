@@ -39,6 +39,10 @@ void polynomial::add_mult (const polynomial&f, uint mult, gf2m&fld)
 void polynomial::mod (const polynomial&f, gf2m&fld)
 {
 	int df = f.degree();
+	if (df < 0) { //mod 0 -> 0
+		clear();
+		return;
+	}
 	int d;
 	uint hi = fld.inv (f[df]);
 	// while there's place to substract, reduce by x^(d-df)-multiply of f
@@ -271,20 +275,36 @@ void polynomial::sqrt (vector<polynomial>& sqInv, gf2m&fld)
 
 void polynomial::div (polynomial&p, polynomial&m, gf2m&fld)
 {
-	int degp = p.degree();
-	if (degp < 0) return;
+	polynomial r0, r1, s0, s1, s2, q1, q2;
 
-	uint headInv = fld.inv (p[degp]);
-	polynomial A = *this;
-	A.mod (m, fld);
-	clear();
-	int da;
-	while ( (da = A.degree() ) >= degp) {
-		int rp = da - degp;
-		if (size() < rp + 1) resize (rp + 1, 0);
-		item (rp) = fld.mult (headInv, A[da]);
-		for (uint i = 0; i <= degp; ++i)
-			A[i+rp] = fld.add (A[i+rp], fld.mult (item (rp), p[i]) );
+	r0 = m;
+
+	r1 = p;
+	r1.mod (m, fld);
+
+	s0.clear();
+
+	s1 = *this;
+	s1.mod (m, fld);
+
+	while (r1.degree() >= 0) {
+		r0.divmod (r1, q1, q2, fld);
+		r0.swap (r1);
+		r1.swap (q2);
+
+		s2 = s0;
+		q1.mult (s1, fld);
+		q1.mod (m, fld);
+		s2.add (q1, fld);
+
+		s0.swap (s1);
+		s1.swap (s2);
+	}
+
+	*this = s0;
+	if (r0.degree() >= 0) {
+		uint m = fld.inv (r0[r0.degree() ]);
+		for (uint i = 0; i < size(); ++i) item (i) = fld.mult (item (i), m);
 	}
 }
 
@@ -320,7 +340,6 @@ void polynomial::mod_to_fracton (polynomial&a, polynomial&b, polynomial&m, gf2m&
 	int deg = m.degree() / 2;
 	polynomial a0, a1, b0, b1, t1, t2;
 	a0 = m;
-	a0.make_monic (fld);
 	a1 = *this;
 	a1.mod (m, fld);
 	b0.resize (1, 0);
