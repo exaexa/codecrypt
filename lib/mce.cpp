@@ -19,14 +19,8 @@ int ccr::mce::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
 	permutation hp;
 	priv.g.compute_goppa_check_matrix (priv.h, priv.fld);
 
-	int attempts_left = 1 << m;
-	for (;;) {
-		if (priv.h.create_goppa_generator (generator, hp, rng) ) break;
-		--attempts_left;
-	}
-	if (!attempts_left) return 1;
-
-	hp.compute_inversion (priv.hperm);
+	for (;;) if (priv.h.create_goppa_generator
+		             (generator, priv.hperm, rng) ) break;
 
 	//scramble matrix
 	matrix S;
@@ -79,7 +73,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	permutation hpermInv;
 	hperm.compute_inversion (hpermInv);
 	bvector canonical, syndrome;
-	hperm.permute (not_permuted, canonical);
+	hpermInv.permute (not_permuted, canonical);
 	h.mult_vec_right (canonical, syndrome);
 
 	//decode
@@ -95,7 +89,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	canonical.add (ev);
 
 	//shuffle back into systematic order
-	hpermInv.permute (canonical, not_permuted);
+	hperm.permute (canonical, not_permuted);
 
 	//get rid of redundancy bits
 	not_permuted.resize (Sinv.size() );
