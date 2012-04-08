@@ -134,6 +134,7 @@ public:
 	void strip();
 	int degree() const;
 	bool zero() const;
+	bool one() const;
 	void shift (uint);
 
 	uint eval (uint, gf2m&) const;

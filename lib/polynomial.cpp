@@ -21,6 +21,12 @@ bool polynomial::zero() const
 	return true;
 }
 
+bool polynomial::one() const
+{
+	if (degree() != 0) return false;
+	return item (0) == 1;
+}
+
 void polynomial::add (const polynomial&f, gf2m&fld)
 {
 	int df = f.degree();
@@ -107,14 +113,17 @@ bool polynomial::is_irreducible (gf2m&fld) const
 
 	uint d = degree();
 	for (uint i = 1; i <= d / 2; ++i) {
+		for (uint j = 0; j < fld.m; ++j) {
+			t = xi;
+			t.mult (xi, fld);
+			t.mod (*this, fld);
+			xi.swap (t);
+		}
 		t = xi;
-		t.mult (xi, fld); //because mult would destroy xi on xi.mult(xi)
-		t.mod (*this, fld);
-		xi = t;
 		t.add (xmodf, fld);
 
 		t = t.gcd (*this, fld);
-		if (t.degree() > 0) //gcd(f,x^2^i - x mod f) is polynomial
+		if (t.degree() > 0) //gcd(f,x^2^i - x mod f) != const
 			return false;
 	}
 	return true;
@@ -124,7 +133,7 @@ void polynomial::generate_random_irreducible (uint s, gf2m&fld, prng& rng)
 {
 	resize (s + 1);
 	item (s) = 1; //degree s
-	item (0) = 1 + rng.random (fld.n - 1); //not divisible by x^1
+	item (0) = 1 + rng.random (fld.n - 1);
 	for (uint i = 1; i < s; ++i) item (i) = rng.random (fld.n);
 	while (!is_irreducible (fld) ) {
 		uint pos = rng.random (s);
@@ -216,32 +225,26 @@ void polynomial::compute_goppa_check_matrix (matrix&r, gf2m&fld)
 {
 	if (degree() < 0) return; //wrongly initialized polynomial
 	uint t = degree();
-	vector<vector<uint> > yz, h;
-	uint i, j, k;
-	yz.resize (t);
-	h.resize (t);
-	for (i = 0; i < t; ++i) {
-		yz[i].resize (fld.n);
-		h[i].resize (fld.n, 0);
+	vector<vector<uint> > h;
+	uint i, j;
+
+	//construction from Sendrier's slides with maximal support L=[0..fld.n)
+	h.resize (fld.n);
+	for (i = 0; i < fld.n; ++i) {
+		h[i].resize (t);
+		h[i][0] = fld.inv (eval (i, fld) );
+		if(h[i][0]==0) std::cout << "BLE" << std::endl;
 	}
-	//create Y*Z
-	for (i = 0; i < fld.n; ++i) yz[0][i] = fld.inv (eval (i, fld) );
-	for (i = 1; i < t; ++i) for (j = 0; j < fld.n; ++j)
-			yz[i][j] = fld.mult (yz[i-1][j], j);
-	//X*Y*Z = h
-	for (i = 0; i < t; ++i)
-		for (j = 0; j < fld.n; ++j)
-			for (k = 0; k <= i; ++k)
-				h[i][j] = fld.add (h[i][j], fld.mult
-				                   (yz[k][j],
-				                    item (t + k - i) ) );
+	//compute support powers
+	for (j = 0; j < fld.n; ++j) for (i = 1; i < t; ++i)
+			h[j][i] = fld.mult (h[j][i-1], j);
 
 	//now convert to binary
 	r.resize (fld.n);
 	for (i = 0; i < fld.n; ++i) {
-		r[i].resize (fld.m * t, 0);
+		r[i].resize (fld.m * t);
 		for (j = 0; j < fld.m * t; ++j)
-			r[i][j] = (h[j/fld.m][i] >> (j % fld.m) ) & 1;
+			r[i][j] = (h[i][j/fld.m] >> (j % fld.m) ) & 1;
 	}
 }
 
@@ -278,7 +281,6 @@ void polynomial::div (polynomial&p, polynomial&m, gf2m&fld)
 	polynomial r0, r1, s0, s1, s2, q1, q2;
 
 	r0 = m;
-
 	r1 = p;
 	r1.mod (m, fld);
 
