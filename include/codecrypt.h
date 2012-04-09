@@ -78,6 +78,8 @@ public:
 	void unit (uint);
 	bool get_left_square (matrix&);
 	bool strip_left_square (matrix&);
+	bool get_right_square (matrix&);
+	bool strip_right_square (matrix&);
 	void extend_left_compact (matrix&);
 	bool create_goppa_generator (matrix&, permutation&, prng&);
 	bool create_goppa_generator (matrix&, const permutation&);

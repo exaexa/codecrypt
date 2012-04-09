@@ -127,6 +127,24 @@ bool matrix::strip_left_square (matrix&r)
 	return true;
 }
 
+bool matrix::get_right_square (matrix&r)
+{
+	uint h = height();
+	if (width() < h) return false;
+	r.resize (h);
+	for (uint i = 0; i < h; ++i) r[i] = item (h + i);
+	return true;
+}
+
+bool matrix::strip_right_square (matrix&r)
+{
+	uint h = height(), w = width();
+	if (w < h) return false;
+	r.resize (w - h);
+	for (uint i = 0; i < w - h; ++i) r[i] = item (i);
+	return true;
+}
+
 void matrix::extend_left_compact (matrix&r)
 {
 	uint i;

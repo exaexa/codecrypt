@@ -225,19 +225,29 @@ void polynomial::compute_goppa_check_matrix (matrix&r, gf2m&fld)
 {
 	if (degree() < 0) return; //wrongly initialized polynomial
 	uint t = degree();
-	vector<vector<uint> > h;
-	uint i, j;
+	vector<vector<uint> > vd, h;
+	uint i, j, k;
 
-	//construction from Sendrier's slides with maximal support L=[0..fld.n)
-	h.resize (fld.n);
+	//construction from Barreto's slides with maximal support L=[0..fld.n)
+	vd.resize (fld.n);
 	for (i = 0; i < fld.n; ++i) {
-		h[i].resize (t);
-		h[i][0] = fld.inv (eval (i, fld) );
-		if(h[i][0]==0) std::cout << "BLE" << std::endl;
+		vd[i].resize (t);
+		vd[i][0] = fld.inv (eval (i, fld) );
 	}
 	//compute support powers
 	for (j = 0; j < fld.n; ++j) for (i = 1; i < t; ++i)
-			h[j][i] = fld.mult (h[j][i-1], j);
+			vd[j][i] = fld.mult (vd[j][i-1], j);
+
+	//multiply by goppa coefficients (compute t*vd)
+	h.resize (fld.n);
+	for (i = 0; i < fld.n; ++i) {
+		h[i].resize (t, 0);
+		for (j = 0; j < t; ++j) //computing the element h[i][j]
+			for (k = 0; k <= j; ++k) //k = column index of t
+				h[i][j] = fld.add (h[i][j],
+				                   fld.mult (item (t - j + k),
+				                             vd[i][k]) );
+	}
 
 	//now convert to binary
 	r.resize (fld.n);
