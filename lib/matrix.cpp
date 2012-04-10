@@ -129,10 +129,10 @@ bool matrix::strip_left_square (matrix&r)
 
 bool matrix::get_right_square (matrix&r)
 {
-	uint h = height();
-	if (width() < h) return false;
+	uint h = height(), w = width();
+	if (w < h) return false;
 	r.resize (h);
-	for (uint i = 0; i < h; ++i) r[i] = item (h + i);
+	for (uint i = 0; i < h; ++i) r[i] = item (w - h + i);
 	return true;
 }
 
@@ -169,12 +169,13 @@ bool matrix::create_goppa_generator (matrix&g, const permutation&p)
 {
 	matrix t, sinv, s;
 
+	//generator construction from Barreto's PQC-4 slides p.21
 	p.permute (*this, t);
-	t.get_left_square (sinv);
+	t.get_right_square (sinv);
 	if (!sinv.compute_inversion (s) ) return false; //meant to be retried.
 
 	s.mult (t);
-	s.strip_left_square (t); //matrix pingpong. optimize it.
+	s.strip_right_square (t); //matrix pingpong for the result
 	t.compute_transpose (s);
 	s.extend_left_compact (g);
 	return true;
