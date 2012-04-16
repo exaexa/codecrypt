@@ -355,9 +355,8 @@ void polynomial::divmod (polynomial&d, polynomial&res, polynomial&rem, gf2m&fld)
 void polynomial::inv (polynomial&m, gf2m&fld)
 {
 	polynomial a = *this;
-	this->resize (2);
-	item (0) = 0;
-	item (1) = 1;
+	this->resize (1);
+	item (0) = 1;
 	div (a, m, fld);
 }
 
