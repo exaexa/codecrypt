@@ -119,7 +119,7 @@ uint gf2m::inv (uint a)
 
 uint gf2m::sq_root (uint a)
 {
-	for (uint i = 0; i < m; ++i)
+	for (uint i = 1; i < m; ++i)
 		a = mult (a, a);
 	return a;
 }

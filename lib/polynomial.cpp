@@ -57,8 +57,9 @@ void polynomial::mod (const polynomial&f, gf2m&fld)
 			uint t = fld.mult (item (d), hi);
 
 			for (int i = 0; i <= df; ++i)
-				item (i + d - df) = fld.add (item (i + d - df),
-				                             fld.mult (t, f[i]) );
+				item (i + d - df)
+				= fld.add (item (i + d - df),
+				           fld.mult (t, f[i]) );
 		}
 	strip();
 }
@@ -192,23 +193,25 @@ for(int c=0;c<d;++c) {\
 					break;
 				}
 			if (j == d) return false;
-			a = fld.inv (l[i][i]); //normalize
-			row_mult (i, a);
-			//zero the col
-			for (j = i + 1; j < d; ++j) if (l[i][j] != 0) {
-					a = l[i][j]; //"minus". luckily on GF(2^m) x+x=0.
-					add_row_mult (i, j, a);
-				}
 		}
+		a = fld.inv (l[i][i]); //normalize
+		row_mult (i, a);
+		//zero the col
+		for (j = i + 1; j < d; ++j)
+			if (l[i][j] != 0) {
+				a = l[i][j]; //"minus". luckily on GF(2^m) x+x=0.
+				add_row_mult (i, j, a);
+			}
 	}
-
 	//jordan
-	for (i = d - 1; i >= 0; --i)
+	for (i = d - 1; i >= 0; --i) {
 		for (j = 0; j < i; ++j) {
 			a = l[i][j];
 			if (a == 0) continue;
 			add_row_mult (i, j, a);
 		}
+	}
+
 	return true;
 }
 
@@ -282,8 +285,19 @@ void polynomial::sqrt (vector<polynomial>& sqInv, gf2m&fld)
 {
 	polynomial a = *this;
 	clear();
-	for (uint i = 0; i < a.size(); ++i) add_mult (sqInv[i], a[i], fld);
-	for (uint i = 0; i < size(); ++i) item (i) = fld.sq_root (item (i) );
+	uint s=sqInv.size();
+	resize (s, 0);
+
+	for (uint i = 0; i < s; ++i) {
+		for (uint j = 0; j < s; ++j) {
+			if (j >= a.size() ) break;
+			if (i >= sqInv[j].size() ) continue;
+			item (i) = fld.add (item (i), fld.mult (sqInv[j][i], a[j]) );
+		}
+	}
+	strip();
+	for (uint i = 0; i < size(); ++i)
+		item (i) = fld.sq_root (item (i) );
 }
 
 void polynomial::div (polynomial&p, polynomial&m, gf2m&fld)
