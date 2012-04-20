@@ -5,6 +5,7 @@ void syndrome_decode (bvector&syndrome, gf2m&fld, polynomial& goppa,
                       std::vector<polynomial>& sqInv, bvector&ev)
 
 {
+	ev.clear();
 	ev.resize (fld.n, 0);
 	if (syndrome.zero() ) return;
 

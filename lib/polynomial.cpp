@@ -244,8 +244,9 @@ void polynomial::compute_goppa_check_matrix (matrix&r, gf2m&fld)
 	//multiply by goppa coefficients (compute t*vd)
 	h.resize (fld.n);
 	for (i = 0; i < fld.n; ++i) {
-		h[i].resize (t, 0);
-		for (j = 0; j < t; ++j) //computing the element h[i][j]
+		h[i].resize (t);
+		for (j = 0; j < t; ++j) { //computing the element h[i][j]
+			h[i][j]=0;
 			for (k = 0; k <= j; ++k) //k = column index of t
 				h[i][j] = fld.add (h[i][j],
 				                   fld.mult (item (t - j + k),
@@ -285,7 +286,7 @@ void polynomial::sqrt (vector<polynomial>& sqInv, gf2m&fld)
 {
 	polynomial a = *this;
 	clear();
-	uint s=sqInv.size();
+	uint s = sqInv.size();
 	resize (s, 0);
 
 	for (uint i = 0; i < s; ++i) {

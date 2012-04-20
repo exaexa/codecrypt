@@ -34,7 +34,8 @@ bool bvector::zero() const
 void bvector::to_poly (polynomial&r, gf2m&fld)
 {
 	r.clear();
-	r.resize ( (size() % fld.m) ? 1 : 0 + (size() / fld.m), 0);
+	if(size() % fld.m) return; //impossible
+	r.resize (size() / fld.m, 0);
 	for (uint i = 0; i < size(); ++i)
 		if (item (i) ) r[i/fld.m] |= 1 << (i % fld.m);
 }

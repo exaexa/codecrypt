@@ -95,7 +95,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	not_permuted.resize (Sinv.size() );
 
 	//unscramble the result
-	Sinv.mult_vec_right (not_permuted, out);
+	Sinv.mult_vecT_left (not_permuted, out);
 
 	return 0;
 }
