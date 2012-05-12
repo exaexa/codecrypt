@@ -38,6 +38,7 @@ public:
 	bool operator* (const bvector&); //dot product
 	bool zero() const;
 	void to_poly (polynomial&, gf2m&);
+	void from_poly (const polynomial&, gf2m&);
 };
 
 /*

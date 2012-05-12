@@ -76,7 +76,7 @@ bool gf2m::create (uint M)
 	m = M;
 	n = 1 << m;
 	if (!n) return false; //too big.
-	for (uint t = 1 + (1 << m), e = 1 << (1 + m); t < e; t += 2)
+	for (uint t = (1 << m)+1, e = 1 << (m+1); t < e; t += 2)
 		if (is_irreducible_gf2_poly (t) ) {
 			poly = t;
 			return true;
