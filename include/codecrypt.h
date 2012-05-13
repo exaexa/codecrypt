@@ -118,6 +118,8 @@ public:
 
 	bool create (uint m);
 
+	std::vector<uint> log, antilog;
+
 	uint add (uint, uint);
 	uint mult (uint, uint);
 	uint exp (uint, sint);

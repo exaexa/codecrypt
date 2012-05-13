@@ -70,18 +70,39 @@ bool is_irreducible_gf2_poly (uint p)
 	return true;
 }
 
+uint gf2p_tablemult (uint a, uint b, uint n,
+                     const std::vector<uint>&log,
+                     const std::vector<uint>&antilog)
+{
+	if (! (a && b) ) return 0;
+	return antilog[ (log[a] + log[b]) % (n - 1) ];
+}
+
 bool gf2m::create (uint M)
 {
 	if (M < 1) return false; //too small.
 	m = M;
 	n = 1 << m;
 	if (!n) return false; //too big.
-	for (uint t = (1 << m)+1, e = 1 << (m+1); t < e; t += 2)
+	for (uint t = (1 << m) + 1, e = 1 << (m + 1); t < e; t += 2)
 		if (is_irreducible_gf2_poly (t) ) {
 			poly = t;
-			return true;
+			break;
 		}
-	return false;
+
+	log.resize (n);
+	antilog.resize (n);
+	log[0] = n - 1;
+	antilog[n-1] = 0;
+
+	uint xi = 1; //x^0
+	for (uint i = 0; i < n - 1; ++i) {
+		log[xi] = i;
+		antilog[i] = xi;
+
+		xi <<= 1; //multiply by x
+		xi = gf2p_mod (xi, poly);
+	}
 }
 
 uint gf2m::add (uint a, uint b)
@@ -91,7 +112,7 @@ uint gf2m::add (uint a, uint b)
 
 uint gf2m::mult (uint a, uint b)
 {
-	return gf2p_modmult (a, b, poly);
+	return gf2p_tablemult (a, b, n, log, antilog);
 }
 
 uint gf2m::exp (uint a, sint k)
@@ -113,8 +134,8 @@ uint gf2m::exp (uint a, sint k)
 
 uint gf2m::inv (uint a)
 {
-	if (n == 2) return a;
-	return exp (a, n - 2);
+	if (!a) return 0;
+	return antilog[ (n-1-log[a]) % (n - 1) ];
 }
 
 uint gf2m::sq_root (uint a)
