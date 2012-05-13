@@ -133,13 +133,9 @@ void polynomial::generate_random_irreducible (uint s, gf2m&fld, prng& rng)
 {
 	resize (s + 1);
 	item (s) = 1; //degree s
-	item (0) = 1 + rng.random (fld.n - 1);
-	for (uint i = 1; i < s; ++i) item (i) = rng.random (fld.n);
-	while (!is_irreducible (fld) ) {
-		uint pos = rng.random (s);
-		item (pos) = pos == 0 ?
-		             (1 + rng.random (fld.n - 1) ) : rng.random (fld.n);
-	}
+	for (uint i = 0; i < s; ++i) item (i) = rng.random (fld.n);
+	while (!is_irreducible (fld) )
+		item (rng.random (s) ) = rng.random (fld.n);
 }
 
 bool polynomial::compute_square_root_matrix (vector<polynomial>&r, gf2m&fld)
@@ -300,7 +296,7 @@ void polynomial::sqrt (vector<polynomial>& sqInv, gf2m&fld)
 
 void polynomial::div (polynomial&p, polynomial&m, gf2m&fld)
 {
-	polynomial r0, r1, s0, s1, s2, q1, q2;
+	polynomial r0, r1, s0, s1, s2, q0, q1;
 
 	r0 = m;
 	r1 = p;
@@ -308,25 +304,30 @@ void polynomial::div (polynomial&p, polynomial&m, gf2m&fld)
 
 	s0.clear();
 
-	s1 = *this;
+	s1.swap(*this);
 	s1.mod (m, fld);
 
 	while (r1.degree() >= 0) {
-		r0.divmod (r1, q1, q2, fld);
+		r0.divmod (r1, q0, q1, fld);
 		r0.swap (r1);
-		r1.swap (q2);
+		r1.swap (q1);
 
 		s2 = s0;
-		q1.mult (s1, fld);
-		q1.mod (m, fld);
-		s2.add (q1, fld);
+		q0.mult (s1, fld);
+		q0.mod (m, fld);
+		s2.add (q0, fld);
 
 		s0.swap (s1);
 		s1.swap (s2);
 	}
 
-	*this = s0;
-	make_monic(fld);
+	this->swap(s0);
+
+	//scalar divide by r0 head
+	if(r0.degree()<0) return;
+	uint c=r0[r0.degree()];
+	c=fld.inv(c);
+	for(uint i=0;i<size();++i) item(i) = fld.mult(item(i),c);
 }
 
 void polynomial::divmod (polynomial&d, polynomial&res, polynomial&rem, gf2m&fld)
@@ -345,6 +346,7 @@ void polynomial::divmod (polynomial&d, polynomial&res, polynomial&rem, gf2m&fld)
 		for (uint i = 0; i <= degd; ++i)
 			rem[i+rp] = fld.add (rem[i+rp], fld.mult (res[rp], d[i]) );
 	}
+	rem.strip();
 }
 
 void polynomial::inv (polynomial&m, gf2m&fld)
@@ -380,6 +382,6 @@ void polynomial::mod_to_fracton (polynomial&a, polynomial&b,
 		b0.swap (b1);
 		b1.swap (q);
 	}
-	a = a1;
-	b = b1;
+	a.swap (a1);
+	b.swap (b1);
 }
