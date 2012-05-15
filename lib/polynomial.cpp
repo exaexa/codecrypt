@@ -222,37 +222,18 @@ uint polynomial::eval (uint x, gf2m&fld) const
 void polynomial::compute_goppa_check_matrix (matrix&r, gf2m&fld)
 {
 	if (degree() < 0) return; //wrongly initialized polynomial
-	uint t = degree();
-	vector<polynomial> vd, h; //matrix over fld
-	uint i, j, k;
 
-	//construction from Barreto's slides with maximal support L=[0..fld.n)
-	vd.resize (fld.n);
-	for (i = 0; i < fld.n; ++i) {
-		vd[i].resize (t);
-		vd[i][0] = fld.inv (eval (i, fld) );
-	}
-	//compute support powers
-	for (j = 0; j < fld.n; ++j) for (i = 1; i < t; ++i)
-			vd[j][i] = fld.mult (vd[j][i-1], j);
-
-	//multiply by goppa coefficients (compute t*vd)
-	h.resize (fld.n);
-	for (i = 0; i < fld.n; ++i) {
-		h[i].resize (t);
-		for (j = 0; j < t; ++j) { //computing the element h[i][j]
-			h[i][j] = 0;
-			for (k = 0; k <= j; ++k) //k = column index of t
-				h[i][j] = fld.add (h[i][j],
-				                   fld.mult (item (t + k - j),
-				                             vd[i][k]) );
-		}
-	}
-
-	//now convert to binary
 	r.resize (fld.n);
-	for (i = 0; i < fld.n; ++i)
-		r[i].from_poly (h[i], fld);
+
+	for (uint i = 0; i < fld.n; ++i) {
+		polynomial col;
+		col.resize (2);
+		col[0] = i;
+		col[1] = 1;
+		col.inv(*this,fld);
+		//i-th row of the check matrix is polynomial 1/(x-i)
+		r[i].from_poly(col,fld);
+	}
 }
 
 void polynomial::make_monic (gf2m&fld)
