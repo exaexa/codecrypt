@@ -24,7 +24,7 @@ bool polynomial::zero() const
 bool polynomial::one() const
 {
 	if (degree() != 0) return false;
-	return item (0) == 1;
+	return (item (0) == 1) ? true : false;
 }
 
 void polynomial::add (const polynomial&f, gf2m&fld)
@@ -123,7 +123,7 @@ bool polynomial::is_irreducible (gf2m&fld) const
 		t.add (xmodf, fld);
 
 		t = t.gcd (*this, fld);
-		if (!t.one() )
+		if (t.degree() > 0)
 			return false;
 	}
 	return true;

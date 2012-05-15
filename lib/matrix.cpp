@@ -88,14 +88,14 @@ void matrix::generate_random_invertible (uint size, prng & rng)
 {
 	matrix lt, ut;
 	uint i, j;
-	// random lower triagonal
+	// random lower triangular
 	lt.resize (size);
 	for (i = 0; i < size; ++i) {
 		lt[i].resize (size);
 		lt[i][i] = 1;
 		for (j = i + 1; j < size; ++j) lt[i][j] = rng.random (2);
 	}
-	// random upper triagonal
+	// random upper triangular
 	ut.resize (size);
 	for (i = 0; i < size; ++i) {
 		ut[i].resize (size);
