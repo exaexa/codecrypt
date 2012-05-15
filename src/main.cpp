@@ -39,7 +39,7 @@ int main()
 	cout << pub.G;
 
 	ccr::bvector plain;
-	plain.resize (pub.plain_size() );
+	plain.resize (pub.plain_size(), 0);
 	plain[0] = 1;
 	plain[1] = 1;
 	plain[2] = 1;

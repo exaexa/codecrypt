@@ -230,9 +230,9 @@ void polynomial::compute_goppa_check_matrix (matrix&r, gf2m&fld)
 		col.resize (2);
 		col[0] = i;
 		col[1] = 1;
-		col.inv(*this,fld);
+		col.inv (*this, fld);
 		//i-th row of the check matrix is polynomial 1/(x-i)
-		r[i].from_poly(col,fld);
+		r[i].from_poly (col, fld);
 	}
 }
 
@@ -285,7 +285,7 @@ void polynomial::div (polynomial&p, polynomial&m, gf2m&fld)
 
 	s0.clear();
 
-	s1.swap(*this);
+	s1.swap (*this);
 	s1.mod (m, fld);
 
 	while (r1.degree() >= 0) {
@@ -302,13 +302,13 @@ void polynomial::div (polynomial&p, polynomial&m, gf2m&fld)
 		s1.swap (s2);
 	}
 
-	this->swap(s0);
+	this->swap (s0);
 
 	//scalar divide by r0 head
-	if(r0.degree()<0) return;
-	uint c=r0[r0.degree()];
-	c=fld.inv(c);
-	for(uint i=0;i<size();++i) item(i) = fld.mult(item(i),c);
+	if (r0.degree() < 0) return;
+	uint c = r0[r0.degree() ];
+	c = fld.inv (c);
+	for (uint i = 0; i < size(); ++i) item (i) = fld.mult (item (i), c);
 }
 
 void polynomial::divmod (polynomial&d, polynomial&res, polynomial&rem, gf2m&fld)

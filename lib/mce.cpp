@@ -72,6 +72,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	//prepare for decoding
 	permutation hpermInv;
 	hperm.compute_inversion (hpermInv);
+
 	bvector canonical, syndrome;
 	hpermInv.permute (not_permuted, canonical);
 	h.mult_vec_right (canonical, syndrome);
@@ -80,8 +81,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	bvector ev;
 	syndrome_decode (syndrome, fld, g, sqInv, ev);
 
-	std::cout << "ERRORS " << ev;
-	//check the error vector. It should have exactly t == deg(g) errors
+	// check the error vector, it should have exactly t == deg (g) errors
 	if ( (int) ev.hamming_weight() != g.degree() )
 		return 1;
 
