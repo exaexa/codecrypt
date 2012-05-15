@@ -9,15 +9,18 @@ void syndrome_decode (bvector&syndrome, gf2m&fld, polynomial& goppa,
 	ev.resize (fld.n, 0);
 	if (syndrome.zero() ) return;
 
-	polynomial p;
-	syndrome.to_poly (p, fld);
-	p.inv (goppa, fld); // p=S^-1 mod goppa
+	polynomial v;
+	syndrome.to_poly (v, fld);
 
-	p[1] = fld.add (1, p[1]); //p is now tau
-	p.sqrt (sqInv, fld); //tau = sqrt(T+x) mod goppa
+	v.inv (goppa, fld); // v=Synd^-1 mod goppa
+
+	if (v.size() < 2) v.resize (2, 0);
+	v[1] = fld.add (1, v[1]); //add x
+	v.sqrt (sqInv, fld); //v = sqrt((1/s)+x) mod goppa
 
 	polynomial a, b;
-	p.mod_to_fracton (a, b, goppa, fld);
+	v.mod_to_fracton (a, b, goppa, fld);
+
 	a.square (fld);
 	b.square (fld);
 	b.shift (1);
@@ -26,6 +29,6 @@ void syndrome_decode (bvector&syndrome, gf2m&fld, polynomial& goppa,
 	a.make_monic (fld); //now it is the error locator.
 
 	for (uint i = 0; i < fld.n; ++i) {
-		if (0 == a.eval (i, fld) ) ev[i] = 1;
+		if (a.eval (i, fld) == 0) ev[i] = 1;
 	}
 }
