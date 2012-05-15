@@ -43,8 +43,8 @@ ostream& operator<< (ostream&o, const matrix& m)
 ostream& operator<< (ostream&o, const bvector& v)
 {
 	o << "vector of " << v.size() << " elements:" << endl;
-	for (uint i = 0, e = v.size(); i < e; ++i) cout << v[i];
-	cout << endl;
+	for (uint i = 0, e = v.size(); i < e; ++i) o << v[i];
+	o << endl;
 	return o;
 }
 
