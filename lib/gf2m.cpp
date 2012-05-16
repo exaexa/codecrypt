@@ -9,9 +9,12 @@ using namespace ccr;
 
 int gf2p_degree (uint p)
 {
-	int r = -1;
-	for (int i = 0; p; p >>= 1, ++i) r = i;
-	return r;
+	int r = 0;
+	while (p) {
+		++r;
+		p >>= 1;
+	}
+	return r - 1;
 }
 
 inline uint gf2p_add (uint a, uint b)
@@ -24,7 +27,7 @@ uint gf2p_mod (uint a, uint p)
 	if (!p) return 0;
 	int t, degp = gf2p_degree (p);
 	while ( (t = gf2p_degree (a) ) >= degp) {
-		a ^= p << (t - degp);
+		a ^= (p << (t - degp) );
 	}
 	return a;
 }
@@ -47,12 +50,12 @@ uint gf2p_modmult (uint a, uint b, uint p)
 	b = gf2p_mod (b, p);
 	uint r = 0;
 	uint d = 1 << gf2p_degree (p);
-	while (a) {
-		if (a & 1) r ^= b;
-		a >>= 1;
-		b <<= 1;
-		if (b >= d) b ^= p;
-	}
+	if (b) while (a) {
+			if (a & 1) r ^= b;
+			a >>= 1;
+			b <<= 1;
+			if (b >= d) b ^= p;
+		}
 	return r;
 }
 
@@ -61,7 +64,7 @@ bool is_irreducible_gf2_poly (uint p)
 	if (!p) return false;
 	int d = gf2p_degree (p) / 2;
 	uint test = 2; //x^1+0
-	for (int i = 0; i < d; ++i) {
+	for (int i = 0; i <= d; ++i) {
 		test = gf2p_modmult (test, test, p);
 
 		if (gf2p_gcd (test ^ 2 /* test - x^1 */, p) != 1)
@@ -84,11 +87,15 @@ bool gf2m::create (uint M)
 	m = M;
 	n = 1 << m;
 	if (!n) return false; //too big.
+	poly = 0;
+	//FIXME fails for M>=12. Why?
 	for (uint t = (1 << m) + 1, e = 1 << (m + 1); t < e; t += 2)
 		if (is_irreducible_gf2_poly (t) ) {
 			poly = t;
 			break;
 		}
+
+	if (!poly) return false;
 
 	log.resize (n);
 	antilog.resize (n);
@@ -115,7 +122,7 @@ uint gf2m::mult (uint a, uint b)
 	return gf2p_tablemult (a, b, n, log, antilog);
 }
 
-uint gf2m::exp (uint a, sint k)
+uint gf2m::exp (uint a, int k)
 {
 	if (!a) return 0;
 	if (a == 1) return 1;

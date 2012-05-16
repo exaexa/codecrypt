@@ -15,10 +15,9 @@ int ccr::mce::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
 	priv.g.generate_random_irreducible (t, priv.fld, rng);
 
 	//check and generator matrix
-	matrix generator;
-	permutation hp;
 	priv.g.compute_goppa_check_matrix (priv.h, priv.fld);
 
+	matrix generator;
 	for (;;) if (priv.h.create_goppa_generator
 		             (generator, priv.hperm, rng) ) break;
 

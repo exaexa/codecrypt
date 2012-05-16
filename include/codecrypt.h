@@ -15,12 +15,11 @@ namespace ccr
 {
 
 /*
- * typedefs. uint and sint should be able to comfortably hold the field
- * elements of underlying calculations (esp. with polynomials. Switching to
- * 64bits is adviseable when computing with n=64K and larger.
+ * typedef. uint should be able to comfortably hold the field elements of
+ * underlying calculations (esp. with polynomials. Switching to 64bits is
+ * adviseable when computing with n=64K and larger.
  */
 typedef unsigned int uint;
-typedef int sint;
 
 /*
  * vector over GF(2). We rely on STL's vector<bool> == bit_vector
@@ -122,7 +121,7 @@ public:
 
 	uint add (uint, uint);
 	uint mult (uint, uint);
-	uint exp (uint, sint);
+	uint exp (uint, int);
 	uint inv (uint);
 	uint sq_root (uint);
 };
