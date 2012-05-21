@@ -200,11 +200,7 @@ bool matrix::mult_vec_right (const bvector&a, bvector&r)
 	uint w = width(), h = height();
 	if (a.size() != w) return false;
 	r.resize (h, 0);
-	for (uint i = 0; i < h; ++i) {
-		bool t = 0;
-		for (uint j = 0; j < w; ++j)
-			t ^= item (j) [i] & a[j];
-		r[i] = t;
-	}
+	for (uint i = 0; i < w; ++i)
+		if (a[i]) r.add (item (i) );
 	return true;
 }
