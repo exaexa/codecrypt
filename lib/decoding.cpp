@@ -2,7 +2,8 @@
 #include "decoding.h"
 
 bool syndrome_decode (bvector&syndrome, gf2m&fld, polynomial& goppa,
-                      std::vector<polynomial>& sqInv, bvector&ev)
+                      std::vector<polynomial>& sqInv, bvector&ev,
+                      bool check_failure)
 
 {
 	ev.clear();
@@ -32,6 +33,7 @@ bool syndrome_decode (bvector&syndrome, gf2m&fld, polynomial& goppa,
 		if (a.eval (i, fld) == 0) {
 			ev[i] = 1;
 
+			if (!check_failure) continue;
 			//check if the error locator splits over GF(2^m).
 			//We simplify it to the assumption that all roots are
 			//also roots of linear factors.

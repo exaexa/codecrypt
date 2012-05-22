@@ -9,6 +9,7 @@ bool syndrome_decode (bvector&syndrome,
                       gf2m&fld,
                       polynomial& gp,
                       std::vector<polynomial>& sqInv,
-                      bvector&ev);
+                      bvector&ev,
+                      bool check_failure = true);
 
 #endif
