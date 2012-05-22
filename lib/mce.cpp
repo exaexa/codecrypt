@@ -117,7 +117,7 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 
 	s = cipher_size();
 
-	//TODO check sizes of everything!
+	if (in.size() != s) return 2;
 
 	//first, prepare the codeword to canonical form for decoding
 	Pinv.permute (in, e2);
@@ -161,8 +161,8 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 int pubkey::verify (const bvector&in, const bvector&hash, uint delta)
 {
 	bvector tmp;
-	//TODO check sizes!
-	G.mult_vecT_left (in, tmp);
+	if (!G.mult_vecT_left (in, tmp) ) return 2; //wrong size of input
+	if (hash.size() != tmp.size() ) return 1; //wrong size of hash, not a sig.
 	tmp.add (hash);
 	if (tmp.hamming_weight() > (t + delta) ) return 1; //not a signature
 	return 0; //sig OK
