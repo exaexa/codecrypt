@@ -64,6 +64,8 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 
 int privkey::decrypt (const bvector&in, bvector&out)
 {
+	if (in.size() != cipher_size() ) return 2;
+
 	//remove the P permutation
 	bvector not_permuted;
 	Pinv.permute (in, not_permuted);
