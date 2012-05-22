@@ -200,7 +200,7 @@ public:
 	uint t;
 
 	int encrypt (const bvector&, bvector&, prng&);
-	int verify (const bvector&, const bvector&, uint, uint);
+	int verify (const bvector&, const bvector&, uint);
 
 	uint cipher_size() {
 		return G.width();
@@ -224,7 +224,7 @@ public:
 	// TODO
 
 	int decrypt (const bvector&, bvector&);
-	int sign (const bvector&hash, bvector&sig, uint, uint, prng&);
+	int sign (const bvector&, bvector&, uint, uint, prng&);
 };
 
 class pubkey
@@ -234,7 +234,7 @@ public:
 	uint t;
 
 	int encrypt (const bvector&, bvector&, prng&);
-	int verify (const bvector&sig, const bvector&hash, uint, uint);
+	int verify (const bvector&, const bvector&, uint);
 };
 
 int generate (pubkey&, privkey&, prng&);

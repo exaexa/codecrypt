@@ -78,7 +78,9 @@ int privkey::decrypt (const bvector&in, bvector&out)
 
 	//decode
 	bvector ev;
-	syndrome_decode (syndrome, fld, g, sqInv, ev);
+	if (!syndrome_decode (syndrome, fld, g, sqInv, ev) ) {
+		return 1; //if decoding somehow failed, fail as well.
+	}
 
 	// check the error vector, it should have exactly t == deg (g) errors
 	if ( (int) ev.hamming_weight() != g.degree() )
@@ -106,14 +108,62 @@ int privkey::prepare ()
 	return 0;
 }
 
-int privkey::sign (const bvector&in, bvector&out, uint delta, uint h, prng&rng)
+int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prng&rng)
 {
+	uint i, t, s;
+	bvector p, e, synd, synd2, e2;
+	std::vector<uint> epos;
+	permutation hpermInv;
 
-	return -1; //TODO
+	s = cipher_size();
+
+	//TODO check sizes of everything!
+
+	//first, prepare the codeword to canonical form for decoding
+	Pinv.permute (in, e2);
+	hperm.compute_inversion (hpermInv);
+	hpermInv.permute (e2, p);
+
+	//prepare extra error vector
+	e.resize (s, 0);
+	epos.resize (delta);
+
+	h.mult_vec_right (p, synd);
+
+	for (t = 0; t < attempts; ++t) {
+		for (i = 0; i < s; ++i) {
+			epos[i] = rng.random (s);
+			/* we don't care about (unlikely) error bit collisions
+			   (they actually don't harm anything) */
+			e[epos[i]] = 1;
+		}
+
+		//abuse linearity of p+e; it is usually faster.
+		h.mult_vec_right (e, synd2);
+		synd2.add (synd);
+
+		if (syndrome_decode (synd2, fld, g, sqInv, e2) ) {
+			//decoding success!
+			p.add (e); //add original errors
+			hperm.permute (p, e2); //back to systematic (e2~=tmp)
+			Sinv.mult_vecT_left (e2, out); //get a signature
+			return 0; //OK lol
+		}
+
+		//if this round failed, we try a new error pattern.
+
+		for (i = 0; i < s; ++i) //clear the errors for the next cycle
+			e[epos[i]] = 0;
+	}
+	return 1; //couldn't decode
 }
 
-int pubkey::verify (const bvector&in, const bvector&hash, uint delta, uint h)
+int pubkey::verify (const bvector&in, const bvector&hash, uint delta)
 {
-
-	return -1; //TODO
+	bvector tmp;
+	//TODO check sizes!
+	G.mult_vecT_left (in, tmp);
+	tmp.add (hash);
+	if (tmp.hamming_weight() > (t + delta) ) return 1; //not a signature
+	return 0; //sig OK
 }

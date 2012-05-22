@@ -28,7 +28,7 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint h, prng&rng)
 	return -1; //TODO
 }
 
-int pubkey::verify (const bvector&in, const bvector&hash, uint delta, uint h)
+int pubkey::verify (const bvector&in, const bvector&hash, uint delta)
 {
 
 	return -1; //TODO

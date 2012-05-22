@@ -5,7 +5,7 @@
 #include "codecrypt.h"
 
 using namespace ccr;
-void syndrome_decode (bvector&syndrome,
+bool syndrome_decode (bvector&syndrome,
                       gf2m&fld,
                       polynomial& gp,
                       std::vector<polynomial>& sqInv,
