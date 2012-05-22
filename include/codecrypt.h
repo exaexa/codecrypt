@@ -191,6 +191,12 @@ public:
 	uint plain_size() {
 		return Sinv.width();
 	}
+	uint hash_size() {
+		return cipher_size();
+	}
+	uint signature_size() {
+		return plain_size();
+	}
 };
 
 class pubkey
@@ -207,6 +213,12 @@ public:
 	}
 	uint plain_size() {
 		return G.height();
+	}
+	uint hash_size() {
+		return cipher_size();
+	}
+	uint signature_size() {
+		return plain_size();
 	}
 };
 

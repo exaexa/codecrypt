@@ -60,6 +60,22 @@ int main()
 
 	cout << "DECRYPTED" << endl;
 	cout << result;
+
+	/* signature test */
+
+	ccr::bvector hash, signature;
+
+	hash.resize (priv.hash_size(), 0);
+	hash[0] = 1;
+	hash[1] = 1;
+	hash[2] = 1;
+
+	cout << "SIGNING" << endl << hash;
+	priv.sign (hash, signature, 2, priv.hash_size() *priv.hash_size(), r);
+	cout << "SIGNATURE" << endl << signature;
+	if (pub.verify (signature, hash, 2) )
+		cout << "VERIFY FAIL" << endl;
+	else	cout << "VERIFY OK" << endl;
 	return 0;
 }
 

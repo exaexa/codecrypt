@@ -95,7 +95,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	hperm.permute (canonical, not_permuted);
 
 	//get rid of redundancy bits
-	not_permuted.resize (Sinv.size() );
+	not_permuted.resize (plain_size() );
 
 	//unscramble the result
 	Sinv.mult_vecT_left (not_permuted, out);
@@ -117,7 +117,7 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 	std::vector<uint> epos;
 	permutation hpermInv;
 
-	s = cipher_size();
+	s = hash_size();
 
 	if (in.size() != s) return 2;
 
@@ -128,12 +128,12 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 
 	//prepare extra error vector
 	e.resize (s, 0);
-	epos.resize (delta);
+	epos.resize (delta, 0);
 
 	h.mult_vec_right (p, synd);
 
 	for (t = 0; t < attempts; ++t) {
-		for (i = 0; i < s; ++i) {
+		for (i = 0; i < delta; ++i) {
 			epos[i] = rng.random (s);
 			/* we don't care about (unlikely) error bit collisions
 			   (they actually don't harm anything) */
@@ -147,14 +147,15 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 		if (syndrome_decode (synd2, fld, g, sqInv, e2) ) {
 			//decoding success!
 			p.add (e); //add original errors
-			hperm.permute (p, e2); //back to systematic (e2~=tmp)
+			hperm.permute (p, e2); //back to systematic (e2 is tmp)
+			e2.resize (signature_size() ); //strip redundancy
 			Sinv.mult_vecT_left (e2, out); //get a signature
 			return 0; //OK lol
 		}
 
 		//if this round failed, we try a new error pattern.
 
-		for (i = 0; i < s; ++i) //clear the errors for the next cycle
+		for (i = 0; i < delta; ++i) //clear the errors for the next cycle
 			e[epos[i]] = 0;
 	}
 	return 1; //couldn't decode
