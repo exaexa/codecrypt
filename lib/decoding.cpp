@@ -50,5 +50,10 @@ bool syndrome_decode (bvector&syndrome, gf2m&fld, polynomial& goppa,
 		}
 	}
 
+	if (check_failure && a.degree() > 0) {
+		ev.clear();
+		return false;
+	}
+
 	return true;
 }

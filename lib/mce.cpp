@@ -6,7 +6,7 @@ using namespace ccr::mce;
 
 #include "decoding.h"
 
-int ccr::mce::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
+int mce::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
 {
 	//finite field
 	priv.fld.create (m);
@@ -80,9 +80,8 @@ int privkey::decrypt (const bvector&in, bvector&out)
 
 	//decode
 	bvector ev;
-	if (!syndrome_decode (syndrome, fld, g, sqInv, ev) ) {
+	if (!syndrome_decode (syndrome, fld, g, sqInv, ev) )
 		return 1; //if decoding somehow failed, fail as well.
-	}
 
 	// check the error vector, it should have exactly t == deg (g) errors
 	if ( (int) ev.hamming_weight() != g.degree() )
@@ -112,8 +111,8 @@ int privkey::prepare ()
 
 int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prng&rng)
 {
-	uint i, t, s;
-	bvector p, e, synd, synd2, e2;
+	uint i, s, t;
+	bvector p, e, synd, synd_orig, e2;
 	std::vector<uint> epos;
 	permutation hpermInv;
 
@@ -130,33 +129,38 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 	e.resize (s, 0);
 	epos.resize (delta, 0);
 
-	h.mult_vec_right (p, synd);
+	h.mult_vec_right (p, synd_orig);
 
 	for (t = 0; t < attempts; ++t) {
+
+		synd = synd_orig;
+
 		for (i = 0; i < delta; ++i) {
 			epos[i] = rng.random (s);
 			/* we don't care about (unlikely) error bit collisions
 			   (they actually don't harm anything) */
 			e[epos[i]] = 1;
+			synd.add (h[epos[i]]);
 		}
 
-		//abuse linearity of p+e; it is usually faster.
-		h.mult_vec_right (e, synd2);
-		synd2.add (synd);
+		if (syndrome_decode (synd, fld, g, sqInv, e2, true) ) {
 
-		if (syndrome_decode (synd2, fld, g, sqInv, e2) ) {
-			//decoding success!
-			p.add (e); //add original errors
-			hperm.permute (p, e2); //back to systematic (e2 is tmp)
-			e2.resize (signature_size() ); //strip redundancy
-			Sinv.mult_vecT_left (e2, out); //get a signature
-			return 0; //OK lol
+			//create the decodable message
+			p.add(e);
+			p.add(e2);
+
+			hperm.permute (p, e2); //back to systematic
+			e2.resize (signature_size() ); //strip checks
+			Sinv.mult_vecT_left (e2, out); //signature
+			return 0;
 		}
 
 		//if this round failed, we try a new error pattern.
 
-		for (i = 0; i < delta; ++i) //clear the errors for the next cycle
+		for (i = 0; i < delta; ++i) {
+			//clear the errors for next cycle
 			e[epos[i]] = 0;
+		}
 	}
 	return 1; //couldn't decode
 }

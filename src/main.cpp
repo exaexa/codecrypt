@@ -26,7 +26,7 @@ int main()
 
 	ccr::mce::privkey priv;
 	ccr::mce::pubkey pub;
-	ccr::mce::generate (pub, priv, r, 7, 4);
+	ccr::mce::generate (pub, priv, r, 7, 2);
 
 	cout << "PRIVATE KEY" << endl;
 	cout << priv.fld;
@@ -37,6 +37,8 @@ int main()
 	cout << "PUBLIC KEY" << endl;
 	cout << pub.t << endl;
 	cout << pub.G;
+
+	/* mce encryption test */
 
 	ccr::bvector plain;
 	plain.resize (pub.plain_size(), 0);
@@ -71,9 +73,9 @@ int main()
 	hash[2] = 1;
 
 	cout << "SIGNING" << endl << hash;
-	priv.sign (hash, signature, 2, priv.hash_size() *priv.hash_size(), r);
+	priv.sign (hash, signature, 3, priv.hash_size() *priv.hash_size(), r);
 	cout << "SIGNATURE" << endl << signature;
-	if (pub.verify (signature, hash, 2) )
+	if (pub.verify (signature, hash, 3) )
 		cout << "VERIFY FAIL" << endl;
 	else	cout << "VERIFY OK" << endl;
 	return 0;

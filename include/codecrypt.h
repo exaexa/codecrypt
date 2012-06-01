@@ -4,7 +4,7 @@
 
 #include <vector>
 
-//STL wraparound, because writing (*this)[i] everywhere is clumsy
+//little STL helper, because writing (*this)[i] everywhere is clumsy
 #define _ccr_declare_vector_item \
 	inline reference item(size_type n) \
 		{ return (*this)[n]; }; \
@@ -233,10 +233,33 @@ namespace nd
 class privkey
 {
 public:
-	// TODO
+	matrix Sinv;
+	permutation Pinv;
+	polynomial g;
+	gf2m fld;
+
+	//derivable.
+	std::vector<polynomial> sqInv;
 
 	int decrypt (const bvector&, bvector&);
 	int sign (const bvector&, bvector&, uint, uint, prng&);
+	int prepare();
+
+	uint cipher_size() {
+		return Pinv.size();
+	}
+	uint plain_size() {
+		return Sinv.width();
+	}
+	uint plain_weight() {
+		return g.degree();
+	}
+	uint hash_size() {
+		return cipher_size();
+	}
+	uint signature_size() {
+		return plain_size();
+	}
 };
 
 class pubkey
@@ -245,11 +268,27 @@ public:
 	matrix H;
 	uint t;
 
-	int encrypt (const bvector&, bvector&, prng&);
+	int encrypt (const bvector&, bvector&);
 	int verify (const bvector&, const bvector&, uint);
+
+	uint cipher_size() {
+		return H.height();
+	}
+	uint plain_size() {
+		return H.width();
+	}
+	uint plain_weight() {
+		return t;
+	}
+	uint hash_size() {
+		return cipher_size();
+	}
+	uint signature_size() {
+		return plain_size();
+	}
 };
 
-int generate (pubkey&, privkey&, prng&);
+int generate (pubkey&, privkey&, prng&, uint m, uint t);
 }
 
 } //namespace ccr
