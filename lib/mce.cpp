@@ -146,8 +146,8 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 		if (syndrome_decode (synd, fld, g, sqInv, e2, true) ) {
 
 			//create the decodable message
-			p.add(e);
-			p.add(e2);
+			p.add (e);
+			p.add (e2);
 
 			hperm.permute (p, e2); //back to systematic
 			e2.resize (signature_size() ); //strip checks

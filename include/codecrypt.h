@@ -70,7 +70,7 @@ public:
 	}
 
 	matrix operator* (const matrix&);
-	void mult (const matrix&);
+	void mult (const matrix&); //right multiply - this*param
 
 	void compute_transpose (matrix&);
 	bool compute_inversion (matrix&);
@@ -246,10 +246,10 @@ public:
 	int prepare();
 
 	uint cipher_size() {
-		return Pinv.size();
+		return Sinv.size();
 	}
 	uint plain_size() {
-		return Sinv.width();
+		return Pinv.size();
 	}
 	uint plain_weight() {
 		return g.degree();

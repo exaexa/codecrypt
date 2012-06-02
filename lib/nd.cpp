@@ -23,15 +23,24 @@ int nd::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
 	S.compute_inversion (priv.Sinv);
 
 	//permutation
-	permutation P;
-	P.generate_random (h.width(), rng);
-	P.compute_inversion (priv.Pinv);
+	priv.Pinv.generate_random (h.width(), rng);
+
+	/*
+	 * note: we actually don't need the inversion, as it inverts itself
+	 * when permuting SH to pubkey.
+	 */
 
 	//pubkey
 	pub.t = t;
 	S.mult (h);
-	P.permute (S, pub.H);
+	priv.Pinv.permute (S, pub.H);
 
+	return 0;
+}
+
+int privkey::prepare ()
+{
+	g.compute_square_root_matrix (sqInv, fld);
 	return 0;
 }
 
@@ -64,22 +73,22 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 {
 	uint i, s, t;
 
-	bvector synd_orig, synd, e;
+	bvector synd_unsc, synd, e;
 
 	s = hash_size();
 	if (in.size() != s) return 2;
 
-	Sinv.mult_vec_right (in, synd_orig);
-
 	for (t = 0; t < attempts; ++t) {
 
-		synd = synd_orig;
+		synd = in;
 		for (i = 0; i < delta; ++i) {
 			uint pos = rng.random (s);
 			synd[pos] = !synd[pos]; //flip a bit
 		}
 
-		if (syndrome_decode (synd, fld, g, sqInv, e, true) ) {
+		Sinv.mult_vec_right (synd, synd_unsc);
+
+		if (syndrome_decode (synd_unsc, fld, g, sqInv, e, true) ) {
 
 			Pinv.permute (e, out);
 			return 0;
