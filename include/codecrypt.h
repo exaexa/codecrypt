@@ -23,7 +23,7 @@ typedef unsigned int uint;
 
 /*
  * vector over GF(2). We rely on STL's vector<bool> == bit_vector
- * specialization for efficiency.
+ * specialization for space efficiency.
  */
 class polynomial;
 class gf2m;
@@ -36,8 +36,12 @@ public:
 	void add (const bvector&);
 	bool operator* (const bvector&); //dot product
 	bool zero() const;
+
 	void to_poly (polynomial&, gf2m&);
 	void from_poly (const polynomial&, gf2m&);
+
+	void colex_rank (bvector&);
+	void colex_unrank (bvector&, uint n, uint k);
 };
 
 /*

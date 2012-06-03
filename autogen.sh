@@ -24,7 +24,7 @@ echo "noinst_HEADERS += `find lib/ -type f -name \*.h |tr \"\n\" \" \" `" >>$OUT
 echo "libcodecrypt_la_CPPFLAGS = -I\$(srcdir)/lib/ ${COMMON_CPPFLAGS}" >>$OUT
 echo "libcodecrypt_la_CFLAGS = ${COMMON_CFLAGS}" >>$OUT
 echo "libcodecrypt_la_LDFLAGS = ${COMMON_LDFLAGS}" >>$OUT
-#echo "libcodecrypt_la_LDADD = ${COMMON_LDADD} " >>$OUT
+echo "libcodecrypt_la_LIBADD = -lgmp ${COMMON_LDADD} " >>$OUT
 [ -f "lib/Makefile.am.extra" ] && cat "lib/Makefile.am.extra" >>$OUT
 
 echo "bin_PROGRAMS = ccr" >>$OUT
