@@ -58,8 +58,11 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	bvector unsc; //unscrambled
 	Sinv.mult_vec_right (in, unsc);
 
+	polynomial loc;
+	compute_error_locator (unsc, fld, g, sqInv, loc);
+
 	bvector ev;
-	if (!syndrome_decode (unsc, fld, g, sqInv, ev) )
+	if (!evaluate_error_locator_dumb (loc, ev, fld) )
 		return 1;
 
 	if ( (int) ev.hamming_weight() != g.degree() )
@@ -75,6 +78,8 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 
 	bvector synd_unsc, synd, e;
 
+	polynomial loc;
+
 	s = hash_size();
 	if (in.size() != s) return 2;
 
@@ -88,7 +93,9 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 
 		Sinv.mult_vec_right (synd, synd_unsc);
 
-		if (syndrome_decode (synd_unsc, fld, g, sqInv, e, true) ) {
+		compute_error_locator (synd_unsc, fld, g, sqInv, loc);
+
+		if (evaluate_error_locator_dumb (loc, e, fld) ) {
 
 			Pinv.permute (e, out);
 			return 0;

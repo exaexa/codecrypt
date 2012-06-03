@@ -79,13 +79,18 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	h.mult_vec_right (canonical, syndrome);
 
 	//decode
+	polynomial loc;
+	compute_error_locator (syndrome, fld, g, sqInv, loc);
+
 	bvector ev;
-	if (!syndrome_decode (syndrome, fld, g, sqInv, ev) )
+	if (!evaluate_error_locator_dumb (loc, ev, fld) )
 		return 1; //if decoding somehow failed, fail as well.
 
 	// check the error vector, it should have exactly t == deg (g) errors
 	if ( (int) ev.hamming_weight() != g.degree() )
 		return 1;
+	//TODO cryptoanalysis suggests omitting this check for preventing
+	//bit-flipping attack
 
 	//correct the errors
 	canonical.add (ev);
@@ -115,6 +120,7 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 	bvector p, e, synd, synd_orig, e2;
 	std::vector<uint> epos;
 	permutation hpermInv;
+	polynomial loc;
 
 	s = hash_size();
 
@@ -143,7 +149,9 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 			synd.add (h[epos[i]]);
 		}
 
-		if (syndrome_decode (synd, fld, g, sqInv, e2, true) ) {
+		compute_error_locator (synd, fld, g, sqInv, loc);
+
+		if (evaluate_error_locator_dumb (loc, e2, fld) ) {
 
 			//create the decodable message
 			p.add (e);

@@ -1,14 +1,15 @@
 
 #include "decoding.h"
 
-bool syndrome_decode (bvector&syndrome, gf2m&fld, polynomial& goppa,
-                      std::vector<polynomial>& sqInv, bvector&ev,
-                      bool check_failure)
-
+void compute_error_locator (bvector&syndrome, gf2m&fld, polynomial& goppa,
+                            std::vector<polynomial>& sqInv, polynomial&out)
 {
-	ev.clear();
-	ev.resize (fld.n, 0);
-	if (syndrome.zero() ) return true;
+	if (syndrome.zero() ) {
+		//ensure no roots
+		out.resize (1);
+		out[0] = 1;
+		return;
+	}
 
 	polynomial v;
 	syndrome.to_poly (v, fld);
@@ -28,20 +29,26 @@ bool syndrome_decode (bvector&syndrome, gf2m&fld, polynomial& goppa,
 	a.add (b, fld); //new a = a^2 + x b^2
 
 	a.make_monic (fld); //now it is the error locator.
+	out = a;
+}
+
+bool evaluate_error_locator_dumb (polynomial&a, bvector&ev, gf2m&fld)
+{
+	ev.clear();
+	ev.resize (fld.n, 0);
 
 	for (uint i = 0; i < fld.n; ++i) {
 		if (a.eval (i, fld) == 0) {
 			ev[i] = 1;
 
-			if (!check_failure) continue;
-			//check if the error locator splits over GF(2^m).
-			//We simplify it to the assumption that all roots are
-			//also roots of linear factors.
+			//divide the polynomial by (found) linear factor
 			polynomial t, q, r;
 			t.resize (2, 0);
 			t[0] = i;
 			t[1] = 1;
 			a.divmod (t, q, r, fld);
+
+			//if it doesn't divide, die.
 			if (r.degree() >= 0) {
 				ev.clear();
 				return false;
@@ -50,7 +57,8 @@ bool syndrome_decode (bvector&syndrome, gf2m&fld, polynomial& goppa,
 		}
 	}
 
-	if (check_failure && a.degree() > 0) {
+	//also if there's something left, die.
+	if (a.degree() > 0) {
 		ev.clear();
 		return false;
 	}

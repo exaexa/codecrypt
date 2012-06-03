@@ -5,11 +5,14 @@
 #include "codecrypt.h"
 
 using namespace ccr;
-bool syndrome_decode (bvector&syndrome,
-                      gf2m&fld,
-                      polynomial& gp,
-                      std::vector<polynomial>& sqInv,
-                      bvector&ev,
-                      bool check_failure = true);
+
+void compute_error_locator (bvector&syndrome,
+                            gf2m&fld,
+                            polynomial&goppa,
+                            std::vector<polynomial>& sqInv,
+                            polynomial&loc);
+
+bool evaluate_error_locator_dumb (polynomial&el, bvector&ev, gf2m&fld);
+bool evaluate_error_locator_trace (polynomial&el, bvector&ev, gf2m&fld);
 
 #endif
