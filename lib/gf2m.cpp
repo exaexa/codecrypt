@@ -139,6 +139,12 @@ uint gf2m::exp (uint a, int k)
 	return r;
 }
 
+uint gf2m::exp (int k)
+{
+	//return x^k
+	return exp (1 << 1, k);
+}
+
 uint gf2m::inv (uint a)
 {
 	if (!a) return 0;

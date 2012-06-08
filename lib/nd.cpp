@@ -62,7 +62,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	compute_error_locator (unsc, fld, g, sqInv, loc);
 
 	bvector ev;
-	if (!evaluate_error_locator_dumb (loc, ev, fld) )
+	if (!evaluate_error_locator_trace (loc, ev, fld) )
 		return 1;
 
 	if ( (int) ev.hamming_weight() != g.degree() )
@@ -95,7 +95,7 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 
 		compute_error_locator (synd_unsc, fld, g, sqInv, loc);
 
-		if (evaluate_error_locator_dumb (loc, e, fld) ) {
+		if (evaluate_error_locator_trace (loc, e, fld) ) {
 
 			Pinv.permute (e, out);
 			return 0;

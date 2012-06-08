@@ -126,6 +126,7 @@ public:
 	uint add (uint, uint);
 	uint mult (uint, uint);
 	uint exp (uint, int);
+	uint exp (int);
 	uint inv (uint);
 	uint sq_root (uint);
 };
