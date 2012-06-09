@@ -64,7 +64,7 @@ bool is_irreducible_gf2_poly (uint p)
 	if (!p) return false;
 	int d = gf2p_degree (p) / 2;
 	uint test = 2; //x^1+0
-	for (int i = 0; i <= d; ++i) {
+	for (int i = 1; i <= d; ++i) {
 		test = gf2p_modmult (test, test, p);
 
 		if (gf2p_gcd (test ^ 2 /* test - x^1 */, p) != 1)
@@ -88,28 +88,45 @@ bool gf2m::create (uint M)
 	n = 1 << m;
 	if (!n) return false; //too big.
 	poly = 0;
-	//FIXME fails for M>=12. Why?
-	for (uint t = (1 << m) + 1, e = 1 << (m + 1); t < e; t += 2)
-		if (is_irreducible_gf2_poly (t) ) {
-			poly = t;
-			break;
+
+	/*
+	 * find a conway polynomial for given degree. First we "filter out" the
+	 * possibilities that cannot be conway (reducible ones), then we check
+	 * that Z2[x]/poly is a field.
+	 */
+	for (uint t = (1 << m) + 1, e = 1 << (m + 1); t < e; t += 2) {
+
+		if (!is_irreducible_gf2_poly (t) ) continue;
+
+		//try to prepare log and antilog tables
+		log.resize (n, 0);
+		antilog.resize (n, 0);
+		log[0] = n - 1;
+		antilog[n-1] = 0;
+
+		uint i, xi = 1; //x^0
+		for (i = 0; i < n - 1; ++i) {
+			if (log[xi] != 0) { //not a cyclic group
+				log.clear();
+				antilog.clear();
+				break;
+			}
+			log[xi] = i;
+			antilog[i] = xi;
+
+			xi <<= 1; //multiply by x
+			xi = gf2p_mod (xi, t);
 		}
+
+		//if it broke...
+		if (i < n - 1) continue;
+		poly = t;
+		break;
+	}
 
 	if (!poly) return false;
 
-	log.resize (n);
-	antilog.resize (n);
-	log[0] = n - 1;
-	antilog[n-1] = 0;
-
-	uint xi = 1; //x^0
-	for (uint i = 0; i < n - 1; ++i) {
-		log[xi] = i;
-		antilog[i] = xi;
-
-		xi <<= 1; //multiply by x
-		xi = gf2p_mod (xi, poly);
-	}
+	return true;
 }
 
 uint gf2m::add (uint a, uint b)

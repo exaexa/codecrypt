@@ -111,9 +111,9 @@ bool polynomial::is_irreducible (gf2m&fld) const
 	xi = xmodf;
 	xmodf.mod (*this, fld); //mod f
 
-	uint d = degree();
+	int d = degree();
 	if (d < 0) return false;
-	for (uint i = 1; i <= (d / 2); ++i) {
+	for (uint i = 1; i <= (uint) (d / 2); ++i) {
 		for (uint j = 0; j < fld.m; ++j) {
 			t = xi;
 			t.mult (xi, fld);
