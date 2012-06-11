@@ -113,6 +113,7 @@ bool matrix::get_left_square (matrix&r)
 {
 	uint h = height();
 	if (width() < h) return false;
+	r.clear();
 	r.resize (h);
 	for (uint i = 0; i < h; ++i) r[i] = item (i);
 	return true;
@@ -122,6 +123,7 @@ bool matrix::strip_left_square (matrix&r)
 {
 	uint h = height(), w = width();
 	if (w < h) return false;
+	r.clear();
 	r.resize (w - h);
 	for (uint i = 0; i < w - h; ++i) r[i] = item (h + i);
 	return true;
@@ -131,6 +133,7 @@ bool matrix::get_right_square (matrix&r)
 {
 	uint h = height(), w = width();
 	if (w < h) return false;
+	r.clear();
 	r.resize (h);
 	for (uint i = 0; i < h; ++i) r[i] = item (w - h + i);
 	return true;
@@ -140,6 +143,7 @@ bool matrix::strip_right_square (matrix&r)
 {
 	uint h = height(), w = width();
 	if (w < h) return false;
+	r.clear();
 	r.resize (w - h);
 	for (uint i = 0; i < w - h; ++i) r[i] = item (i);
 	return true;
@@ -149,6 +153,7 @@ void matrix::extend_left_compact (matrix&r)
 {
 	uint i;
 	uint h = height(), w = width();
+	r.clear();
 	r.resize (h + w);
 	for (i = 0; i < h; ++i) {
 		r[i].resize (h, 0);
@@ -185,6 +190,7 @@ bool matrix::mult_vecT_left (const bvector&a, bvector&r)
 {
 	uint w = width(), h = height();
 	if (a.size() != h) return false;
+	r.clear();
 	r.resize (w, 0);
 	for (uint i = 0; i < w; ++i) {
 		bool t = 0;
@@ -199,6 +205,7 @@ bool matrix::mult_vec_right (const bvector&a, bvector&r)
 {
 	uint w = width(), h = height();
 	if (a.size() != w) return false;
+	r.clear();
 	r.resize (h, 0);
 	for (uint i = 0; i < w; ++i)
 		if (a[i]) r.add (item (i) );
