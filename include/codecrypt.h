@@ -52,7 +52,6 @@ class prng
 {
 public:
 	virtual uint random (uint) = 0;
-	virtual void seed (uint) = 0;
 };
 
 /*
