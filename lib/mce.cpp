@@ -153,12 +153,12 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 
 		if (evaluate_error_locator_trace (loc, e2, fld) ) {
 
-			//create the decodable message
+			//recreate the decodable codeword
 			p.add (e);
 			p.add (e2);
 
 			hperm.permute (p, e2); //back to systematic
-			e2.resize (signature_size() ); //strip checks
+			e2.resize (signature_size() ); //strip to message
 			Sinv.mult_vecT_left (e2, out); //signature
 			return 0;
 		}
