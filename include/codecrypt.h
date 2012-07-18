@@ -10,6 +10,13 @@
 		{ return (*this)[n]; }; \
 	inline const_reference item(size_type n) const \
 		{ return (*this)[n]; };
+#define _ccr_declare_matrix_item \
+	inline value_type::reference \
+		item(size_type n, size_type m) \
+		{ return (*this)[n][m]; }; \
+	inline value_type::const_reference \
+		item(size_type n, size_type m) const \
+		{ return (*this)[n][m]; };
 
 namespace ccr
 {
@@ -62,6 +69,7 @@ class matrix : public std::vector<bvector>
 {
 protected:
 	_ccr_declare_vector_item
+	_ccr_declare_matrix_item
 public:
 	uint width() const {
 		return size();
@@ -75,20 +83,24 @@ public:
 	matrix operator* (const matrix&);
 	void mult (const matrix&); //right multiply - this*param
 
-	void compute_transpose (matrix&);
-	bool compute_inversion (matrix&);
-	void generate_random_invertible (uint, prng&);
 	void unit (uint);
+
+	void compute_transpose (matrix&);
+	bool mult_vecT_left (const bvector&, bvector&);
+	bool mult_vec_right (const bvector&, bvector&);
+	bool compute_inversion (matrix&);
+
+	bool set_block (uint, uint, const matrix&);
 	bool get_left_square (matrix&);
 	bool strip_left_square (matrix&);
 	bool get_right_square (matrix&);
 	bool strip_right_square (matrix&);
 	void extend_left_compact (matrix&);
+
+	void generate_random_invertible (uint, prng&);
 	bool create_goppa_generator (matrix&, permutation&, prng&);
 	bool create_goppa_generator (matrix&, const permutation&);
 
-	bool mult_vecT_left (const bvector&, bvector&);
-	bool mult_vec_right (const bvector&, bvector&);
 };
 
 /*
@@ -295,6 +307,125 @@ public:
 int generate (pubkey&, privkey&, prng&, uint m, uint t);
 }
 
+/*
+ * compact Quasi-dyadic McEliece
+ * according to Misoczki, Barreto, Compact McEliece Keys from Goppa Codes.
+ *
+ * Good security, extremely good speed with extremely reduced key size.
+ * Recommended for encryption.
+ */
+namespace mce_qd
+{
+class privkey
+{
+public:
+	int decrypt (const bvector&, bvector&);
+	int prepare();
+
+	uint cipher_size() {
+		return 0; //TODO
+	}
+	uint plain_size() {
+		return 0; //TODO
+	}
+	uint hash_size() {
+		return 0; //TODO
+	}
+	uint signature_size() {
+		return 0; //TODO
+	}
+};
+
+class pubkey
+{
+public:
+	matrix G;
+	uint t;
+
+	int encrypt (const bvector&, bvector&, prng&);
+
+	uint cipher_size() {
+		return G.height();
+	}
+	uint plain_size() {
+		return G.width();
+	}
+	uint hash_size() {
+		return cipher_size();
+	}
+	uint signature_size() {
+		return plain_size();
+	}
+};
+
+int generate (pubkey&, privkey&, prng&, uint m, uint t);
+}
+
+/*
+ * McEliece on Overlapping Chain of Goppa Codes
+ *
+ * Similar to Hamdi's Chained BCH Codes, but with improvement.
+ *
+ * This is experimental, unverified, probably insecure, but practical scheme
+ * that achieves good speed, probability and key size for full decoding that is
+ * needed to produce signatures. Technique is described in documentation, with
+ * some (probably sufficient) notes in source code.
+ *
+ * Note that encryption using this scheme is absolutely impractical.
+ */
+namespace mce_oc
+{
+class privkey
+{
+public:
+	matrix Sinv;
+	permutation Pinv;
+	gf2m fld;
+
+	class subcode
+	{
+	public:
+		polynomial g;
+		permutation hperm;
+
+		//derivables
+		matrix h;
+		std::vector<polynomial> sqInv;
+	};
+
+	std::vector<subcode> codes;
+
+	int sign (const bvector&, bvector&, uint, uint, prng&);
+	int prepare();
+
+	uint hash_size() {
+		return Pinv.size();
+	}
+	uint signature_size() {
+		return Sinv.size();
+	}
+};
+
+class pubkey
+{
+public:
+	matrix G;
+	uint n, t;
+
+	int verify (const bvector&, const bvector&, uint);
+
+	uint hash_size() {
+		return G.width();
+	}
+	uint signature_size() {
+		return G.height();
+	}
+};
+
+//n is the number of subcodes used
+int generate (pubkey&, privkey&, prng&, uint m, uint t, uint n);
+}
+
 } //namespace ccr
 
 //global overload for iostream operators
@@ -305,8 +436,6 @@ std::ostream& operator<< (std::ostream&o, const ccr::permutation&);
 std::ostream& operator<< (std::ostream&o, const ccr::gf2m&);
 std::ostream& operator<< (std::ostream&o, const ccr::matrix&);
 std::ostream& operator<< (std::ostream&o, const ccr::bvector&);
-
-
 
 
 #endif // _CODECRYPT_H_

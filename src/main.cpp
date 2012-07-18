@@ -24,22 +24,18 @@ int main()
 	primitiverng r;
 	r.seed (0);
 
-	ccr::mce::privkey priv;
-	ccr::mce::pubkey pub;
-	ccr::mce::generate (pub, priv, r, 7, 2);
+	ccr::mce_oc::privkey priv;
+	ccr::mce_oc::pubkey pub;
+	ccr::mce_oc::generate (pub, priv, r, 7, 2, 8);
 
-	cout << "PRIVATE KEY" << endl;
-	cout << priv.fld;
-	cout << priv.hperm;
-	cout << priv.Pinv;
-	cout << priv.Sinv;
-	cout << priv.g;
+	priv.prepare();
+
 	cout << "PUBLIC KEY" << endl;
 	cout << pub.t << endl;
 	cout << pub.G;
 
+#if 0
 	/* mce encryption test */
-
 	ccr::bvector plain;
 	plain.resize (pub.plain_size(), 0);
 	plain[0] = 1;
@@ -50,18 +46,19 @@ int main()
 	cout << plain;
 
 	ccr::bvector cipher;
-	pub.encrypt (plain, cipher, r);
+	//pub.encrypt (plain, cipher, r);
+	pub.encrypt (plain, cipher, r, 10);
 
 	cout << "CIPHERTEXT" << endl;
 	cout << cipher;
 
-	priv.prepare();
 
 	ccr::bvector result;
 	priv.decrypt (cipher, result);
 
 	cout << "DECRYPTED" << endl;
 	cout << result;
+#endif
 
 	/* signature test */
 
@@ -73,9 +70,9 @@ int main()
 	hash[2] = 1;
 
 	cout << "SIGNING" << endl << hash;
-	priv.sign (hash, signature, 3, priv.hash_size() *priv.hash_size(), r);
+	priv.sign (hash, signature, 2, priv.hash_size() *priv.hash_size(), r);
 	cout << "SIGNATURE" << endl << signature;
-	if (pub.verify (signature, hash, 3) )
+	if (pub.verify (signature, hash, 2) )
 		cout << "VERIFY FAIL" << endl;
 	else	cout << "VERIFY OK" << endl;
 	return 0;

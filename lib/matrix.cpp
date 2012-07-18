@@ -211,3 +211,13 @@ bool matrix::mult_vec_right (const bvector&a, bvector&r)
 		if (a[i]) r.add (item (i) );
 	return true;
 }
+
+bool matrix::set_block (uint x, uint y, const matrix&b)
+{
+	uint h = b.height(), w = b.width();
+	if (width() < x + w) return false;
+	if (height() < y + h) return false;
+	for (uint i = 0; i < w; ++i)
+		for (uint j = 0; j < h; ++j) item (x + i, y + j) = b.item (i, j);
+	return true;
+}

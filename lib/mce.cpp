@@ -145,8 +145,8 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 			epos[i] = rng.random (s);
 			/* we don't care about (unlikely) error bit collisions
 			   (they actually don't harm anything) */
+			if (!e[epos[i]]) synd.add (h[epos[i]]);
 			e[epos[i]] = 1;
-			synd.add (h[epos[i]]);
 		}
 
 		compute_error_locator (synd, fld, g, sqInv, loc);
