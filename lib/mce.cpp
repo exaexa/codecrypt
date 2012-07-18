@@ -86,12 +86,6 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	if (!evaluate_error_locator_trace (loc, ev, fld) )
 		return 1; //if decoding somehow failed, fail as well.
 
-	// check the error vector, it should have exactly t == deg (g) errors
-	if ( (int) ev.hamming_weight() != g.degree() )
-		return 1;
-	//TODO cryptoanalysis suggests omitting this check for preventing
-	//bit-flipping attack
-
 	//correct the errors
 	canonical.add (ev);
 
