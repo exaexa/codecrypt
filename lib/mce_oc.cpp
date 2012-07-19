@@ -6,7 +6,8 @@ using namespace ccr::mce_oc;
 
 #include "decoding.h"
 
-int mce_oc::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t, uint n)
+int mce_oc::generate (pubkey&pub, privkey&priv,
+                      prng&rng, uint m, uint t, uint n)
 {
 	priv.fld.create (m);
 
@@ -60,7 +61,8 @@ int privkey::prepare ()
 	return 0;
 }
 
-int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prng&rng)
+int privkey::sign (const bvector&in, bvector&out,
+                   uint delta, uint attempts, prng&rng)
 {
 	if (in.size() != hash_size() ) return 2;
 	if (!codes.size() ) return 2;
@@ -70,33 +72,40 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 	Pinv.permute (in, inp);
 
 	//decoding helpers
-	bvector e, e2, synd, synd_orig, cw, cwc, plain;
+	bvector e, e2, synd, synd_orig, cw, cwc, plain, overlap;
 	std::vector<uint> epos;
 	permutation hpermInv;
 	polynomial loc;
 	uint i, t;
+
+	uint 	mt = fld.m * codes[0].g.degree(),
+	        subplain_size = fld.n - mt;
 
 	plain.clear();
 
 	//decode the rest
 	for (uint ci = 0; ci < codes.size(); ++ci) {
 
-		uint 	mt = fld.m * codes[ci].g.degree(),
-		        subplain_size = fld.n - mt;
-
 		e.clear();
 		e.resize (fld.n, 0);
 		epos.resize (delta, 0);
 
-		//decode first subcode
+		//create the codeword
 		cw.clear();
 		if (ci == 0)
 			cw.insert (cw.end(), inp.begin(), inp.begin() + fld.n);
 		else {
-			cw.resize (mt, 0);
+			cw = overlap;
 			bvector::iterator tmp = inp.begin();
 			tmp += (ci * subplain_size) + mt;
 			cw.insert (cw.end(), tmp, tmp + subplain_size);
+		}
+
+		//create the overlap, xor it to codeword
+		if (ci + 1 < codes.size() ) {
+			overlap.resize (mt);
+			for (uint i = 0; i < mt; ++i) overlap[i] = rng.random (2);
+			cw.add_offset (overlap, subplain_size);
 		}
 
 		//compute syndrome with no extra errors
@@ -110,7 +119,8 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 			synd = synd_orig;
 			for (i = 0; i < delta; ++i) {
 				epos[i] = rng.random (fld.n);
-				if (!e[epos[i]]) synd.add (codes[ci].h[epos[i]]);
+				if (!e[epos[i]])
+					synd.add (codes[ci].h[epos[i]]);
 				e[epos[i]] = 1;
 			}
 
@@ -124,7 +134,10 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 
 				codes[ci].hperm.permute (cwc, cw);
 				plain.insert (plain.end(), cw.begin(),
-				              cw.begin() + (fld.n - (fld.m * codes[ci].g.degree() ) ) );
+				              cw.begin() +
+				              (fld.n - (fld.m *
+				                        codes[ci].g.degree() ) )
+				             );
 				break;
 			}
 
@@ -150,6 +163,6 @@ int pubkey::verify (const bvector&in, const bvector&hash, uint delta)
 	if (hash.size() != tmp.size() ) return 1; //invalid hash size
 
 	tmp.add (hash);
-	if (tmp.hamming_weight() > n* (t + delta) ) return 1; //too far
+	if (tmp.hamming_weight() > n * (t + delta) ) return 1; //too far
 	return 0;
 }

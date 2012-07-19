@@ -41,6 +41,7 @@ protected:
 public:
 	uint hamming_weight();
 	void add (const bvector&);
+	void add_offset (const bvector&, uint);
 	bool operator* (const bvector&); //dot product
 	bool zero() const;
 
@@ -371,7 +372,8 @@ int generate (pubkey&, privkey&, prng&, uint m, uint t);
  * needed to produce signatures. Technique is described in documentation, with
  * some (probably sufficient) notes in source code.
  *
- * Note that encryption using this scheme is absolutely impractical.
+ * Note that encryption using this scheme is impossible, as there is only an
+ * extremely tiny probability of successful decoding.
  */
 namespace mce_oc
 {

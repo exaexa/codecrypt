@@ -12,8 +12,15 @@ uint bvector::hamming_weight()
 void bvector::add (const bvector&a)
 {
 	if (a.size() > size() ) resize (a.size(), 0);
-	for (uint i = 0; i < size(); ++i)
+	for (uint i = 0; i < a.size(); ++i)
 		item (i) = item (i) ^ a[i];
+}
+
+void bvector::add_offset (const bvector&a, uint offset)
+{
+	if (offset + a.size() > size() ) resize (offset + a.size(), 0);
+	for (uint i = 0; i < a.size(); ++i)
+		item (offset + i) = item (offset + i) ^ a[i];
 }
 
 bool bvector::operator* (const bvector&a)
