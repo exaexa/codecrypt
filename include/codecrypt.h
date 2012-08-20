@@ -41,6 +41,7 @@ protected:
 public:
 	uint hamming_weight();
 	void add (const bvector&);
+	void add_range (const bvector&, uint, uint);
 	void add_offset (const bvector&, uint);
 	bool operator* (const bvector&); //dot product
 	bool zero() const;
@@ -71,6 +72,7 @@ class matrix : public std::vector<bvector>
 protected:
 	_ccr_declare_vector_item
 	_ccr_declare_matrix_item
+
 public:
 	uint width() const {
 		return size();
@@ -81,17 +83,26 @@ public:
 		return 0;
 	}
 
+	void resize2 (uint w, uint h, bool def = 0);
+
 	matrix operator* (const matrix&);
 	void mult (const matrix&); //right multiply - this*param
 
+	void zero ();
 	void unit (uint);
 
 	void compute_transpose (matrix&);
 	bool mult_vecT_left (const bvector&, bvector&);
 	bool mult_vec_right (const bvector&, bvector&);
-	bool compute_inversion (matrix&);
+	bool compute_inversion (matrix&,
+	                        bool upper_tri = false,
+	                        bool lower_tri = false);
 
 	bool set_block (uint, uint, const matrix&);
+	bool add_block (uint, uint, const matrix&);
+	bool set_block_from (uint, uint, const matrix&);
+	bool add_block_from (uint, uint, const matrix&);
+
 	bool get_left_square (matrix&);
 	bool strip_left_square (matrix&);
 	bool get_right_square (matrix&);
@@ -99,9 +110,9 @@ public:
 	void extend_left_compact (matrix&);
 
 	void generate_random_invertible (uint, prng&);
+	void generate_random_with_inversion (uint, matrix&, prng&);
 	bool create_goppa_generator (matrix&, permutation&, prng&);
 	bool create_goppa_generator (matrix&, const permutation&);
-
 };
 
 /*

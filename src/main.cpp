@@ -26,7 +26,7 @@ int main()
 
 	ccr::mce_oc::privkey priv;
 	ccr::mce_oc::pubkey pub;
-	ccr::mce_oc::generate (pub, priv, r, 7, 2, 8);
+	ccr::mce_oc::generate (pub, priv, r, 7, 2, 2);
 
 	priv.prepare();
 

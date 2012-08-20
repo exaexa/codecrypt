@@ -3,6 +3,20 @@
 
 using namespace ccr;
 
+void matrix::resize2 (uint w, uint h, bool def)
+{
+	resize (w);
+	for (uint i = 0; i < w; ++i) item (i).resize (h, def);
+}
+
+void matrix::zero ()
+{
+	uint w = width(), h = height();
+	for (uint i = 0; i < w; ++i)
+		for (uint j = 0; j < h; ++j)
+			item (i, j) = 0;
+}
+
 void matrix::unit (uint size)
 {
 	clear();
@@ -43,7 +57,7 @@ void matrix::mult (const matrix&right)
 	}
 }
 
-bool matrix::compute_inversion (matrix&res)
+bool matrix::compute_inversion (matrix&res, bool upper_tri, bool lower_tri)
 {
 	//gauss-jordan elimination with inversion of the second matrix.
 	//we are computing with transposed matrices for simpler row ops
@@ -57,28 +71,42 @@ bool matrix::compute_inversion (matrix&res)
 	uint i, j;
 
 	//gauss step, create a lower triangular out of m, mirror to r
-	for (i = 0; i < s; ++i) {
-		//we need pivoting 1 at [i][i]. If there's none, get it below.
-		if (m[i][i] != 1) {
-			for (j = i + 1; j < s; ++j) if (m[j][i] == 1) break;
-			if (j == s) return false; //noninvertible
-			m[i].swap (m[j]);
-			r[i].swap (r[j]);
+	if (!upper_tri) for (i = 0; i < s; ++i) {
+			//we need pivoting 1 at [i][i]. If there's none, get it below.
+			if (m[i][i] != 1) {
+				for (j = i + 1; j < s; ++j) if (m[j][i] == 1) break;
+				if (j == s) return false; //noninvertible
+				m[i].swap (m[j]);
+				r[i].swap (r[j]);
+			}
+			//remove 1's below
+			if (lower_tri) {
+				for (j = i + 1; j < s; ++j) if (m[j][i]) {
+						m[j].add_range (m[i], 0, j + 1);
+						r[j].add_range (r[i], 0, j + 1);
+					}
+			} else {
+				for (j = i + 1; j < s; ++j) if (m[j][i]) {
+						m[j].add (m[i]);
+						r[j].add (r[i]);
+					}
+			}
 		}
-		//remove 1's below
-		for (j = i + 1; j < s; ++j) if (m[j][i]) {
-				m[j].add (m[i]);
-				r[j].add (r[i]);
-			}
-	}
 
-	//jordan step (we do it forward because it doesn't matter on GF(2))
-	for (i = 0; i < s; ++i)
-		for (j = 0; j < i; ++j)
-			if (m[j][i]) {
-				m[j].add (m[i]);
-				r[j].add (r[i]);
-			}
+	//jordan step
+	if (!lower_tri) {
+		if (upper_tri) {
+			for (i = s; i > 0; --i)
+				for (j = i - 1; j > 0; --j)
+					if (m[j-1][i-1])
+						r[j-1].add_range (r[i-1], i - 1, s);
+		} else {
+			for (i = s; i > 0; --i)
+				for (j = i - 1; j > 0; --j)
+					if (m[j-1][i-1])
+						r[j-1].add (r[i-1]);
+		}
+	}
 
 	r.compute_transpose (res);
 	return true;
@@ -108,6 +136,32 @@ void matrix::generate_random_invertible (uint size, prng & rng)
 	p.generate_random (size, rng);
 	p.permute (lt, *this);
 }
+
+void matrix::generate_random_with_inversion (uint size, matrix&inversion, prng&rng)
+{
+	matrix lt, ut;
+	uint i, j;
+	// random lower triangular
+	lt.resize (size);
+	for (i = 0; i < size; ++i) {
+		lt[i].resize (size);
+		lt[i][i] = 1;
+		for (j = i + 1; j < size; ++j) lt[i][j] = rng.random (2);
+	}
+	// random upper triangular
+	ut.resize (size);
+	for (i = 0; i < size; ++i) {
+		ut[i].resize (size);
+		ut[i][i] = 1;
+		for (j = 0; j < i; ++j) ut[i][j] = rng.random (2);
+	}
+	*this = lt;
+	this->mult (ut);
+	ut.compute_inversion (inversion,	true, false);
+	lt.compute_inversion (ut, false, true);
+	inversion.mult (ut);
+}
+
 
 bool matrix::get_left_square (matrix&r)
 {
@@ -219,5 +273,48 @@ bool matrix::set_block (uint x, uint y, const matrix&b)
 	if (height() < y + h) return false;
 	for (uint i = 0; i < w; ++i)
 		for (uint j = 0; j < h; ++j) item (x + i, y + j) = b.item (i, j);
+	return true;
+}
+
+bool matrix::add_block (uint x, uint y, const matrix&b)
+{
+	uint h = b.height(), w = b.width();
+	if (width() < x + w) return false;
+	if (height() < y + h) return false;
+	for (uint i = 0; i < w; ++i)
+		for (uint j = 0; j < h; ++j)
+			item (x + i, y + j) =
+			    item (x + i, y + j)
+			    ^ b.item (i, j);
+	return true;
+}
+
+bool matrix::set_block_from (uint x, uint y, const matrix&b)
+{
+	uint h = b.height(),
+	     w = b.width(),
+	     mh = height(),
+	     mw = width();
+	if (mw > x + w) return false;
+	if (mh > y + h) return false;
+	for (uint i = 0; i < mw; ++i)
+		for (uint j = 0; j < mh; ++j)
+			item (i, j) = b.item (x + i, y + j);
+	return true;
+}
+
+bool matrix::add_block_from (uint x, uint y, const matrix&b)
+{
+	uint h = b.height(),
+	     w = b.width(),
+	     mh = height(),
+	     mw = width();
+	if (mw > x + w) return false;
+	if (mh > y + h) return false;
+	for (uint i = 0; i < mw; ++i)
+		for (uint j = 0; j < mh; ++j)
+			item (i, j) =
+			    item (i, j)
+			    ^ b.item (x + i, y + j);
 	return true;
 }

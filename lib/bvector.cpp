@@ -16,6 +16,13 @@ void bvector::add (const bvector&a)
 		item (i) = item (i) ^ a[i];
 }
 
+void bvector::add_range (const bvector&a, uint b, uint e)
+{
+	if (e > size() ) resize (e, 0);
+	for (uint i = b; i < e; ++i)
+		item (i) = item (i) ^ a[i];
+}
+
 void bvector::add_offset (const bvector&a, uint offset)
 {
 	if (offset + a.size() > size() ) resize (offset + a.size(), 0);

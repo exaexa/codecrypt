@@ -19,8 +19,7 @@ int nd::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
 
 	//scrambler
 	matrix S;
-	S.generate_random_invertible (h.height(), rng);
-	S.compute_inversion (priv.Sinv);
+	S.generate_random_with_inversion (h.height(), priv.Sinv, rng);
 
 	//permutation
 	priv.Pinv.generate_random (h.width(), rng);

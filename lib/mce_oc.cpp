@@ -35,8 +35,7 @@ int mce_oc::generate (pubkey&pub, privkey&priv,
 
 	//scramble matrix
 	matrix S;
-	S.generate_random_invertible (g.height(), rng);
-	S.compute_inversion (priv.Sinv);
+	S.generate_random_with_inversion (g.height(), priv.Sinv, rng);
 
 	//scramble permutation
 	permutation P;
