@@ -90,6 +90,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		//compute the support, retry if it has two equal elements.
 		used.clear();
 		bool consistent = true;
+		used.insert (0); //zero is forbidden
 		for (uint i = 0; i < fld.n / 2; ++i) {
 			support[i] = fld.add (
 			                 fld.inv (Hsig[i]),
