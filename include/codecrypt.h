@@ -49,6 +49,9 @@ public:
 	void to_poly (polynomial&, gf2m&);
 	void from_poly (const polynomial&, gf2m&);
 
+	void to_poly_cotrace (polynomial&, gf2m&);
+	void from_poly_cotrace (const polynomial&, gf2m&);
+
 	void colex_rank (bvector&);
 	void colex_unrank (bvector&, uint n, uint k);
 };
@@ -127,8 +130,12 @@ public:
 	void compute_inversion (permutation&) const;
 
 	void generate_random (uint n, prng&);
-	void permute (const bvector&, bvector&) const;
-	void permute (const matrix&, matrix&) const;
+
+	template<class V> void permute (const V&a, V&r) const {
+		r.resize (a.size() );
+		for (uint i = 0; i < size(); ++i) r[item (i) ] = a[i];
+	}
+
 	void permute_rows (const matrix&, matrix&) const;
 };
 
@@ -324,13 +331,27 @@ int generate (pubkey&, privkey&, prng&, uint m, uint t);
  * according to Misoczki, Barreto, Compact McEliece Keys from Goppa Codes.
  *
  * Good security, extremely good speed with extremely reduced key size.
- * Recommended for encryption.
+ * Recommended for encryption, but needs some plaintext conversion -- either
+ * Fujisaki-Okamoto or Kobara-Imai are known to work good.
  */
 namespace mce_qd
 {
 class privkey
 {
 public:
+	std::vector<uint> essence;
+	gf2m fld;   //we fix q=2^fld.m=fld.n, n=q/2
+	uint T;     //the QD's t parameter is 2^T.
+	uint hperm; //dyadic permutation of H to G
+	permutation block_perm; //order of blocks
+	uint block_count; //blocks >= block_count are shortened-out
+	std::vector<uint> block_perms; //dyadic permutations of blocks
+
+	//derivable stuff
+	std::vector<uint> Hsig; //signature of canonical H matrix
+	std::vector<uint> support; //computed goppa support
+	polynomial g; //computed goppa polynomial
+
 	int decrypt (const bvector&, bvector&);
 	int prepare();
 
@@ -340,37 +361,25 @@ public:
 	uint plain_size() {
 		return 0; //TODO
 	}
-	uint hash_size() {
-		return 0; //TODO
-	}
-	uint signature_size() {
-		return 0; //TODO
-	}
 };
 
 class pubkey
 {
 public:
-	matrix G;
-	uint t;
+	uint T;
+	matrix M;
 
 	int encrypt (const bvector&, bvector&, prng&);
 
 	uint cipher_size() {
-		return G.height();
+		return 0; //TODO
 	}
 	uint plain_size() {
-		return G.width();
-	}
-	uint hash_size() {
-		return cipher_size();
-	}
-	uint signature_size() {
-		return plain_size();
+		return 0; //TODO
 	}
 };
 
-int generate (pubkey&, privkey&, prng&, uint m, uint t);
+int generate (pubkey&, privkey&, prng&, uint m, uint T, uint b);
 }
 
 /*

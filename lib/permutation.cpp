@@ -27,18 +27,6 @@ void permutation::generate_random (uint size, prng&rng)
 	}
 }
 
-void permutation::permute (const bvector&a, bvector&r) const
-{
-	r.resize (a.size() );
-	for (uint i = 0; i < size(); ++i) r[item (i) ] = a[i];
-}
-
-void permutation::permute (const matrix&a, matrix&r) const
-{
-	r.resize (a.size() );
-	for (uint i = 0; i < size(); ++i) r[item (i) ] = a[i];
-}
-
 void permutation::permute_rows (const matrix&a, matrix&r) const
 {
 	r.resize (a.size() );

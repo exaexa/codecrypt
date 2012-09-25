@@ -62,6 +62,23 @@ void bvector::from_poly (const polynomial&r, gf2m&fld)
 		item (i) = (r[i/fld.m] >> (i % fld.m) ) & 1;
 }
 
+void bvector::to_poly_cotrace (polynomial&r, gf2m&fld)
+{
+	r.clear();
+	if (size() % fld.m) return; //impossible
+	r.resize (size() / fld.m, 0);
+	for (uint i = 0; i < size(); ++i)
+		if (item (i) ) r[i%fld.m] |= (1 << (i / fld.m) );
+}
+
+void bvector::from_poly_cotrace (const polynomial&r, gf2m&fld)
+{
+	clear();
+	resize (r.size() *fld.m, 0);
+	for (uint i = 0; i < size(); ++i)
+		item (i) = (r[i%fld.m] >> (i / fld.m) ) & 1;
+}
+
 /*
  * utility colex (un)ranking for niederreiter and workalikes.
  * see Ruskey's Combinatorial Generation, algorithm 4.10
