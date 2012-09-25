@@ -137,6 +137,39 @@ public:
 	}
 
 	void permute_rows (const matrix&, matrix&) const;
+
+	//work-alike for dyadic permutations.
+	template<class V> static bool permute_dyadic
+	(uint sig, const V&a, V&r) {
+
+		//check if the thing has size 2^n
+		uint s = a.size();
+		while (s > 1) {
+			if (s & 1) return false;
+			s >>= 1;
+		}
+
+		if (sig >= a.size() ) return false;
+
+		r.resize (a.size() );
+
+		uint i, t, x;
+		for (i = 0; i < a.size(); ++i) {
+			r[sig] = a[i];
+
+			//flip the correct bit in signature
+			t = i + 1;
+			x = 1;
+			while (! (t & 1) ) {
+				t >>= 1;
+				x <<= 1;
+			}
+			sig ^= x;
+		}
+
+		return true;
+	}
+
 };
 
 /*
