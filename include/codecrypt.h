@@ -116,6 +116,9 @@ public:
 	void generate_random_with_inversion (uint, matrix&, prng&);
 	bool create_goppa_generator (matrix&, permutation&, prng&);
 	bool create_goppa_generator (matrix&, const permutation&);
+
+	bool create_goppa_generator_dyadic (matrix&, uint&, prng&);
+	bool create_goppa_generator_dyadic (matrix&, uint);
 };
 
 /*
@@ -131,7 +134,7 @@ public:
 
 	void generate_random (uint n, prng&);
 
-	template<class V> void permute (const V&a, V&r) const {
+	template<class A, class R> void permute (const A&a, R&r) const {
 		r.resize (a.size() );
 		for (uint i = 0; i < size(); ++i) r[item (i) ] = a[i];
 	}
@@ -139,8 +142,8 @@ public:
 	void permute_rows (const matrix&, matrix&) const;
 
 	//work-alike for dyadic permutations.
-	template<class V> static bool permute_dyadic
-	(uint sig, const V&a, V&r) {
+	template<class A, class R> static bool permute_dyadic
+	(uint sig, const A&a, R&r) {
 
 		//check if the thing has size 2^n
 		uint s = a.size();
@@ -365,7 +368,8 @@ int generate (pubkey&, privkey&, prng&, uint m, uint t);
  *
  * Good security, extremely good speed with extremely reduced key size.
  * Recommended for encryption, but needs some plaintext conversion -- either
- * Fujisaki-Okamoto or Kobara-Imai are known to work good.
+ * Fujisaki-Okamoto or Kobara-Imai are known to work good. Without the
+ * conversion, the encryption itself is extremely weak.
  */
 namespace mce_qd
 {
@@ -375,9 +379,9 @@ public:
 	std::vector<uint> essence;
 	gf2m fld;   //we fix q=2^fld.m=fld.n, n=q/2
 	uint T;     //the QD's t parameter is 2^T.
-	uint hperm; //dyadic permutation of H to G
 	permutation block_perm; //order of blocks
 	uint block_count; //blocks >= block_count are shortened-out
+	permutation hperm; //block permutation of H block used to get G
 	std::vector<uint> block_perms; //dyadic permutations of blocks
 
 	//derivable stuff
@@ -400,7 +404,7 @@ class pubkey
 {
 public:
 	uint T;
-	matrix M;
+	std::vector<bvector> qd_sigs;
 
 	int encrypt (const bvector&, bvector&, prng&);
 

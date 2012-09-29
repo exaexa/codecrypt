@@ -128,19 +128,63 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 			         Hsig.begin() + (i + 1) * block_size);
 
 		//permute them
-		permutation bp;
-		bp.generate_random (h_block_count, rng);
-		bp.permute (bl, blp);
+		priv.block_perm.generate_random (h_block_count, rng);
+		priv.block_perm.permute (bl, blp);
 
 		//discard blocks
 		blp.resize (block_count);
 
-		//TODO permute individual blocks
+		//permute individual blocks
+		priv.block_count = block_count;
+		priv.block_perms.resize (block_count);
+		bl.resize (blp.size() );
+		for (uint i = 0; i < block_count; ++i) {
+			priv.block_perms[i] = rng.random (block_size);
+			permutation::permute_dyadic (priv.block_perms[i],
+			                             blp[i], bl[i]);
+		}
 
-		//TODO co-trace to binary H^
-		//TODO systematic H
-		//TODO systematic G
-		//TODO signature of G
+		//co-trace blocks to binary H^, retry creating G using hperm.
+		matrix Hc;
+		polynomial col;
+		Hc.resize (block_count * block_size);
+
+		matrix r, ri, l;
+
+		for (;;) {
+			priv.hperm.generate_random (block_count, rng);
+
+			for (uint i = 0; i < block_count; ++i)
+				for (uint j = 0; j < block_size; ++j) {
+					permutation::permute_dyadic
+					(j, bl[priv.hperm[i]], col);
+					Hc[i*block_size + j].from_poly_cotrace
+					(col, fld);
+				}
+
+			/*
+			 * try computing the redundancy block of G
+			 *
+			 * Since H*G^T = [L | R] * [I | X] = L + R*X = 0
+			 * we have the solution: X = R^1 * L
+			 */
+
+			Hc.get_right_square (r);
+			if (!r.compute_inversion (ri) )
+				continue; //retry with other hperm
+			Hc.strip_right_square (l);
+			ri.mult (l);
+		}
+
+		/*
+		 * Redundancy-checking part of G is now (transposed) in ri.
+		 * Get QD signatures by getting every t'th row (transposed).
+		 */
+
+		pub.T = T;
+		pub.qd_sigs.resize (ri.width() / t);
+		for (uint i = 0; i < ri.width(); i += t)
+			pub.qd_sigs[i/t] = ri[i];
 
 		return 0;
 	}
@@ -148,17 +192,20 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 int privkey::prepare()
 {
-
+	//TODO compute H signature from essence
+	//TODO compute goppa code support
 	return 0;
 }
 
 int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 {
+	//TODO FWHT
 	return 0;
 }
 
 int privkey::decrypt (const bvector&in, bvector&out)
 {
+	//TODO decoding
 	return 0;
 }
 
