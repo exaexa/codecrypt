@@ -90,7 +90,6 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		//compute the support, retry if it has two equal elements.
 		used.clear();
 		bool consistent = true;
-		used.insert (0); //zero is forbidden
 		for (uint i = 0; i < fld.n / 2; ++i) {
 			support[i] = fld.add (
 			                 fld.inv (Hsig[i]),
@@ -121,7 +120,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 		//assemble blocks to bl
 		std::vector<std::vector<uint> > bl, blp;
-		bl.resize (block_size);
+		bl.resize (h_block_count);
 		for (uint i = 0; i < h_block_count; ++i)
 			bl[i] = std::vector<uint>
 			        (Hsig.begin() + i * block_size,
@@ -174,6 +173,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 				continue; //retry with other hperm
 			Hc.strip_right_square (l);
 			ri.mult (l);
+			break;
 		}
 
 		/*
