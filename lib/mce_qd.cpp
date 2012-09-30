@@ -70,18 +70,18 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 			used.insert (fld.inv (essence[s]) );
 
 			for (uint j = 1; j < i; ++j) {
-				Hsig[i+j] = fld.inv (
-				                fld.add (
-				                    fld.inv (Hsig[i]),
-				                    fld.add (
-				                        fld.inv (Hsig[j]),
-				                        essence[m-1]
-				                    ) ) );
+				Hsig[i+j] = fld.inv
+				            (fld.add
+				             (fld.inv (Hsig[i]),
+				              fld.add (
+				                  fld.inv (Hsig[j]),
+				                  essence[m-1]
+				              ) ) );
 				used.insert (Hsig[i+j]);
-				used.insert (fld.inv (
-				                 fld.add (
-				                     fld.inv (Hsig[i+j]),
-				                     essence[m-1]) ) );
+				used.insert (fld.inv
+				             (fld.add
+				              (fld.inv (Hsig[i+j]),
+				               essence[m-1]) ) );
 			}
 		}
 
@@ -182,6 +182,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		 */
 
 		pub.T = T;
+		pub.k = (block_count - fld.m) * block_size;
 		pub.qd_sigs.resize (ri.width() / t);
 		for (uint i = 0; i < ri.width(); i += t)
 			pub.qd_sigs[i/t] = ri[i];
@@ -192,14 +193,105 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 int privkey::prepare()
 {
-	//TODO compute H signature from essence
-	//TODO compute goppa code support
+	//compute H signature from essence
+	Hsig.resize (fld.n / 2);
+	Hsig[0] = fld.inv (essence[fld.m-1]);
+	for (uint s = 0; s < fld.m - 1; ++s) {
+		uint i = 1 << s; //i = 2^s
+
+		//TODO verify this
+		Hsig[i] = fld.inv (fld.add (essence[s], essence[fld.m-1]) );
+
+		for (uint j = 1; j < i; ++j)
+			Hsig[i+j] = fld.inv
+			            (fld.add
+			             (fld.inv (Hsig[i]),
+			              fld.add (
+			                  fld.inv (Hsig[j]),
+			                  essence[fld.m-1]
+			              ) ) );
+	}
+
+	//compute the support
+	support.resize (fld.n / 2);
+	for (uint i = 0; i < fld.n / 2; ++i) {
+		support[i] = fld.add
+		             (fld.inv (Hsig[i]),
+		              essence[fld.m-1]);
+
+	}
+
+	//goppa polynomial
+	g.clear();
+	g.resize (1, 1);
+	polynomial tmp;
+	tmp.resize (2, 1);
+	uint t = 1 << T;
+	for (uint i = 0; i < t; ++i) {
+		tmp[0] = fld.inv (Hsig[i]);
+		g.mult (tmp, fld);
+	}
+
+	//sqInv
+	g.compute_square_root_matrix (sqInv, fld);
+
 	return 0;
 }
 
+#include "fwht.h"
+
 int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 {
-	//TODO FWHT
+	uint t = 1 << T;
+	bvector p, g, r, cksum;
+
+	/*
+	 * shortened checksum pair of G is computed blockwise accordingly to
+	 * the t-sized square dyadic blocks.
+	 */
+
+	//some checks
+	if (in.size() != k) return 1;
+	if (!qd_sigs.size() ) return 1;
+	if (qd_sigs[0].size() % t) return 1;
+
+	uint blocks = qd_sigs[0].size() / t;
+	cksum.resize (qd_sigs[0].size(), 0);
+
+	p.resize (t);
+	g.resize (t);
+	r.resize (t);
+
+	for (uint i = 0; i < blocks; ++i) {
+		//plaintext block
+		for (uint k = 0; k < t; ++k) p[k] = in[k+i*t];
+
+		for (uint j = 0; j < qd_sigs.size(); ++j) {
+			//checksum block
+			for (uint k = 0; k < t; ++k) g[k] = qd_sigs[i][k+j*t];
+
+			//block result
+			fwht_dyadic_multiply (p, g, r);
+			cksum.add_offset (r, t * j);
+		}
+	}
+
+	//generate t errors
+	bvector e;
+	e.resize (k + qd_sigs[0].size(), 0);
+	for (uint n = t; n > 0;) {
+		uint p = rng.random (e.size() );
+		if (!e[p]) {
+			e[p] = 1;
+			--n;
+		}
+	}
+
+	//compute ciphertext
+	out = in;
+	out.insert (out.end(), cksum.begin(), cksum.end() );
+	out.add (e);
+
 	return 0;
 }
 

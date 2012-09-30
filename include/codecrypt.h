@@ -388,6 +388,8 @@ public:
 	std::vector<uint> Hsig; //signature of canonical H matrix
 	std::vector<uint> support; //computed goppa support
 	polynomial g; //computed goppa polynomial
+	std::vector<polynomial> sqInv;
+
 
 	int decrypt (const bvector&, bvector&);
 	int prepare();
@@ -404,6 +406,7 @@ class pubkey
 {
 public:
 	uint T;
+	uint k;
 	std::vector<bvector> qd_sigs;
 
 	int encrypt (const bvector&, bvector&, prng&);
