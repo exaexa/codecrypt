@@ -395,10 +395,10 @@ public:
 	int prepare();
 
 	uint cipher_size() {
-		return 0; //TODO
+		return (1 << T) * block_count;
 	}
 	uint plain_size() {
-		return 0; //TODO
+		return (1 << T) * (block_count - fld.m);
 	}
 };
 
@@ -406,16 +406,15 @@ class pubkey
 {
 public:
 	uint T;
-	uint k;
 	std::vector<bvector> qd_sigs;
 
 	int encrypt (const bvector&, bvector&, prng&);
 
 	uint cipher_size() {
-		return 0; //TODO
+		return plain_size() + qd_sigs[0].size();
 	}
 	uint plain_size() {
-		return 0; //TODO
+		return (1 << T) * qd_sigs.size();
 	}
 };
 

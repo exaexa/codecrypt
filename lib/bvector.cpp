@@ -66,19 +66,19 @@ void bvector::to_poly_cotrace (polynomial&r, gf2m&fld)
 {
 	r.clear();
 	if (size() % fld.m) return; //impossible
-	uint s=size()/fld.m;
+	uint s = size() / fld.m;
 	r.resize (s, 0);
 	for (uint i = 0; i < size(); ++i)
-		if (item (i) ) r[i%s] |= (1 << (i/s) );
+		if (item (i) ) r[i%s] |= (1 << (i / s) );
 }
 
 void bvector::from_poly_cotrace (const polynomial&r, gf2m&fld)
 {
 	clear();
-	uint s=r.size();
-	resize (s*fld.m, 0);
+	uint s = r.size();
+	resize (s * fld.m, 0);
 	for (uint i = 0; i < size(); ++i)
-		item (i) = (r[i%s] >> (i/s) ) & 1;
+		item (i) = (r[i%s] >> (i / s) ) & 1;
 }
 
 /*

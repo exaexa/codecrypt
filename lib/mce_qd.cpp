@@ -31,7 +31,7 @@ static uint choose_random (uint limit, prng&rng, std::set<uint>used)
 }
 
 int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
-                      uint m, uint T, uint block_count)
+                      uint m, uint T, uint block_discard)
 {
 	priv.fld.create (m);
 	priv.T = T;
@@ -87,6 +87,17 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 		//from now on, we fix 'omega' from the paper to zero.
 
+		//assemble goppa polynomial.
+		g.clear();
+		g.resize (1, 1); //g(x)=1 so we can multiply it
+		polynomial tmp;
+		tmp.resize (2, 1); //tmp(x)=x-1
+		for (uint i = 0; i < t; ++i) {
+			//tmp(x)=x-z=x-(1/h_i)
+			tmp[0] = fld.inv (Hsig[i]);
+			g.mult (tmp, fld);
+		}
+
 		//compute the support, retry if it has two equal elements.
 		used.clear();
 		bool consistent = true;
@@ -99,24 +110,22 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 				consistent = false;
 				break;
 			}
+
+			if (g.eval (support[i], fld) == 0) {
+				consistent = false;
+				break;
+			}
+
+
 			used.insert (support[i]);
 		}
 		if (!consistent) continue; //retry
 
-		//assemble goppa polynomial.
-		g.clear();
-		g.resize (1, 1); //g(x)=1 so we can multiply it
-		polynomial tmp;
-		tmp.resize (2, 1); //tmp(x)=x-1
-		for (uint i = 0; i < t; ++i) {
-			//tmp(x)=x-z=x-(1/h_i)
-			tmp[0] = fld.inv (Hsig[i]);
-			g.mult (tmp, fld);
-		}
-
 		//now the blocks.
 		uint block_size = 1 << T,
 		     h_block_count = (fld.n / 2) / block_size;
+		uint& block_count = priv.block_count;
+		block_count = h_block_count - block_discard;
 
 		//assemble blocks to bl
 		std::vector<std::vector<uint> > bl, blp;
@@ -134,7 +143,6 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		blp.resize (block_count);
 
 		//permute individual blocks
-		priv.block_count = block_count;
 		priv.block_perms.resize (block_count);
 		bl.resize (blp.size() );
 		for (uint i = 0; i < block_count; ++i) {
@@ -182,7 +190,6 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		 */
 
 		pub.T = T;
-		pub.k = (block_count - fld.m) * block_size;
 		pub.qd_sigs.resize (ri.width() / t);
 		for (uint i = 0; i < ri.width(); i += t)
 			pub.qd_sigs[i/t] = ri[i];
@@ -251,7 +258,6 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 	 */
 
 	//some checks
-	if (in.size() != k) return 1;
 	if (!qd_sigs.size() ) return 1;
 	if (qd_sigs[0].size() % t) return 1;
 
@@ -262,11 +268,11 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 	g.resize (t);
 	r.resize (t);
 
-	for (uint i = 0; i < blocks; ++i) {
+	for (uint i = 0; i < qd_sigs.size(); ++i) {
 		//plaintext block
 		for (uint k = 0; k < t; ++k) p[k] = in[k+i*t];
 
-		for (uint j = 0; j < qd_sigs.size(); ++j) {
+		for (uint j = 0; j < blocks; ++j) {
 			//checksum block
 			for (uint k = 0; k < t; ++k) g[k] = qd_sigs[i][k+j*t];
 
@@ -278,7 +284,7 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 
 	//generate t errors
 	bvector e;
-	e.resize (k + qd_sigs[0].size(), 0);
+	e.resize (cipher_size(), 0);
 	for (uint n = t; n > 0;) {
 		uint p = rng.random (e.size() );
 		if (!e[p]) {

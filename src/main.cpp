@@ -24,18 +24,15 @@ int main()
 	primitiverng r;
 	r.seed (0);
 
-	ccr::mce_oc::privkey priv;
-	ccr::mce_oc::pubkey pub;
-	ccr::mce_oc::generate (pub, priv, r, 7, 2, 2);
+	ccr::mce_qd::privkey priv;
+	ccr::mce_qd::pubkey pub;
+	ccr::mce_qd::generate (pub, priv, r, 5, 1, 1);
 
 	priv.prepare();
 
-	cout << "PUBLIC KEY" << endl;
-	cout << pub.t << endl;
-	cout << pub.G;
+	cout << "cipher size: " << priv.cipher_size() << ' ' << pub.cipher_size() << endl;
+	cout << "plain size:  " << priv.plain_size() << ' ' << pub.plain_size() << endl;
 
-#if 0
-	/* mce encryption test */
 	ccr::bvector plain;
 	plain.resize (pub.plain_size(), 0);
 	plain[0] = 1;

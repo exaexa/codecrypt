@@ -37,6 +37,10 @@ void fwht_dyadic_multiply (const bvector& a, const bvector& b, bvector& out)
 	vector<int> t, A, B;
 	uint i;
 
+	t.resize (a.size() );
+	A.resize (a.size() );
+	B.resize (a.size() );
+
 	for (i = 0; i < a.size(); ++i) t[i] = a[i];
 	fwht (t, A);
 
