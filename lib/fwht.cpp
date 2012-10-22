@@ -21,9 +21,9 @@ static void fwht (vector<int> x, vector<int>&r)
 		x.swap (r);
 		for (uint i = 0; i < s; ++i) {
 			if ( (i / bs) & 1)
-				r[i] = x[i-bs] - x[i];
+				r[i] = x[i - bs] - x[i];
 			else
-				r[i] = x[i] + x[i+bs];
+				r[i] = x[i] + x[i + bs];
 		}
 		bs >>= 1;
 	}

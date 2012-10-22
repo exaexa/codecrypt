@@ -78,8 +78,9 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	h.mult_vec_right (canonical, syndrome);
 
 	//decode
-	polynomial loc;
-	compute_error_locator (syndrome, fld, g, sqInv, loc);
+	polynomial synd, loc;
+	syndrome.to_poly (synd, fld);
+	compute_error_locator (synd, fld, g, sqInv, loc);
 
 	bvector ev;
 	if (!evaluate_error_locator_trace (loc, ev, fld) )
@@ -113,7 +114,7 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 	bvector p, e, synd, synd_orig, e2;
 	std::vector<uint> epos;
 	permutation hpermInv;
-	polynomial loc;
+	polynomial loc, Synd;
 
 	s = hash_size();
 
@@ -142,7 +143,8 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 			e[epos[i]] = 1;
 		}
 
-		compute_error_locator (synd, fld, g, sqInv, loc);
+		synd.to_poly (Synd, fld);
+		compute_error_locator (Synd, fld, g, sqInv, loc);
 
 		if (evaluate_error_locator_trace (loc, e2, fld) ) {
 

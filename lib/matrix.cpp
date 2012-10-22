@@ -98,13 +98,13 @@ bool matrix::compute_inversion (matrix&res, bool upper_tri, bool lower_tri)
 		if (upper_tri) {
 			for (i = s; i > 0; --i)
 				for (j = i - 1; j > 0; --j)
-					if (m[j-1][i-1])
-						r[j-1].add_range (r[i-1], i - 1, s);
+					if (m[j - 1][i - 1])
+						r[j - 1].add_range (r[i - 1], i - 1, s);
 		} else {
 			for (i = s; i > 0; --i)
 				for (j = i - 1; j > 0; --j)
-					if (m[j-1][i-1])
-						r[j-1].add (r[i-1]);
+					if (m[j - 1][i - 1])
+						r[j - 1].add (r[i - 1]);
 		}
 	}
 
@@ -214,7 +214,7 @@ void matrix::extend_left_compact (matrix&r)
 		r[i][i] = 1;
 	}
 	for (i = 0; i < w; ++i) {
-		r[h+i] = item (i);
+		r[h + i] = item (i);
 	}
 }
 
@@ -233,6 +233,7 @@ bool matrix::create_goppa_generator (matrix&g, const permutation&p)
 	t.get_right_square (sinv);
 	if (!sinv.compute_inversion (s) ) return false; //meant to be retried.
 
+	//TODO why multiply and THEN strip?
 	s.mult (t);
 	s.strip_right_square (t); //matrix pingpong for the result
 	t.compute_transpose (s);

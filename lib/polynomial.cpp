@@ -58,8 +58,8 @@ void polynomial::mod (const polynomial&f, gf2m&fld)
 
 			for (int i = 0; i <= df; ++i)
 				item (i + d - df)
-				= fld.add (item (i + d - df),
-				           fld.mult (t, f[i]) );
+				    = fld.add (item (i + d - df),
+				               fld.mult (t, f[i]) );
 		}
 	strip();
 }
@@ -326,7 +326,7 @@ void polynomial::divmod (polynomial&d, polynomial&res, polynomial&rem, gf2m&fld)
 		if (res.size() < rp + 1) res.resize (rp + 1, 0);
 		res[rp] = fld.mult (headInv, rem[t]);
 		for (uint i = 0; i <= degd; ++i)
-			rem[i+rp] = fld.add (rem[i+rp], fld.mult (res[rp], d[i]) );
+			rem[i + rp] = fld.add (rem[i + rp], fld.mult (res[rp], d[i]) );
 	}
 	rem.strip();
 }

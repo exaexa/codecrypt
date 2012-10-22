@@ -102,7 +102,7 @@ bool gf2m::create (uint M)
 		log.resize (n, 0);
 		antilog.resize (n, 0);
 		log[0] = n - 1;
-		antilog[n-1] = 0;
+		antilog[n - 1] = 0;
 
 		uint i, xi = 1; //x^0
 		for (i = 0; i < n - 1; ++i) {
@@ -165,7 +165,7 @@ uint gf2m::exp (int k)
 uint gf2m::inv (uint a)
 {
 	if (!a) return 0;
-	return antilog[ (n-1-log[a]) % (n - 1) ];
+	return antilog[ (n - 1 - log[a]) % (n - 1) ];
 }
 
 uint gf2m::sq_root (uint a)

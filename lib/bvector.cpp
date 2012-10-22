@@ -30,6 +30,13 @@ void bvector::add_offset (const bvector&a, uint offset)
 		item (offset + i) = item (offset + i) ^ a[i];
 }
 
+void bvector::get_block (uint offset, uint bs, bvector&out) const
+{
+	if (offset + bs > size() ) return;
+	out.resize (bs);
+	for (uint i = 0; i < bs; ++i) out[i] = item (offset + i);
+}
+
 bool bvector::operator* (const bvector&a)
 {
 	bool r = 0;
@@ -45,13 +52,13 @@ bool bvector::zero() const
 	return true;
 }
 
-void bvector::to_poly (polynomial&r, gf2m&fld)
+void bvector::to_poly (polynomial&r, gf2m&fld) const
 {
 	r.clear();
 	if (size() % fld.m) return; //impossible
 	r.resize (size() / fld.m, 0);
 	for (uint i = 0; i < size(); ++i)
-		if (item (i) ) r[i/fld.m] |= (1 << (i % fld.m) );
+		if (item (i) ) r[i / fld.m] |= (1 << (i % fld.m) );
 }
 
 void bvector::from_poly (const polynomial&r, gf2m&fld)
@@ -59,17 +66,17 @@ void bvector::from_poly (const polynomial&r, gf2m&fld)
 	clear();
 	resize (r.size() *fld.m, 0);
 	for (uint i = 0; i < size(); ++i)
-		item (i) = (r[i/fld.m] >> (i % fld.m) ) & 1;
+		item (i) = (r[i / fld.m] >> (i % fld.m) ) & 1;
 }
 
-void bvector::to_poly_cotrace (polynomial&r, gf2m&fld)
+void bvector::to_poly_cotrace (polynomial&r, gf2m&fld) const
 {
 	r.clear();
 	if (size() % fld.m) return; //impossible
 	uint s = size() / fld.m;
 	r.resize (s, 0);
 	for (uint i = 0; i < size(); ++i)
-		if (item (i) ) r[i%s] |= (1 << (i / s) );
+		if (item (i) ) r[i % s] |= (1 << (i / s) );
 }
 
 void bvector::from_poly_cotrace (const polynomial&r, gf2m&fld)
@@ -78,7 +85,7 @@ void bvector::from_poly_cotrace (const polynomial&r, gf2m&fld)
 	uint s = r.size();
 	resize (s * fld.m, 0);
 	for (uint i = 0; i < size(); ++i)
-		item (i) = (r[i%s] >> (i / s) ) & 1;
+		item (i) = (r[i % s] >> (i / s) ) & 1;
 }
 
 /*
@@ -117,7 +124,7 @@ static void combination_number (uint n, uint k, mpz_t& r)
 	mpz_clear (t);
 }
 
-static void bvector_to_mpz (bvector&v, mpz_t&r)
+static void bvector_to_mpz (const bvector&v, mpz_t&r)
 {
 	mpz_set_ui (r, 0);
 	mpz_realloc2 (r, v.size() );
@@ -134,7 +141,7 @@ static void mpz_to_bvector (mpz_t&x, bvector&r)
 		r[i] = mpz_tstbit (x, i);
 }
 
-void bvector::colex_rank (bvector&r)
+void bvector::colex_rank (bvector&r) const
 {
 	mpz_t res, t, t2;
 	mpz_init_set_ui (res, 0);
@@ -158,8 +165,7 @@ void bvector::colex_rank (bvector&r)
 	mpz_clear (res);
 }
 
-#include <stdio.h>
-void bvector::colex_unrank (bvector&res, uint n, uint k)
+void bvector::colex_unrank (bvector&res, uint n, uint k) const
 {
 	mpz_t r, t, t2;
 	mpz_init (r);
@@ -185,7 +191,7 @@ void bvector::colex_unrank (bvector&res, uint n, uint k)
 		mpz_swap (t2, r);
 		mpz_sub (r, t2, t);
 		if (p > n) continue; //overflow protection
-		res[p-1] = 1;
+		res[p - 1] = 1;
 	}
 
 	mpz_clear (r);

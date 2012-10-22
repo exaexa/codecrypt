@@ -43,17 +43,18 @@ public:
 	void add (const bvector&);
 	void add_range (const bvector&, uint, uint);
 	void add_offset (const bvector&, uint);
+	void get_block (uint, uint, bvector&) const;
 	bool operator* (const bvector&); //dot product
 	bool zero() const;
 
-	void to_poly (polynomial&, gf2m&);
+	void to_poly (polynomial&, gf2m&) const;
 	void from_poly (const polynomial&, gf2m&);
 
-	void to_poly_cotrace (polynomial&, gf2m&);
+	void to_poly_cotrace (polynomial&, gf2m&) const;
 	void from_poly_cotrace (const polynomial&, gf2m&);
 
-	void colex_rank (bvector&);
-	void colex_unrank (bvector&, uint n, uint k);
+	void colex_rank (bvector&) const;
+	void colex_unrank (bvector&, uint n, uint k) const;
 };
 
 /*
@@ -380,6 +381,7 @@ public:
 	gf2m fld;   //we fix q=2^fld.m=fld.n, n=q/2
 	uint T;     //the QD's t parameter is 2^T.
 	permutation block_perm; //order of blocks
+	//TODO this is derivable from hperm.
 	uint block_count; //blocks >= block_count are shortened-out
 	permutation hperm; //block permutation of H block used to get G
 	std::vector<uint> block_perms; //dyadic permutations of blocks
@@ -390,6 +392,8 @@ public:
 	polynomial g; //computed goppa polynomial
 	std::vector<polynomial> sqInv;
 
+	std::vector<bvector> Hc; //signature lines of pre-permuted check matrix
+	std::vector<uint> support_pos; //pre-permuted positions of support rows
 
 	int decrypt (const bvector&, bvector&);
 	int prepare();
@@ -427,9 +431,9 @@ int generate (pubkey&, privkey&, prng&, uint m, uint T, uint b);
  * Similar to Hamdi's Chained BCH Codes, but with improvement.
  *
  * This is experimental, unverified, probably insecure, but practical scheme
- * that achieves good speed, probability and key size for full decoding that is
- * needed to produce signatures. Technique is described in documentation, with
- * some (probably sufficient) notes in source code.
+ * that achieves good speed, probability and non-exponential key size for full
+ * decoding that is needed to produce signatures. Technique is described in
+ * documentation, with some (probably sufficient) notes in source code.
  *
  * Note that encryption using this scheme is impossible, as there is only an
  * extremely tiny probability of successful decoding.

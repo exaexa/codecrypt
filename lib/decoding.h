@@ -6,7 +6,7 @@
 
 using namespace ccr;
 
-void compute_error_locator (bvector&syndrome,
+void compute_error_locator (polynomial&syndrome,
                             gf2m&fld,
                             polynomial&goppa,
                             std::vector<polynomial>& sqInv,

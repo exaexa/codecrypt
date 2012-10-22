@@ -74,7 +74,7 @@ int privkey::sign (const bvector&in, bvector&out,
 	bvector e, e2, synd, synd_orig, cw, cwc, plain, overlap;
 	std::vector<uint> epos;
 	permutation hpermInv;
-	polynomial loc;
+	polynomial loc, Synd;
 	uint i, t;
 
 	uint 	mt = fld.m * codes[0].g.degree(),
@@ -123,7 +123,8 @@ int privkey::sign (const bvector&in, bvector&out,
 				e[epos[i]] = 1;
 			}
 
-			compute_error_locator (synd, fld,
+			synd.to_poly (Synd, fld);
+			compute_error_locator (Synd, fld,
 			                       codes[ci].g,
 			                       codes[ci].sqInv, loc);
 

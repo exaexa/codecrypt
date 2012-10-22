@@ -1,7 +1,7 @@
 
 #include "decoding.h"
 
-void compute_error_locator (bvector&syndrome, gf2m&fld, polynomial& goppa,
+void compute_error_locator (polynomial&syndrome, gf2m&fld, polynomial& goppa,
                             std::vector<polynomial>& sqInv, polynomial&out)
 {
 	if (syndrome.zero() ) {
@@ -11,9 +11,7 @@ void compute_error_locator (bvector&syndrome, gf2m&fld, polynomial& goppa,
 		return;
 	}
 
-	polynomial v;
-	syndrome.to_poly (v, fld);
-
+	polynomial v = syndrome;
 	v.inv (goppa, fld); // v=Synd^-1 mod goppa
 
 	if (v.size() < 2) v.resize (2, 0);
@@ -90,7 +88,7 @@ bool evaluate_error_locator_trace (polynomial&sigma, bvector&ev, gf2m&fld)
 	trace[0] = trace_aux[0]; //trace[0] = x
 
 	for (uint i = 1; i < fld.m; ++i) {
-		trace_aux[i] = trace_aux[i-1];
+		trace_aux[i] = trace_aux[i - 1];
 		trace_aux[i].square (fld);
 		trace_aux[i].mod (sigma, fld);
 		trace[0].add (trace_aux[i], fld);

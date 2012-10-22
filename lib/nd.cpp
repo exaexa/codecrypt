@@ -57,8 +57,9 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	bvector unsc; //unscrambled
 	Sinv.mult_vec_right (in, unsc);
 
-	polynomial loc;
-	compute_error_locator (unsc, fld, g, sqInv, loc);
+	polynomial loc, synd;
+	unsc.to_poly (synd, fld);
+	compute_error_locator (synd, fld, g, sqInv, loc);
 
 	bvector ev;
 	if (!evaluate_error_locator_trace (loc, ev, fld) )
@@ -76,8 +77,7 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 	uint i, s, t;
 
 	bvector synd_unsc, synd, e;
-
-	polynomial loc;
+	polynomial loc, Synd;
 
 	s = hash_size();
 	if (in.size() != s) return 2;
@@ -92,7 +92,8 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 
 		Sinv.mult_vec_right (synd, synd_unsc);
 
-		compute_error_locator (synd_unsc, fld, g, sqInv, loc);
+		synd_unsc.to_poly (Synd, fld);
+		compute_error_locator (Synd, fld, g, sqInv, loc);
 
 		if (evaluate_error_locator_trace (loc, e, fld) ) {
 
