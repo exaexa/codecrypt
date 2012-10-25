@@ -43,6 +43,7 @@ public:
 	void add (const bvector&);
 	void add_range (const bvector&, uint, uint);
 	void add_offset (const bvector&, uint);
+	void set_block (const bvector&, uint);
 	void get_block (uint, uint, bvector&) const;
 	bool operator* (const bvector&); //dot product
 	bool zero() const;

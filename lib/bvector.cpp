@@ -30,6 +30,13 @@ void bvector::add_offset (const bvector&a, uint offset)
 		item (offset + i) = item (offset + i) ^ a[i];
 }
 
+void bvector::set_block (const bvector&a, uint offset)
+{
+	if (offset + a.size() > size() ) resize (offset + a.size(), 0);
+	for (uint i = 0; i < a.size(); ++i)
+		item (offset + i) = a[i];
+}
+
 void bvector::get_block (uint offset, uint bs, bvector&out) const
 {
 	if (offset + bs > size() ) return;

@@ -139,12 +139,13 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		block_count = h_block_count - block_discard;
 
 		//assemble blocks to bl
-		std::vector<std::vector<uint> > bl, blp;
+		std::vector<polynomial> bl, blp;
 		bl.resize (h_block_count);
-		for (uint i = 0; i < h_block_count; ++i)
-			bl[i] = std::vector<uint>
-			        (Hsig.begin() + i * block_size,
-			         Hsig.begin() + (i + 1) * block_size);
+		for (uint i = 0; i < h_block_count; ++i) {
+			bl[i].resize (block_size);
+			for (uint j = 0; j < block_size; ++j)
+				bl[i][j] = Hsig[i * block_size + j];
+		}
 
 		std::cout << "permuting blocks..." << std::endl;
 		//permute them
@@ -165,58 +166,165 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 			                             blp[i], bl[i]);
 		}
 
-		//co-trace blocks to binary H^, retry creating G using hperm.
-		matrix Hc;
-		polynomial col;
-		Hc.resize (block_count * block_size);
-
-		matrix r, ri, l;
-
 		//try several permutations to construct G
 		uint attempts = 0;
 		for (attempts = 0; attempts < block_count; ++attempts) {
 			std::cout << "generating G..." << std::endl;
-			priv.hperm.generate_random (block_count, rng);
-
-			for (uint i = 0; i < block_count; ++i)
-				for (uint j = 0; j < block_size; ++j) {
-					permutation::permute_dyadic
-					(j, bl[priv.hperm[i]], col);
-					Hc[i * block_size + j].from_poly_cotrace
-					(col, fld);
-				}
 
 			/*
 			 * try computing the redundancy block of G
 			 *
+			 * First, co-trace H, then compute G in form
+			 *
+			 * G^T = [I | X]
+			 *
 			 * Since H*G^T = [L | R] * [I | X] = L + R*X = 0
 			 * we have the solution: X = R^1 * L
+			 * (thanks to Rafael Misoczki)
+			 *
+			 * Inversion is done the quasi-dyadic way:
+			 *
+			 * - because for QD matrix m=delta(h) the product
+			 *   m*m = sum(h) * I, binary QD matrix m is either
+			 *   inversion of itself (m*m=I) or isn't invertible
+			 *   and m*m=0. sum(h), the "count of ones in QD
+			 *   signature mod 2", easily determines the result.
+			 *
+			 * - Using blockwise invertions/multiplications,
+			 *   gaussian elimination needed to invert the right
+			 *   square of H can be performed in O(m^2*block_count)
+			 *   matrix operations. Matrix operations are either
+			 *   addition (O(t) on QDs), multiplication(O(t log t)
+			 *   on QDs) or inversion (O(t), as shown above).
+			 *   Whole proces is therefore quite fast.
+			 *
+			 * Gaussian elimination on the QD signature should
+			 * result in something like this: (for m=3, t=4)
+			 *
+			 *   1010 0101 1001 1000 0000 0000
+			 *   0101 1100 1110 0000 1000 0000
+			 *   0111 1110 0100 0000 0000 1000
 			 */
 
-			Hc.get_right_square (r);
-			std::cout << "RIGHT SQUARE " << r;
-			if (!r.compute_inversion (ri) )
-				continue; //retry with other code
-			std::cout << "Rinv " << ri;
-			Hc.strip_right_square (l);
-			ri.mult (l);
-			std::cout << "l " << ri;
+			priv.hperm.generate_random (block_count, rng);
+
+			std::vector<std::vector<bvector> > hblocks;
+			bvector tmp;
+			bool failed;
+			uint i, j, k, l;
+
+			//prepare blocks of h
+			hblocks.resize (block_count);
+			for (i = 0; i < block_count; ++i)
+				hblocks[i].resize (fld.m);
+
+			//fill them from Hsig
+			for (i = 0; i < block_count; ++i) {
+				tmp.from_poly_cotrace (bl[priv.hperm[i]], fld);
+				for (j = 0; j < fld.m; ++j)
+					tmp.get_block (j * block_size,
+					               block_size,
+					               hblocks[i][j]);
+			}
+
+			/* now do a modified gaussian elimination on hblocks */
+			failed = false;
+			tmp.resize (block_size);
+			for (i = 0; i < fld.m; ++i) { //gauss step
+				//first, find a nonsingular matrix in the column
+				for (j = i; j < fld.m; ++j)
+					if (hblocks[block_count - fld.m + i][j]
+					    .hamming_weight() % 2) break;
+				if (j >= fld.m) { //none found, break;
+					failed = true;
+					break;
+				}
+
+				//bring it to correct position (swap it to i-th row)
+				if (j > i) for (k = 0; k < block_count; ++k)
+						hblocks[k][i].swap
+						(hblocks[k][j]);
+
+				//now normalize the row
+				for (j = i; j < fld.m; ++j) {
+					uint l = hblocks
+					         [block_count - fld.m + i]
+					         [j].hamming_weight();
+					if (l == 0) continue; //zero is just okay :]
+					if (! (l % 2) ) //singular, make it regular by adding the i-th row
+						for (k = 0;
+						     k < block_count;
+						     ++k)
+							hblocks[k][j].add
+							(hblocks[k][i]);
+
+					//now a matrix is regular, we can easily make it I
+					for (k = 0; k < block_count; ++k) {
+						fwht_dyadic_multiply
+						(hblocks[block_count - fld.m + i][j],
+						 hblocks[k][j], tmp);
+						hblocks[k][j] = tmp;
+					}
+
+					//and zero the column below diagonal
+					if (j > i) for (k = 0; k < block_count; ++k)
+							hblocks[k][j].add
+							(hblocks[k][i]);
+				}
+			}
+
+			if (failed) continue;
+
+			for (i = 0; i < fld.m; ++i) { //jordan step
+				//normalize diagonal (it's already nonsingular)
+				for (k = 0; k < block_count; ++k) {
+					fwht_dyadic_multiply
+					(hblocks[block_count - i - 1][fld.m - i - 1],
+					 hblocks[k][fld.m - i - 1], tmp);
+					hblocks[k][fld.m - i - 1] = tmp;
+				}
+
+				//now make zeroes above
+				for (j = i + 1; j < fld.m; ++j) {
+					l = hblocks[block_count - i - 1]
+					    [fld.m - j - 1].hamming_weight();
+					if (l == 0) continue; //already zero
+					if (! (l % 2) ) { //nonsingular, fix it by adding diagonal
+						for (k = 0; k < block_count; ++k)
+							hblocks[k][fld.m - j - 1].add
+							(hblocks[k][fld.m - i - 1]);
+					}
+					for (k = 0; k < block_count; ++k) {
+						fwht_dyadic_multiply
+						(hblocks[block_count - i - 1]
+						 [fld.m - j - 1],
+						 hblocks[k][fld.m - j - 1], tmp);
+						hblocks[k][fld.m - j - 1] = tmp;
+					}
+					//I+I=0
+					for (k = 0; k < block_count; ++k)
+						hblocks[k][fld.m - j - 1].add
+						(hblocks[k][fld.m - i - 1]);
+				}
+			}
+
+			if (failed) continue;
+
+			pub.qd_sigs.resize (block_count - fld.m);
+			for (uint i = 0; i < block_count - fld.m; ++i) {
+				pub.qd_sigs[i].resize (block_size * fld.m);
+				for (uint j = 0; j < fld.m; ++j)
+					pub.qd_sigs[i].set_block
+					(hblocks[i][j], block_size * j);
+			}
+
+			//finish the pubkey
+			pub.T = T;
 			break;
 		}
 
 		if (attempts == block_count) //generating G failed, retry all
 			continue;
-
-		/*
-		 * Redundancy-checking part of G is now (transposed) in ri.
-		 * Get QD signatures by getting every t'th row (transposed).
-		 */
-
-		std::cout << "pubkey..." << std::endl;
-		pub.T = T;
-		pub.qd_sigs.resize (ri.width() / t);
-		for (uint i = 0; i < ri.width(); i += t)
-			pub.qd_sigs[i / t] = ri[i];
 
 		return 0;
 	}
@@ -274,7 +382,7 @@ int privkey::prepare()
 	return 0;
 }
 
-int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
+int pubkey::encrypt (const bvector & in, bvector & out, prng & rng)
 {
 	uint t = 1 << T;
 	bvector p, g, r, cksum;
@@ -295,10 +403,6 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 	p.resize (t);
 	g.resize (t);
 	r.resize (t);
-
-	for (i = 0; i < qd_sigs.size(); ++i) {
-		std::cout << "Signature line " << i << ": " << qd_sigs[i];
-	}
 
 	for (i = 0; i < qd_sigs.size(); ++i) {
 		//plaintext block
@@ -330,13 +434,12 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 	//compute ciphertext
 	out = in;
 	out.insert (out.end(), cksum.begin(), cksum.end() );
-	std::cout << "without errors: " << out;
 	out.add (e);
 
 	return 0;
 }
 
-int privkey::decrypt (const bvector&in, bvector&out)
+int privkey::decrypt (const bvector & in, bvector & out)
 {
 	if (in.size() != cipher_size() ) return 2;
 
