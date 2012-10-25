@@ -318,13 +318,14 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 					(hblocks[i][j], block_size * j);
 			}
 
-			//finish the pubkey
-			pub.T = T;
 			break;
 		}
 
 		if (attempts == block_count) //generating G failed, retry all
 			continue;
+
+		//finish the pubkey
+		pub.T = T;
 
 		return 0;
 	}
