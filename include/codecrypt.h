@@ -392,9 +392,10 @@ public:
 	std::vector<uint> support; //computed goppa support
 	polynomial g; //computed goppa polynomial
 	std::vector<polynomial> sqInv;
-
-	std::vector<bvector> Hc; //signature lines of pre-permuted check matrix
-	std::vector<uint> support_pos; //pre-permuted positions of support rows
+	//blocks of signature lines of pre-permuted check matrix
+	std::vector<std::vector<bvector> > Hc;
+	//pre-permuted positions of support rows
+	std::vector<uint> support_pos;
 
 	int decrypt (const bvector&, bvector&);
 	int prepare();

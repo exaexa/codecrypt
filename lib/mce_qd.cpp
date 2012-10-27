@@ -333,16 +333,17 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 int privkey::prepare()
 {
+	uint s, i, j;
 	std::cout << "prepare" << std::endl;
 	//compute H signature from essence
 	Hsig.resize (fld.n / 2);
 	Hsig[0] = fld.inv (essence[fld.m - 1]);
-	for (uint s = 0; s < fld.m - 1; ++s) {
-		uint i = 1 << s; //i = 2^s
+	for (s = 0; s < fld.m - 1; ++s) {
+		i = 1 << s; //i = 2^s
 
 		Hsig[i] = fld.inv (fld.add (essence[s], essence[fld.m - 1]) );
 
-		for (uint j = 1; j < i; ++j)
+		for (j = 1; j < i; ++j)
 			Hsig[i + j] = fld.inv
 			              (fld.add
 			               (fld.inv (Hsig[i]),
@@ -354,17 +355,76 @@ int privkey::prepare()
 
 	//compute the support
 	support.resize (fld.n / 2);
-	for (uint i = 0; i < fld.n / 2; ++i) {
+	std::set<uint> used_support;
+	for (i = 0; i < fld.n / 2; ++i) {
 		support[i] = fld.add
 		             (fld.inv (Hsig[i]),
 		              essence[fld.m - 1]);
 
+		//support consistency check
+		if (used_support.count (support[i]) )
+			return 1;
+		used_support.insert (support[i]);
 	}
 
-	//TODO prepare permuted Hsig (that can be applied to the ciphertext)
+	//prepare permuted Hsig (so that it can be applied directly)
+	//and prepare reverse support position lookup data
+	uint block_size = 1 << T;
+	uint pos, blk_perm;
+	polynomial tmp_blk, tmp_pblk;
+	bvector cotrace, tmp_block;
+	std::vector<uint> sbl1, sbl2, permuted_support;
 
-	//TODO prepare function that converts a support zero to ciphertext
-	//position
+	tmp_blk.resize (block_size);
+	tmp_pblk.resize (block_size);
+
+	Hc.resize (fld.m);
+	for (i = 0; i < fld.m; ++i) {
+		Hc[i].resize (block_count);
+	}
+
+	permuted_support.resize (block_size * block_count);
+	sbl1.resize (block_size);
+	sbl2.resize (block_size);
+
+	//go through all the blocks of original H and convert them if they
+	//aren't discarded.
+	for (i = 0; i < (fld.n / 2) / block_size; ++i) {
+		pos = block_perm[i];
+		if (pos >= block_count) continue; //was discarded
+		blk_perm = block_perms[pos];
+		pos = hperm[pos];
+
+		//permute i-th block of H to pos-th block of Hc,
+		//also move the support.
+		for (j = 0; j < block_size; ++j) {
+			tmp_blk[j] = Hsig[j + i * block_size];
+			sbl1[j] = support[j + i * block_size];
+		}
+		permutation::permute_dyadic (blk_perm, tmp_blk, tmp_pblk);
+		permutation::permute_dyadic (blk_perm, sbl1, sbl2);
+
+		//store support to permuted support
+		for (j = 0; j < block_size; ++j)
+			permuted_support[j + pos * block_size] = sbl2[j];
+
+		//cotrace permuted H block to Hc
+		cotrace.from_poly_cotrace (tmp_pblk, fld);
+
+		for (j = 0; j < fld.m; ++j)
+			cotrace.get_block (j * block_size, block_size, Hc[j][pos]);
+	}
+
+	//convert the support result to actual lookup
+	support_pos.clear();
+	//fld.n in support lookup means that it isn't there (we don't have -1)
+	support_pos.resize (fld.n, fld.n);
+	for (i = 0; i < block_size * block_count; ++i)
+		support_pos[permuted_support[i]] = i;
+
+	for (i = 0; i < support_pos.size(); ++i) {
+		std::cout << "support " << i << " has position " << support_pos[i] << std::endl;
+	}
 
 	//goppa polynomial
 	g.clear();
@@ -372,7 +432,7 @@ int privkey::prepare()
 	polynomial tmp;
 	tmp.resize (2, 1);
 	uint t = 1 << T;
-	for (uint i = 0; i < t; ++i) {
+	for (i = 0; i < t; ++i) {
 		tmp[0] = fld.inv (Hsig[i]);
 		g.mult (tmp, fld);
 	}
@@ -451,15 +511,13 @@ int privkey::decrypt (const bvector & in, bvector & out)
 	uint i, j, k;
 
 	synd_vec.resize (block_size * fld.m);
-	hp.resize (block_size);
 	cp.resize (block_size);
 	res.resize (block_size);
 
 	for (i = 0; i < block_count; ++i) {
 		in.get_block (i * block_size, block_size, cp);
 		for (j = 0; j < fld.m; ++j) {
-			Hc[j].get_block (i * block_size, block_size, hp);
-			fwht_dyadic_multiply (hp, cp, res);
+			fwht_dyadic_multiply (Hc[j][i], cp, res);
 			synd_vec.add_offset (res, j * block_size);
 		}
 	}
@@ -475,10 +533,12 @@ int privkey::decrypt (const bvector & in, bvector & out)
 	//TODO evaluator should return error positions, not bvector. fix it everywhere!
 
 	out = in;
+	out.resize (plain_size() );
 	//flip error positions of out.
 	for (i = 0; i < ev.size(); ++i) if (ev[i]) {
-			if (support_pos[i] == -1) return 1; //couldn't decode TODO is it true?
-			out[i] = !out[i];
+			if (support_pos[i] == fld.n) return 1; //couldn't decode TODO is it true?
+			if (i < plain_size() )
+				out[i] = !out[i];
 		}
 
 	return 0;
