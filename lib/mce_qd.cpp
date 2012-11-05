@@ -38,13 +38,12 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 	priv.T = T;
 	uint t = 1 << T;
 
-	std::cout << "generate" << std::endl;
 	//convenience
 	gf2m&fld = priv.fld;
 	std::vector<uint>&Hsig = priv.Hsig;
 	std::vector<uint>&essence = priv.essence;
 	std::vector<uint>&support = priv.support;
-	polynomial&g = priv.g;
+	polynomial g;
 
 	//prepare for data
 	Hsig.resize (fld.n / 2);
@@ -58,7 +57,6 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		std::set<uint> used;
 		used.clear();
 
-		std::cout << "attempt..." << std::endl;
 		//first off, compute the H signature
 
 		Hsig[0] = choose_random (fld.n, rng, used);
@@ -88,27 +86,28 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 			}
 		}
 
-		//from now on, we fix 'omega' from the paper to zero.
-
-		std::cout << "goppa..." << std::endl;
 		//assemble goppa polynomial.
+		used.clear();
+
 		g.clear();
 		g.resize (1, 1); //g(x)=1 so we can multiply it
 		polynomial tmp;
 		tmp.resize (2, 1); //tmp(x)=x-1
+		bool consistent = true;
 		for (uint i = 0; i < t; ++i) {
 			//tmp(x)=x-z=x-(1/h_i)
 			tmp[0] = fld.inv (Hsig[i]);
+			if (used.count (tmp[0]) ) {
+				consistent = false;
+				break;
+			}
+			used.insert (tmp[0]);
+
 			g.mult (tmp, fld);
-			std::cout << "computing g... " << g;
 		}
+		if (!consistent) continue; //retry
 
-		std::cout << "Goppa poly " << g;
-
-		std::cout << "support..." << std::endl;
 		//compute the support, retry if it has two equal elements.
-		used.clear();
-		bool consistent = true;
 		for (uint i = 0; i < fld.n / 2; ++i) {
 			support[i] = fld.add (
 			                 fld.inv (Hsig[i]),
@@ -119,19 +118,17 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 				break;
 			}
 
+			//as we are having z's in used, this is not necessary.
+			//TODO verify, then TODO maybe delete.
 			if (g.eval (support[i], fld) == 0) {
-				std::cout << "support zero!" << std::endl;
 				consistent = false;
 				break;
 			}
-
-			std::cout << "support at " << i << ": " << support[i] << std::endl;
 
 			used.insert (support[i]);
 		}
 		if (!consistent) continue; //retry
 
-		std::cout << "blocks..." << std::endl;
 		//now the blocks.
 		uint block_size = 1 << T,
 		     h_block_count = (fld.n / 2) / block_size;
@@ -147,16 +144,13 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 				bl[i][j] = Hsig[i * block_size + j];
 		}
 
-		std::cout << "permuting blocks..." << std::endl;
 		//permute them
 		priv.block_perm.generate_random (h_block_count, rng);
 		priv.block_perm.permute (bl, blp);
 
-		std::cout << "discarding blocks..." << std::endl;
 		//discard blocks
 		blp.resize (block_count);
 
-		std::cout << "permuting dyadic blocks..." << std::endl;
 		//permute individual blocks
 		priv.block_perms.resize (block_count);
 		bl.resize (blp.size() );
@@ -169,7 +163,6 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		//try several permutations to construct G
 		uint attempts = 0;
 		for (attempts = 0; attempts < block_count; ++attempts) {
-			std::cout << "generating G..." << std::endl;
 
 			/*
 			 * try computing the redundancy block of G
@@ -207,11 +200,14 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 			 */
 
 			priv.hperm.generate_random (block_count, rng);
+			permutation hpermInv;
+			priv.hperm.compute_inversion (hpermInv);
 
 			std::vector<std::vector<bvector> > hblocks;
 			bvector tmp;
 			bool failed;
 			uint i, j, k, l;
+
 
 			//prepare blocks of h
 			hblocks.resize (block_count);
@@ -220,14 +216,14 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 			//fill them from Hsig
 			for (i = 0; i < block_count; ++i) {
-				tmp.from_poly_cotrace (bl[priv.hperm[i]], fld);
+				tmp.from_poly_cotrace (bl[hpermInv[i]], fld);
 				for (j = 0; j < fld.m; ++j)
 					tmp.get_block (j * block_size,
 					               block_size,
 					               hblocks[i][j]);
 			}
 
-			/* now do a modified gaussian elimination on hblocks */
+			/* do a modified QD-blockwise gaussian elimination on hblocks */
 			failed = false;
 			tmp.resize (block_size);
 			for (i = 0; i < fld.m; ++i) { //gauss step
@@ -247,9 +243,8 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 				//now normalize the row
 				for (j = i; j < fld.m; ++j) {
-					uint l = hblocks
-					         [block_count - fld.m + i]
-					         [j].hamming_weight();
+					l = hblocks [block_count - fld.m + i]
+					    [j].hamming_weight();
 					if (l == 0) continue; //zero is just okay :]
 					if (! (l % 2) ) //singular, make it regular by adding the i-th row
 						for (k = 0;
@@ -258,13 +253,21 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 							hblocks[k][j].add
 							(hblocks[k][i]);
 
-					//now a matrix is regular, we can easily make it I
+					//now a matrix is regular, we can easily make it I.
+					//first, multiply the row
 					for (k = 0; k < block_count; ++k) {
+						//don't overwrite the matrix we're counting with
+						if (k == block_count - fld.m + i) continue;
 						fwht_dyadic_multiply
 						(hblocks[block_count - fld.m + i][j],
 						 hblocks[k][j], tmp);
 						hblocks[k][j] = tmp;
 					}
+					//change the block on the diagonal
+					fwht_dyadic_multiply
+					(hblocks[block_count - fld.m + i][j],
+					 hblocks[block_count - fld.m + i][j], tmp);
+					hblocks[block_count - fld.m + i][j] = tmp;
 
 					//and zero the column below diagonal
 					if (j > i) for (k = 0; k < block_count; ++k)
@@ -276,8 +279,9 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 			if (failed) continue;
 
 			for (i = 0; i < fld.m; ++i) { //jordan step
-				//normalize diagonal (it's already nonsingular)
-				for (k = 0; k < block_count; ++k) {
+				//normalize diagonal
+				for (k = 0; k < block_count - i; ++k) {
+					//we can safely rewrite the diagonal here (nothing's behind it)
 					fwht_dyadic_multiply
 					(hblocks[block_count - i - 1][fld.m - i - 1],
 					 hblocks[k][fld.m - i - 1], tmp);
@@ -294,7 +298,8 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 							hblocks[k][fld.m - j - 1].add
 							(hblocks[k][fld.m - i - 1]);
 					}
-					for (k = 0; k < block_count; ++k) {
+					for (k = 0; k < block_count - i; ++k) {
+						//overwrite is also safe here
 						fwht_dyadic_multiply
 						(hblocks[block_count - i - 1]
 						 [fld.m - j - 1],
@@ -307,8 +312,6 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 						(hblocks[k][fld.m - i - 1]);
 				}
 			}
-
-			if (failed) continue;
 
 			pub.qd_sigs.resize (block_count - fld.m);
 			for (uint i = 0; i < block_count - fld.m; ++i) {
@@ -334,7 +337,6 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 int privkey::prepare()
 {
 	uint s, i, j;
-	std::cout << "prepare" << std::endl;
 	//compute H signature from essence
 	Hsig.resize (fld.n / 2);
 	Hsig[0] = fld.inv (essence[fld.m - 1]);
@@ -353,92 +355,103 @@ int privkey::prepare()
 			                ) ) );
 	}
 
-	//compute the support
+	//goppa polynomial with omega=0
+	std::set<uint> used;
+	used.clear();
+
+	polynomial g, tmp;
+	g.clear();
+	g.resize (1, 1); //g(x)=1
+	tmp.clear();
+	tmp.resize (2, 1); //tmp(x)=x+1
+	for (i = 0; i < (1 << T); ++i) {
+		tmp[0] = fld.inv (Hsig[i]); //tmp(x)=x+1/h_i
+		if (used.count (tmp[0]) )
+			return 1;
+		used.insert (tmp[0]);
+		g.mult (tmp, fld);
+	}
+
+	//compute the support with omega=0
 	support.resize (fld.n / 2);
-	std::set<uint> used_support;
 	for (i = 0; i < fld.n / 2; ++i) {
 		support[i] = fld.add
 		             (fld.inv (Hsig[i]),
 		              essence[fld.m - 1]);
-
 		//support consistency check
-		if (used_support.count (support[i]) )
+		if (used.count (support[i]) )
 			return 1;
-		used_support.insert (support[i]);
+		used.insert (support[i]);
 	}
 
-	//prepare permuted Hsig (so that it can be applied directly)
-	//and prepare reverse support position lookup data
+	//choose omega
+	omega = fld.n;
+	for (i = 0; i < fld.n; ++i)
+		if (!used.count (i) ) {
+			omega = i;
+			break;
+		}
+	if (omega == fld.n) return 1;
+
+	//modify support to omega-ized version
+	for (i = 0; i < support.size(); ++i)
+		support[i] = fld.add (support[i], omega);
+
+	//modify g to omega-ized version
+	g.clear();
+	tmp.clear();
+	g.resize (1, 1); //g(x)=1
+	tmp.resize (2, 1); //tmp(x)=x+1
+	for (i = 0; i < (1 << T); ++i) {
+		tmp[0] = fld.add (fld.inv (Hsig[i]), omega);
+		g.mult (tmp, fld);
+	}
+
+	// prepare permuted support, from that prepare permuted check matrix
+	// (so that it can be applied directly)
 	uint block_size = 1 << T;
 	uint pos, blk_perm;
-	polynomial tmp_blk, tmp_pblk;
-	bvector cotrace, tmp_block;
 	std::vector<uint> sbl1, sbl2, permuted_support;
 
-	tmp_blk.resize (block_size);
-	tmp_pblk.resize (block_size);
-
-	Hc.resize (fld.m);
-	for (i = 0; i < fld.m; ++i) {
-		Hc[i].resize (block_count);
-	}
-
-	permuted_support.resize (block_size * block_count);
 	sbl1.resize (block_size);
 	sbl2.resize (block_size);
+	permuted_support.resize (block_size * block_count);
 
-	//go through all the blocks of original H and convert them if they
-	//aren't discarded.
+	//permute support
 	for (i = 0; i < (fld.n / 2) / block_size; ++i) {
 		pos = block_perm[i];
 		if (pos >= block_count) continue; //was discarded
 		blk_perm = block_perms[pos];
 		pos = hperm[pos];
 
-		//permute i-th block of H to pos-th block of Hc,
-		//also move the support.
-		for (j = 0; j < block_size; ++j) {
-			tmp_blk[j] = Hsig[j + i * block_size];
+		//permute i-th block of support
+		for (j = 0; j < block_size; ++j)
 			sbl1[j] = support[j + i * block_size];
-		}
-		permutation::permute_dyadic (blk_perm, tmp_blk, tmp_pblk);
+
 		permutation::permute_dyadic (blk_perm, sbl1, sbl2);
 
 		//store support to permuted support
 		for (j = 0; j < block_size; ++j)
 			permuted_support[j + pos * block_size] = sbl2[j];
-
-		//cotrace permuted H block to Hc
-		cotrace.from_poly_cotrace (tmp_pblk, fld);
-
-		for (j = 0; j < fld.m; ++j)
-			cotrace.get_block (j * block_size, block_size, Hc[j][pos]);
 	}
 
-	//convert the support result to actual lookup
+	//prepare Hc
+	Hc.resize (block_size * block_count);
+	for (i = 0; i < block_size * block_count; ++i) {
+		Hc[i].resize (block_size * 2);
+		Hc[i][0] = fld.inv (g.eval (permuted_support[i], fld) );
+		Hc[i][0] = fld.mult (Hc[i][0], Hc[i][0]);
+		for (j = 1; j < 2 * block_size; ++j)
+			Hc[i][j] = fld.mult (permuted_support[i],
+			                     Hc[i][j - 1]);
+	}
+
+	//convert the permuted support to actual lookup
 	support_pos.clear();
 	//fld.n in support lookup means that it isn't there (we don't have -1)
 	support_pos.resize (fld.n, fld.n);
 	for (i = 0; i < block_size * block_count; ++i)
 		support_pos[permuted_support[i]] = i;
-
-	for (i = 0; i < support_pos.size(); ++i) {
-		std::cout << "support " << i << " has position " << support_pos[i] << std::endl;
-	}
-
-	//goppa polynomial
-	g.clear();
-	g.resize (1, 1);
-	polynomial tmp;
-	tmp.resize (2, 1);
-	uint t = 1 << T;
-	for (i = 0; i < t; ++i) {
-		tmp[0] = fld.inv (Hsig[i]);
-		g.mult (tmp, fld);
-	}
-
-	//sqInv
-	g.compute_square_root_matrix (sqInv, fld);
 
 	return 0;
 }
@@ -475,9 +488,7 @@ int pubkey::encrypt (const bvector & in, bvector & out, prng & rng)
 
 			//block result
 			fwht_dyadic_multiply (p, g, r);
-			//std::cout << "DYADIC MULTIPLY: " << p << g << r << "---" << std::endl;
 			cksum.add_offset (r, t * j);
-			//std::cout << "CKSUM NOW: " << cksum;
 		}
 	}
 
@@ -503,29 +514,17 @@ int pubkey::encrypt (const bvector & in, bvector & out, prng & rng)
 int privkey::decrypt (const bvector & in, bvector & out)
 {
 	if (in.size() != cipher_size() ) return 2;
+	polynomial synd;
+	uint i;
 
-	//multiply line-by-line block-by-block by H
-	uint block_size = 1 << T;
-	bvector synd_vec;
-	bvector hp, cp, res;
-	uint i, j, k;
-
-	synd_vec.resize (block_size * fld.m);
-	cp.resize (block_size);
-	res.resize (block_size);
-
-	for (i = 0; i < block_count; ++i) {
-		in.get_block (i * block_size, block_size, cp);
-		for (j = 0; j < fld.m; ++j) {
-			fwht_dyadic_multiply (Hc[j][i], cp, res);
-			synd_vec.add_offset (res, j * block_size);
-		}
-	}
+	synd.clear();
+	for (i = 0; i < cipher_size(); ++i)
+		if (in[i]) synd.add (Hc[i], fld);
 
 	//decoding
-	polynomial synd, loc;
-	synd_vec.to_poly_cotrace (synd, fld);
-	compute_error_locator (synd, fld, g, sqInv, loc);
+	polynomial loc;
+	//compute_alternant_error_locator (synd, fld, g, loc);
+	compute_alternant_error_locator (synd, fld, 1 << T, loc);
 
 	bvector ev;
 	if (!evaluate_error_locator_trace (loc, ev, fld) )
@@ -536,9 +535,14 @@ int privkey::decrypt (const bvector & in, bvector & out)
 	out.resize (plain_size() );
 	//flip error positions of out.
 	for (i = 0; i < ev.size(); ++i) if (ev[i]) {
-			if (support_pos[i] == fld.n) return 1; //couldn't decode TODO is it true?
-			if (i < plain_size() )
-				out[i] = !out[i];
+			uint epos = support_pos[fld.inv (i)];
+			if (epos == fld.n) {
+				//found unexpected support, die.
+				out.clear();
+				return 1;
+			}
+			if (epos < plain_size() )
+				out[epos] = !out[epos];
 		}
 
 	return 0;

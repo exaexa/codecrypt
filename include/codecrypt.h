@@ -31,6 +31,9 @@ typedef unsigned int uint;
 /*
  * vector over GF(2). We rely on STL's vector<bool> == bit_vector
  * specialization for space efficiency.
+ *
+ * TODO. This is great, but some operations (ESPECIALLY add()) could be done
+ * blockwise for speed. Investigate/implement that.
  */
 class polynomial;
 class gf2m;
@@ -136,6 +139,7 @@ public:
 
 	void generate_random (uint n, prng&);
 
+	//TODO permute_inv is easy, do it everywhere
 	template<class A, class R> void permute (const A&a, R&r) const {
 		r.resize (a.size() );
 		for (uint i = 0; i < size(); ++i) r[item (i) ] = a[i];
@@ -216,6 +220,7 @@ public:
 
 	uint eval (uint, gf2m&) const;
 	uint head() {
+		int t;
 		if ( (t = degree() ) >= 0) return item (t);
 		else return 0;
 	}
@@ -387,7 +392,7 @@ public:
 	gf2m fld;   //we fix q=2^fld.m=fld.n, n=q/2
 	uint T;     //the QD's t parameter is 2^T.
 	permutation block_perm; //order of blocks
-	//TODO this is derivable from hperm.
+	//TODO block_count is (easily) derivable from hperm.
 	uint block_count; //blocks >= block_count are shortened-out
 	permutation hperm; //block permutation of H block used to get G
 	std::vector<uint> block_perms; //dyadic permutations of blocks
@@ -395,10 +400,10 @@ public:
 	//derivable stuff
 	std::vector<uint> Hsig; //signature of canonical H matrix
 	std::vector<uint> support; //computed goppa support
-	polynomial g; //computed goppa polynomial
-	std::vector<polynomial> sqInv;
-	//blocks of signature lines of pre-permuted check matrix
-	std::vector<std::vector<bvector> > Hc;
+	uint omega;
+
+	//cols of check matrix of g^2(x)
+	std::vector<polynomial> Hc;
 	//pre-permuted positions of support rows
 	std::vector<uint> support_pos;
 

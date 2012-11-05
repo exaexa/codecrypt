@@ -70,7 +70,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	Pinv.permute (in, not_permuted);
 
 	//prepare for decoding
-	permutation hpermInv;
+	permutation hpermInv; //TODO pre-invert it in prepare()
 	hperm.compute_inversion (hpermInv);
 
 	bvector canonical, syndrome;
