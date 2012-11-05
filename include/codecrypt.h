@@ -50,7 +50,7 @@ typedef unsigned int uint;
  * specialization for space efficiency.
  *
  * TODO. This is great, but some operations (ESPECIALLY add()) could be done
- * blockwise for speed. Investigate/implement that.
+ * blockwise for O(cpu_word_size) speedup. Investigate/implement that. haha.
  */
 class polynomial;
 class gf2m;
@@ -80,7 +80,7 @@ public:
 
 /*
  * pseudorandom number generator. Meant to be inherited and
- * instantiated by the user
+ * instantiated by the library user
  */
 class prng
 {
