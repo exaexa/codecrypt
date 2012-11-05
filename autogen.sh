@@ -17,24 +17,17 @@ echo "AUTOMAKE_OPTIONS = subdir-objects" >>$OUT
 echo "dist_noinst_SCRIPTS = autogen.sh" `for i in $DISTDIRS ; do find \$i -type f ; done | tr "\n" " " ` >>$OUT
 
 echo "noinst_HEADERS = `find include/ -type f -name \*.h |tr \"\n\" \" \" `" >>$OUT
-echo "lib_LTLIBRARIES = libcodecrypt.la" >>$OUT
-echo "libcodecrypt_la_SOURCES = `(find lib/ -type f -name *.c; find lib/ -type f -name *.cpp)|tr \"\n\" \" \" ` " >>$OUT
 echo "noinst_HEADERS += `find lib/ -type f -name \*.h |tr \"\n\" \" \" `" >>$OUT
-
-echo "libcodecrypt_la_CPPFLAGS = -I\$(srcdir)/lib/ ${COMMON_CPPFLAGS}" >>$OUT
-echo "libcodecrypt_la_CFLAGS = ${COMMON_CFLAGS}" >>$OUT
-echo "libcodecrypt_la_LDFLAGS = ${COMMON_LDFLAGS}" >>$OUT
-echo "libcodecrypt_la_LIBADD = -lgmp ${COMMON_LDADD} " >>$OUT
-[ -f "lib/Makefile.am.extra" ] && cat "lib/Makefile.am.extra" >>$OUT
 
 echo "bin_PROGRAMS = ccr" >>$OUT
 echo "ccrdir = src/" >>$OUT
 echo "ccr_SOURCES = `( find src/ -type f -name \*.c ; find src/ -type f -name \*.cpp ) |tr \"\n\" \" \" ` " >>$OUT
+echo "ccr_SOURCES += `(find lib/ -type f -name *.c; find lib/ -type f -name *.cpp)|tr \"\n\" \" \" ` " >>$OUT
 echo "noinst_HEADERS += `find src/ -type f -name \*.h |tr \"\n\" \" \" `" >>$OUT
 echo "ccr_CPPFLAGS = -I\$(srcdir)/$i/ ${COMMON_CPPFLAGS}" >>$OUT
 echo "ccr_CFLAGS = ${COMMON_CFLAGS}" >>$OUT
 echo "ccr_LDFLAGS = ${COMMON_LDFLAGS}" >>$OUT
-echo "ccr_LDADD = libcodecrypt.la ${COMMON_LDADD} " >>$OUT
+echo "ccr_LDADD = -lgmp ${COMMON_LDADD} " >>$OUT
 [ -f "src/Makefile.am.extra" ] && cat "src/Makefile.am.extra" >>$OUT
 
 libtoolize --force && aclocal && autoconf && automake --add-missing
