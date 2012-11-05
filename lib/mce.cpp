@@ -80,7 +80,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	//decode
 	polynomial synd, loc;
 	syndrome.to_poly (synd, fld);
-	compute_error_locator (synd, fld, g, sqInv, loc);
+	compute_goppa_error_locator (synd, fld, g, sqInv, loc);
 
 	bvector ev;
 	if (!evaluate_error_locator_trace (loc, ev, fld) )
@@ -144,7 +144,7 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 		}
 
 		synd.to_poly (Synd, fld);
-		compute_error_locator (Synd, fld, g, sqInv, loc);
+		compute_goppa_error_locator (Synd, fld, g, sqInv, loc);
 
 		if (evaluate_error_locator_trace (loc, e2, fld) ) {
 

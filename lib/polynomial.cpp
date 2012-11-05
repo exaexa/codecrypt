@@ -339,9 +339,45 @@ void polynomial::inv (polynomial&m, gf2m&fld)
 	div (a, m, fld);
 }
 
+void polynomial::ext_euclid (polynomial&a_out, polynomial&b_out,
+                             polynomial&m, gf2m&fld, int deg)
+{
+	//TODO: speed this up (spare degree calculations)
+	polynomial A, B, a, b, tmp;
+	int j;
+	uint h;
+
+	A = *this;
+	a = m;
+	B.clear();
+	B.resize (1, 1);
+	b.clear();
+
+	while (a.degree() > deg) {
+		if (A.degree() < 0)
+			break;
+
+		A.swap (a);
+		B.swap (b);
+		while ( (j = A.degree() - a.degree() ) >= 0) {
+			h = fld.mult (A.head(), fld.inv (a.head() ) );
+			tmp = a;
+			tmp.shift (j);
+			A.add_mult (tmp, h, fld);
+			tmp = b;
+			tmp.shift (j);
+			B.add_mult (tmp, h, fld);
+		}
+	}
+
+	a.swap (a_out);
+	b.swap (b_out);
+}
+
 void polynomial::mod_to_fracton (polynomial&a, polynomial&b,
                                  polynomial&m, gf2m&fld)
 {
+	//TODO: replace with ext_euclid
 	int deg = m.degree() / 2;
 	polynomial a0, a1, b0, b1, q, r;
 	a0 = m;

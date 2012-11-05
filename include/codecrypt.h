@@ -215,6 +215,10 @@ public:
 	void shift (uint);
 
 	uint eval (uint, gf2m&) const;
+	uint head() {
+		if ( (t = degree() ) >= 0) return item (t);
+		else return 0;
+	}
 	void add (const polynomial&, gf2m&);
 	void mult (const polynomial&, gf2m&);
 	void add_mult (const polynomial&, uint mult, gf2m&);
@@ -228,6 +232,7 @@ public:
 	void sqrt (vector<polynomial>&, gf2m&);
 	polynomial gcd (polynomial, gf2m&);
 	void mod_to_fracton (polynomial&, polynomial&, polynomial&, gf2m&);
+	void ext_euclid (polynomial&, polynomial&, polynomial&, gf2m&, int);
 
 	bool is_irreducible (gf2m&) const;
 	void generate_random_irreducible (uint s, gf2m&, prng&);

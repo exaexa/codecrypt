@@ -124,9 +124,9 @@ int privkey::sign (const bvector&in, bvector&out,
 			}
 
 			synd.to_poly (Synd, fld);
-			compute_error_locator (Synd, fld,
-			                       codes[ci].g,
-			                       codes[ci].sqInv, loc);
+			compute_goppa_error_locator (Synd, fld,
+			                             codes[ci].g,
+			                             codes[ci].sqInv, loc);
 
 			if (evaluate_error_locator_trace (loc, e2, fld) ) {
 				cwc.add (e);

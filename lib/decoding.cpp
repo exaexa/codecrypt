@@ -1,8 +1,10 @@
 
 #include "decoding.h"
 
-void compute_error_locator (polynomial&syndrome, gf2m&fld, polynomial& goppa,
-                            std::vector<polynomial>& sqInv, polynomial&out)
+void compute_goppa_error_locator (polynomial&syndrome, gf2m&fld,
+                                  polynomial& goppa,
+                                  std::vector<polynomial>& sqInv,
+                                  polynomial&out)
 {
 	if (syndrome.zero() ) {
 		//ensure no roots
@@ -28,6 +30,30 @@ void compute_error_locator (polynomial&syndrome, gf2m&fld, polynomial& goppa,
 
 	a.make_monic (fld); //now it is the error locator.
 	out = a;
+}
+
+void compute_alternant_error_locator (polynomial&syndrome, gf2m&fld,
+                                      uint t, polynomial&out)
+{
+	if (syndrome.zero() ) {
+		//ensure no roots
+		out.resize (1);
+		out[0] = 1;
+		return;
+	}
+
+	polynomial a, b;
+
+	polynomial x2t; //should be x^2t
+	x2t.clear();
+	x2t.resize (1, 1);
+	x2t.shift (2 * t);
+
+	syndrome.ext_euclid (a, b, x2t, fld, t - 1);
+	uint b0inv = fld.inv (b[0]);
+	for (uint i = 0; i < b.size(); ++i) b[i] = fld.mult (b[i], b0inv);
+	out = b;
+	//we don't care about error evaluator
 }
 
 bool evaluate_error_locator_dumb (polynomial&a, bvector&ev, gf2m&fld)
