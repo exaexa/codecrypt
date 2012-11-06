@@ -409,8 +409,6 @@ public:
 	gf2m fld;   //we fix q=2^fld.m=fld.n, n=q/2
 	uint T;     //the QD's t parameter is 2^T.
 	permutation block_perm; //order of blocks
-	//TODO block_count is (easily) derivable from hperm.
-	uint block_count; //blocks >= block_count are shortened-out
 	permutation hperm; //block permutation of H block used to get G
 	std::vector<uint> block_perms; //dyadic permutations of blocks
 

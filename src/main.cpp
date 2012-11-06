@@ -44,7 +44,7 @@ int main()
 
 	ccr::mce_qd::privkey priv;
 	ccr::mce_qd::pubkey pub;
-	ccr::mce_qd::generate (pub, priv, r, 11, 5, 2);
+	ccr::mce_qd::generate (pub, priv, r, 14, 8, 2);
 
 	cout << "cipher size: " << priv.cipher_size() << ' ' << pub.cipher_size() << endl;
 	cout << "plain size:  " << priv.plain_size() << ' ' << pub.plain_size() << endl;
