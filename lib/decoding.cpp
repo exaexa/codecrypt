@@ -38,7 +38,7 @@ void compute_goppa_error_locator (polynomial&syndrome, gf2m&fld,
 	v.sqrt (sqInv, fld); //v = sqrt((1/s)+x) mod goppa
 
 	polynomial a, b;
-	v.mod_to_fracton (a, b, goppa, fld);
+	v.ext_euclid (a, b, goppa, fld, goppa.degree()/2);
 
 	a.square (fld);
 	b.square (fld);

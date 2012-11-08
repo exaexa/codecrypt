@@ -253,7 +253,6 @@ public:
 
 	void sqrt (vector<polynomial>&, gf2m&);
 	polynomial gcd (polynomial, gf2m&);
-	void mod_to_fracton (polynomial&, polynomial&, polynomial&, gf2m&);
 	void ext_euclid (polynomial&, polynomial&, polynomial&, gf2m&, int);
 
 	bool is_irreducible (gf2m&) const;

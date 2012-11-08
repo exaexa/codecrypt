@@ -391,32 +391,3 @@ void polynomial::ext_euclid (polynomial&a_out, polynomial&b_out,
 	b.swap (b_out);
 }
 
-void polynomial::mod_to_fracton (polynomial&a, polynomial&b,
-                                 polynomial&m, gf2m&fld)
-{
-	//TODO: replace with ext_euclid
-	int deg = m.degree() / 2;
-	polynomial a0, a1, b0, b1, q, r;
-	a0 = m;
-	a1 = *this;
-	a1.mod (m, fld);
-
-	b0.clear();
-	b1.clear();
-	b1.resize (1, 1);
-
-	while (a1.degree() > deg) {
-
-		a0.divmod (a1, q, r, fld);
-		a0.swap (a1);
-		a1.swap (r);
-
-		q.mult (b1, fld);
-		q.mod (m, fld);
-		q.add (b0, fld);
-		b0.swap (b1);
-		b1.swap (q);
-	}
-	a.swap (a1);
-	b.swap (b1);
-}
