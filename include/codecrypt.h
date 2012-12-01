@@ -19,6 +19,7 @@
 #ifndef _CODECRYPT_H_
 #define _CODECRYPT_H_
 
+#include <string>
 #include <vector>
 
 //little STL helper, because writing (*this)[i] everywhere is clumsy
@@ -37,6 +38,51 @@
 
 namespace ccr
 {
+
+/*
+ * data serialization format
+ */
+
+class sencode
+{
+public:
+	virtual std::string encode() = 0;
+	virtual void destroy() {}
+};
+
+bool sencode_decode (const std::string&, sencode**);
+void sencode_destroy (sencode*);
+
+class sencode_list: public sencode
+{
+public:
+	std::vector<sencode*> items;
+
+	virtual std::string encode();
+	virtual void destroy();
+};
+
+class sencode_int: public sencode
+{
+public:
+	unsigned int i;
+	sencode_int (unsigned int I) {
+		i = I;
+	}
+
+	virtual std::string encode();
+};
+
+class sencode_bytes: public sencode
+{
+public:
+	std::string b;
+	sencode_bytes (const std::string&s) {
+		b = s;
+	}
+
+	virtual std::string encode();
+};
 
 /*
  * typedef. uint should be able to comfortably hold the field elements of

@@ -16,16 +16,116 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sencode.h"
-#include <sstream>
+#include "codecrypt.h"
+using namespace ccr;
 
-bool sencode_decode (const std::string& str, sencode**out)
+#include <sstream>
+#include <list>
+
+static void parse_int (const std::string&str, int&pos, int len,
+                       unsigned int&res)
 {
+	res = 0;
+	++pos; //skip 'i'
+	if (pos >= len) goto fail;
+	for (;;) {
+		if (pos >= len) goto fail; //not terminated
+		else if (str[pos] == 'e') break; //done good
+		else if ( (str[pos] >= '0') and (str[pos] <= '9') ) //integer
+			res = (10 * res) + (unsigned int) (str[pos] - '0');
+		else goto fail; //something weird!
+		++pos;
+	}
+
+	return;
+fail:
+	pos = -1;
+}
+
+static void parse_string (const std::string&str, int&pos, int len,
+                          std::string&res)
+{
+	//first, read the amount of bytes
+	unsigned int bytes = 0;
+	for (;;) {
+		if (pos >= len) goto fail;
+		else if (str[pos] == ':') break; //got it
+		else if ( (str[pos] >= '0') and (str[pos] <= '9') ) //integer
+			bytes = (10 * bytes) + (unsigned int) (str[pos] - '0');
+		else goto fail; //weird!
+		++pos;
+	}
+
+	++pos;
+	if (pos + bytes >= len) goto fail;
+	res = str.substr (pos, bytes);
+	pos += bytes;
+	--pos; //last char of the bytestring
+	return;
+fail:
+	pos = -1;
+}
+
+bool ccr::sencode_decode (const std::string& str, sencode**out)
+{
+	std::list<sencode*> stk;
+	int pos = 0;
+	int len = str.length();
+
+	for (; pos < len; ++pos) {
+
+		/* try to get a token */
+		if (str[pos] == 's') {
+			//push a new s-exp and don't allow closing it yet.
+			stk.push_back (new sencode_list);
+			continue;
+		} else if (str[pos] == 'e') {
+			//push nothing (so the TOS s-exp gets terminated)
+		} else if (str[pos] == 'i') {
+			//parse an integer (it's unsigned!)
+			unsigned int res;
+			parse_int (str, pos, len, res);
+			if (pos < 0) break;
+			stk.push_back (new sencode_int (res) );
+
+		} else if ( (str[pos] >= '0') && (str[pos] <= '9') ) {
+			//parse a bytestring
+			std::string res;
+			parse_string (str, pos, len, res);
+			if (pos < 0) break;
+			stk.push_back (new sencode_bytes (res) );
+		}
+
+		/* if there's nothing on the stack now, it's an error. */
+		if (stk.empty() ) break;
+
+		/* reduce stack. (return positively if it would
+		 * get empty and there's nothing more to parse.) */
+		if (stk.size() > 1) {
+			std::list<sencode*>::iterator i = stk.end();
+			--i;
+			sencode*tos = *i;
+			--i;
+			sencode_list*se = dynamic_cast<sencode_list*> (*i);
+			if (!se) break; //shouldn't happen, but keep eyes open!
+			se->items.push_back (tos);
+			stk.pop_back();
+		} else if (pos + 1 == len) {
+			*out = stk.front();
+			return true;
+		}
+	}
+
+	/* error handling. Destroy the stack, return false. */
+
+	for (std::list<sencode*>::iterator i = stk.begin(), e = stk.end();
+	     i != e; ++i)
+		sencode_destroy (*i);
 
 	return false;
 }
 
-void sencode_destroy (sencode*x)
+void ccr::sencode_destroy (sencode*x)
 {
 	x->destroy();
 	delete x;
@@ -57,17 +157,15 @@ std::string sencode_list::encode()
 
 std::string sencode_int::encode()
 {
-	std::string r;
-	std::stringstream ss (r);
+	std::stringstream ss;
 	ss << 'i' << i << 'e';
-	return r;
+	return ss.str();
 }
 
 std::string sencode_bytes::encode()
 {
-	std::string r;
-	std::stringstream ss (r);
+	std::stringstream ss;
 	ss << b.length() << ':' << b;
-	return r;
+	return ss.str();
 }
 
