@@ -207,6 +207,11 @@ public:
 	void compute_inversion (permutation&) const;
 
 	void generate_random (uint n, prng&);
+	void generate_identity (uint n) {
+		resize (n);
+		for (uint i = 0; i < n; ++i)
+			item (i) = i;
+	}
 
 	//TODO permute_inv is easy, do it everywhere
 	template<class A, class R> void permute (const A&a, R&r) const {
@@ -425,6 +430,9 @@ public:
 	uint signature_size() {
 		return plain_size();
 	}
+	uint signature_weight() {
+		return plain_weight();
+	}
 
 	sencode* serialize();
 	bool unserialize (sencode*);
@@ -454,6 +462,9 @@ public:
 	uint signature_size() {
 		return plain_size();
 	}
+	uint signature_weight() {
+		return plain_weight();
+	}
 
 	sencode* serialize();
 	bool unserialize (sencode*);
@@ -480,14 +491,10 @@ public:
 	gf2m fld;   //we fix q=2^fld.m=fld.n, n=q/2
 	uint T;     //the QD's t parameter is 2^T.
 	permutation block_perm; //order of blocks
-	permutation hperm; //block permutation of H block used to get G
 	std::vector<uint> block_perms; //dyadic permutations of blocks
+	permutation hperm; //block permutation of H block used to get G
 
 	//derivable stuff
-	std::vector<uint> Hsig; //signature of canonical H matrix
-	std::vector<uint> support; //computed goppa support
-	uint omega;
-
 	//cols of check matrix of g^2(x)
 	std::vector<polynomial> Hc;
 	//pre-permuted positions of support rows
@@ -497,10 +504,10 @@ public:
 	int prepare();
 
 	uint cipher_size() {
-		return (1 << T) * block_count;
+		return (1 << T) * hperm.size();
 	}
 	uint plain_size() {
-		return (1 << T) * (block_count - fld.m);
+		return (1 << T) * (hperm.size() - fld.m);
 	}
 
 	sencode* serialize();
@@ -511,7 +518,7 @@ class pubkey
 {
 public:
 	uint T;
-	std::vector<bvector> qd_sigs;
+	matrix qd_sigs;
 
 	int encrypt (const bvector&, bvector&, prng&);
 
@@ -521,15 +528,87 @@ public:
 	uint plain_size() {
 		return (1 << T) * qd_sigs.size();
 	}
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 int generate (pubkey&, privkey&, prng&, uint m, uint T, uint b);
 }
 
 /*
+ * QD-CFS
+ *
+ * according to "Quasi-dyadic CFS signatures" by Baretto, Cayrel, Misoczki,
+ * Niebuhr.
+ *
+ * As always with Niederreiter, hash must be of weight t (=1<<T)
+ */
+namespace cfs_qd
+{
+class privkey
+{
+public:
+	std::vector<uint> essence;
+	gf2m fld; //we fix q=2^fld.m=fld.n, n=q/2
+	uint T, t; //size of blocks is 1<<T, t is error correction capability
+	permutation block_perm; //order of blocks
+	std::vector<uint> block_perms; //dyadic permutations of blocks
+
+	//derivable stuff
+	polynomial g; //goppa
+	std::vector<polynomial> sqInv; //sqroot mod g
+	//pre-permuted positions of support rows
+	std::vector<uint> support_pos;
+	std::vector<polynomial> syndS;
+
+	int sign (const bvector&, bvector&, uint d, uint attempts, prng&);
+	int prepare();
+
+	uint hash_size() {
+		return t * fld.m;
+	}
+	uint signature_size() {
+		return (1 << T) * block_perms.size();
+	}
+	uint signature_weight() {
+		return t;
+	}
+
+	sencode* serialize();
+	bool unserialize (sencode*);
+};
+
+class pubkey
+{
+public:
+	uint t, T;
+	//cols of H
+	std::vector<bvector> qd_sigs;
+
+	int verify (const bvector&, const bvector&, uint);
+
+	uint hash_size() {
+		return t * qd_sigs.size();
+	}
+	uint signature_size() {
+		return qd_sigs[0].size();
+	}
+	uint signature_weight() {
+		return t;
+	}
+
+	sencode* serialize();
+	bool unserialize (sencode*);
+};
+
+int generate (pubkey&, privkey&, prng&, uint m, uint T, uint t, uint b);
+}
+
+/*
  * McEliece on Overlapping Chain of Goppa Codes
  *
- * Similar to Hamdi's Chained BCH Codes, but with improvement.
+ * Similar to Hamdi's Chained BCH Codes, but with improvements.
  *
  * This is experimental, unverified, probably insecure, but practical scheme
  * that achieves good speed, probability and non-exponential key size for full

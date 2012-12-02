@@ -3,6 +3,29 @@
 
 using namespace ccr;
 
+static sencode* serialize_uint_vector (std::vector<uint>*v)
+{
+	sencode_list*l = new sencode_list;
+	l->items.resize (v->size() );
+	for (uint i = 0; i < v->size(); ++i)
+		l->items[i] = new sencode_int ( (*v) [i]);
+	return l;
+}
+
+static bool unserialize_uint_vector (std::vector<uint>*v, sencode*s)
+{
+	sencode_list*l = dynamic_cast<sencode_list*> (s);
+	if (!l) return false;
+	v->clear();
+	v->resize (l->items.size() );
+	for (uint i = 0; i < v->size(); ++i) {
+		sencode_int*x = dynamic_cast<sencode_int*> (l->items[i]);
+		if (!x) return false;
+		(*v) [i] = x->i;
+	}
+	return true;
+}
+
 sencode* bvector::serialize()
 {
 	uint ss = (size() + 7) / 8;
@@ -68,25 +91,16 @@ bool matrix::unserialize (sencode* s)
 
 sencode* permutation::serialize()
 {
-	sencode_list*l = new sencode_list;
-	l->items.resize (size() );
-	for (uint i = 0; i < size(); ++i)
-		l->items[i] = new sencode_int (item (i) );
-	return l;
+	return serialize_uint_vector (this);
 }
 
 bool permutation::unserialize (sencode* s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
-	clear();
-	resize (l->items.size() );
-	for (uint i = 0; i < size(); ++i) {
-		sencode_int*x = dynamic_cast<sencode_int*> (l->items[i]);
-		if (!x) return false;
-		if (x->i >= size() ) return false; //small sanity check
-		item (i) = x->i;
-	}
+	if (!unserialize_uint_vector (this, s) ) return false;
+
+	//small sanity check
+	for (uint i = 0; i < size(); ++i) if (item (i) >= size() ) return false;
+
 	return true;
 }
 
@@ -104,25 +118,12 @@ bool gf2m::unserialize (sencode* s)
 
 sencode* polynomial::serialize()
 {
-	sencode_list*l = new sencode_list;
-	l->items.resize (size() );
-	for (uint i = 0; i < size(); ++i)
-		l->items[i] = new sencode_int (item (i) );
-	return l;
+	return serialize_uint_vector (this);
 }
 
 bool polynomial::unserialize (sencode* s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
-	clear();
-	resize (l->items.size() );
-	for (uint i = 0; i < size(); ++i) {
-		sencode_int*x = dynamic_cast<sencode_int*> (l->items[i]);
-		if (!x) return false;
-		item (i) = x->i;
-	}
-	return true;
+	return unserialize_uint_vector (this, s);
 }
 
 sencode* mce::privkey::serialize()
@@ -227,22 +228,58 @@ bool nd::pubkey::unserialize (sencode* s)
 
 sencode* mce_qd::privkey::serialize()
 {
-
+	sencode_list*l = new sencode_list;
+	l->items.resize (6);
+	l->items[0] = fld.serialize();
+	l->items[1] = new sencode_int (T);
+	l->items[2] = serialize_uint_vector (&essence);
+	l->items[3] = block_perm.serialize();
+	l->items[4] = serialize_uint_vector (&block_perms);
+	l->items[5] = hperm.serialize();
+	return l;
 }
 
 bool mce_qd::privkey::unserialize (sencode* s)
 {
+	sencode_list*l = dynamic_cast<sencode_list*> (s);
+	if (!l) return false;
+	if (l->items.size() != 6) return false;
 
+	sencode_int*p = dynamic_cast<sencode_int*> (l->items[1]);
+	if (!p) return false;
+	T = p->i;
+
+	if (! (fld.unserialize (l->items[0]) &&
+	       unserialize_uint_vector (&essence, l->items[2]) &&
+	       block_perm.unserialize (l->items[3]) &&
+	       unserialize_uint_vector (&block_perms, l->items[4]) &&
+	       hperm.unserialize (l->items[5]) ) ) return false;
+
+	return true;
 }
 
 sencode* mce_qd::pubkey::serialize()
 {
-
+	sencode_list*l = new sencode_list;
+	l->items.resize (2);
+	l->items[0] = new sencode_int (T);
+	l->items[1] = qd_sigs.serialize();
+	return l;
 }
 
 bool mce_qd::pubkey::unserialize (sencode* s)
 {
+	sencode_list*l = dynamic_cast<sencode_list*> (s);
+	if (!l) return false;
+	if (l->items.size() != 2) return false;
 
+	sencode_int*p = dynamic_cast<sencode_int*> (l->items[0]);
+	if (!p) return false;
+	T = p->i;
+
+	if (!qd_sigs.unserialize (l->items[1]) ) return false;
+
+	return true;
 }
 
 sencode* cfs_qd::privkey::serialize()

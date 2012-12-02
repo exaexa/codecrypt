@@ -194,3 +194,15 @@ bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&mat)
 
 	return true;
 }
+
+uint choose_random (uint limit, prng&rng, std::set<uint>&used)
+{
+	if (used.size() >= limit - 1) return 0; //die
+	for (;;) {
+		uint a = 1 + rng.random (limit - 1);
+		if (used.count (a) ) continue;
+		used.insert (a);
+		return a;
+	}
+}
+

@@ -26,28 +26,6 @@ using namespace ccr::mce_qd;
 
 #include <set>
 
-static uint sample_from_u (gf2m&fld, prng&rng, std::set<uint>&used)
-{
-	uint x;
-	for (;;) {
-		x = rng.random (fld.n);
-		if (used.count (x) ) continue;
-		used.insert (x);
-		return x;
-	}
-}
-
-static uint choose_random (uint limit, prng&rng, std::set<uint>used)
-{
-	if (used.size() >= limit - 1) return 0; //die
-	for (;;) {
-		uint a = 1 + rng.random (limit - 1);
-		if (used.count (a) ) continue;
-		used.insert (a);
-		return a;
-	}
-}
-
 int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
                       uint m, uint T, uint block_discard)
 {
@@ -61,6 +39,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 	std::vector<uint> support, Hsig;
 	polynomial g;
+	uint i, j;
 
 	//prepare for data
 	Hsig.resize (fld.n / 2);
@@ -81,13 +60,13 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		//essence[m-1] is now used as precomputed 1/h_0
 
 		for (uint s = 0; s < m - 1; ++s) {
-			uint i = 1 << s; //i = 2^s
+			i = 1 << s; //i = 2^s
 
 			Hsig[i] = choose_random (fld.n, rng, used);
 			essence[s] = fld.add (essence[m - 1], fld.inv (Hsig[i]) );
 			used.insert (fld.inv (essence[s]) );
 
-			for (uint j = 1; j < i; ++j) {
+			for (j = 1; j < i; ++j) {
 				Hsig[i + j] = fld.inv
 				              (fld.add
 				               (fld.inv (Hsig[i]),
@@ -111,7 +90,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		polynomial tmp;
 		tmp.resize (2, 1); //tmp(x)=x-1
 		bool consistent = true;
-		for (uint i = 0; i < t; ++i) {
+		for (i = 0; i < t; ++i) {
 			//tmp(x)=x-z=x-(1/h_i)
 			tmp[0] = fld.inv (Hsig[i]);
 			if (used.count (tmp[0]) ) {
@@ -125,7 +104,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		if (!consistent) continue; //retry
 
 		//compute the support, retry if it has two equal elements.
-		for (uint i = 0; i < fld.n / 2; ++i) {
+		for (i = 0; i < fld.n / 2; ++i) {
 			support[i] = fld.add (
 			                 fld.inv (Hsig[i]),
 			                 essence[m - 1]);
@@ -154,9 +133,9 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		//assemble blocks to bl
 		std::vector<polynomial> bl, blp;
 		bl.resize (h_block_count);
-		for (uint i = 0; i < h_block_count; ++i) {
+		for (i = 0; i < h_block_count; ++i) {
 			bl[i].resize (block_size);
-			for (uint j = 0; j < block_size; ++j)
+			for (j = 0; j < block_size; ++j)
 				bl[i][j] = Hsig[i * block_size + j];
 		}
 
@@ -170,7 +149,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		//permute individual blocks
 		priv.block_perms.resize (block_count);
 		bl.resize (blp.size() );
-		for (uint i = 0; i < block_count; ++i) {
+		for (i = 0; i < block_count; ++i) {
 			priv.block_perms[i] = rng.random (block_size);
 			permutation::permute_dyadic (priv.block_perms[i],
 			                             blp[i], bl[i]);
@@ -186,7 +165,6 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 			std::vector<std::vector<bvector> > hblocks;
 			bvector col;
-			uint i, j;
 
 			//prepare blocks of h
 			hblocks.resize (block_count);
@@ -206,10 +184,10 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 			 * If it fails, retry. */
 			if (!qd_to_right_echelon_form (hblocks) ) continue;
 
-			pub.qd_sigs.resize (block_count - fld.m);
-			for (uint i = 0; i < block_count - fld.m; ++i) {
-				pub.qd_sigs[i].resize (block_size * fld.m);
-				for (uint j = 0; j < fld.m; ++j)
+			pub.qd_sigs.resize2 (block_count - fld.m,
+			                     block_size * fld.m, 0);
+			for (i = 0; i < block_count - fld.m; ++i) {
+				for (j = 0; j < fld.m; ++j)
 					pub.qd_sigs[i].set_block
 					(hblocks[i][j], block_size * j);
 			}
@@ -232,6 +210,9 @@ int privkey::prepare()
 	uint s, i, j;
 	std::vector<uint> Hsig, support;
 	uint omega;
+
+	uint block_size = 1 << T,
+	     block_count = hperm.size();
 
 	//compute H signature from essence
 	Hsig.resize (fld.n / 2);
@@ -271,6 +252,8 @@ int privkey::prepare()
 	//compute the support with omega=0
 	support.resize (fld.n / 2);
 	for (i = 0; i < fld.n / 2; ++i) {
+		//don't check discarded support
+		if (block_perm[i / block_size] >= block_count) continue;
 		support[i] = fld.add
 		             (fld.inv (Hsig[i]),
 		              essence[fld.m - 1]);
@@ -305,9 +288,7 @@ int privkey::prepare()
 
 	// prepare permuted support, from that prepare permuted check matrix
 	// (so that it can be applied directly)
-	uint block_size = 1 << T;
 	uint pos, blk_perm;
-	uint block_count = hperm.size();
 	std::vector<uint> sbl1, sbl2, permuted_support;
 
 	sbl1.resize (block_size);
@@ -365,11 +346,11 @@ int pubkey::encrypt (const bvector & in, bvector & out, prng & rng)
 	 */
 
 	//some checks
-	if (!qd_sigs.size() ) return 1;
-	if (qd_sigs[0].size() % t) return 1;
+	if (!qd_sigs.width() ) return 1;
+	if (qd_sigs.height() % t) return 1;
 
-	uint blocks = qd_sigs[0].size() / t;
-	cksum.resize (qd_sigs[0].size(), 0);
+	uint blocks = qd_sigs.height() / t;
+	cksum.resize (qd_sigs.height(), 0);
 
 	p.resize (t);
 	g.resize (t);
