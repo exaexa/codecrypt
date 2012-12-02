@@ -122,6 +122,9 @@ public:
 
 	void colex_rank (bvector&) const;
 	void colex_unrank (bvector&, uint n, uint k) const;
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 /*
@@ -187,6 +190,9 @@ public:
 
 	bool create_goppa_generator_dyadic (matrix&, uint&, prng&);
 	bool create_goppa_generator_dyadic (matrix&, uint);
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 /*
@@ -242,6 +248,8 @@ public:
 		return true;
 	}
 
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 /*
@@ -264,6 +272,9 @@ public:
 	uint exp (int);
 	uint inv (uint);
 	uint sq_root (uint);
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 /*
@@ -306,6 +317,9 @@ public:
 
 	bool compute_square_root_matrix (std::vector<polynomial>&, gf2m&);
 	void compute_goppa_check_matrix (matrix&, gf2m&);
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 /*
@@ -342,6 +356,9 @@ public:
 	uint signature_size() {
 		return plain_size();
 	}
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 class pubkey
@@ -365,6 +382,9 @@ public:
 	uint signature_size() {
 		return plain_size();
 	}
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 int generate (pubkey&, privkey&, prng&, uint m, uint t);
@@ -405,6 +425,9 @@ public:
 	uint signature_size() {
 		return plain_size();
 	}
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 class pubkey
@@ -431,6 +454,9 @@ public:
 	uint signature_size() {
 		return plain_size();
 	}
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 int generate (pubkey&, privkey&, prng&, uint m, uint t);
@@ -476,6 +502,9 @@ public:
 	uint plain_size() {
 		return (1 << T) * (block_count - fld.m);
 	}
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 class pubkey
@@ -541,6 +570,9 @@ public:
 	uint signature_size() {
 		return Sinv.size();
 	}
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 class pubkey
@@ -557,6 +589,9 @@ public:
 	uint signature_size() {
 		return G.height();
 	}
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 //n is the number of subcodes used
