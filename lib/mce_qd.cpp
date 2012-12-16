@@ -334,7 +334,26 @@ int privkey::prepare()
 	return 0;
 }
 
-int pubkey::encrypt (const bvector & in, bvector & out, prng & rng)
+int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
+{
+	uint s = cipher_size(),
+	     t = 1 << T;
+	if (t > s) return 1;
+
+	//create error vector
+	bvector e;
+	e.resize (s, 0);
+	for (uint n = t; n > 0;) {
+		uint p = rng.random (s);
+		if (!e[p]) {
+			e[p] = 1;
+			--n;
+		}
+	}
+	return encrypt (in, out, e);
+}
+
+int pubkey::encrypt (const bvector & in, bvector & out, const bvector&errors)
 {
 	uint t = 1 << T;
 	bvector p, g, r, cksum;
@@ -348,6 +367,8 @@ int pubkey::encrypt (const bvector & in, bvector & out, prng & rng)
 	//some checks
 	if (!qd_sigs.width() ) return 1;
 	if (qd_sigs.height() % t) return 1;
+	if (in.size() != plain_size() ) return 2;
+	if (errors.size() != cipher_size() ) return 2;
 
 	uint blocks = qd_sigs.height() / t;
 	cksum.resize (qd_sigs.height(), 0);
@@ -370,26 +391,21 @@ int pubkey::encrypt (const bvector & in, bvector & out, prng & rng)
 		}
 	}
 
-	//generate t errors
-	bvector e;
-	e.resize (cipher_size(), 0);
-	for (uint n = t; n > 0;) {
-		uint p = rng.random (e.size() );
-		if (!e[p]) {
-			e[p] = 1;
-			--n;
-		}
-	}
-
 	//compute ciphertext
 	out = in;
 	out.insert (out.end(), cksum.begin(), cksum.end() );
-	out.add (e);
+	out.add (errors);
 
 	return 0;
 }
 
 int privkey::decrypt (const bvector & in, bvector & out)
+{
+	bvector tmp_errors;
+	return decrypt (in, out, tmp_errors);
+}
+
+int privkey::decrypt (const bvector & in, bvector & out, bvector & errors)
 {
 	if (in.size() != cipher_size() ) return 2;
 	polynomial synd;
@@ -411,6 +427,8 @@ int privkey::decrypt (const bvector & in, bvector & out)
 
 	out = in;
 	out.resize (plain_size() );
+	errors.clear();
+	errors.resize (cipher_size(), 0);
 	//flip error positions of out.
 	for (i = 0; i < ev.size(); ++i) if (ev[i]) {
 			uint epos = support_pos[fld.inv (i)];
@@ -419,6 +437,8 @@ int privkey::decrypt (const bvector & in, bvector & out)
 				out.clear();
 				return 1;
 			}
+			if (epos >= cipher_size() ) return 1;
+			errors[epos] = 1;
 			if (epos < plain_size() )
 				out[epos] = !out[epos];
 		}

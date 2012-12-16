@@ -59,12 +59,8 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 {
 	uint s = cipher_size();
 	if (t > s) return 1;
-	if (in.size() != plain_size() ) return 2;
 
-	//make a codeword
-	G.mult_vecT_left (in, out);
-
-	//add error vector
+	//create error vector
 	bvector e;
 	e.resize (s, 0);
 	for (uint n = t; n > 0;) {
@@ -74,11 +70,25 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 			--n;
 		}
 	}
-	out.add (e);
+	return encrypt (in, out, e);
+}
+
+int pubkey::encrypt (const bvector&in, bvector&out, const bvector&errors)
+{
+	if (in.size() != plain_size() ) return 2;
+	if (errors.size() != cipher_size() ) return 2;
+	G.mult_vecT_left (in, out);
+	out.add (errors);
 	return 0;
 }
 
 int privkey::decrypt (const bvector&in, bvector&out)
+{
+	bvector tmp_errors;
+	return decrypt (in, out, tmp_errors);
+}
+
+int privkey::decrypt (const bvector&in, bvector&out, bvector&errors)
 {
 	if (in.size() != cipher_size() ) return 2;
 
@@ -108,6 +118,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 
 	//shuffle back into systematic order
 	hperm.permute (canonical, not_permuted);
+	hperm.permute (ev, errors);
 
 	//get rid of redundancy bits
 	not_permuted.resize (plain_size() );

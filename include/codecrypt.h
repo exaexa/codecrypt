@@ -347,6 +347,7 @@ public:
 
 	int prepare();
 	int decrypt (const bvector&, bvector&);
+	int decrypt (const bvector&, bvector&, bvector&);
 	int sign (const bvector&, bvector&, uint, uint, prng&);
 
 	uint cipher_size() {
@@ -361,6 +362,9 @@ public:
 	uint signature_size() {
 		return plain_size();
 	}
+	uint error_count() {
+		return g.degree();
+	}
 
 	sencode* serialize();
 	bool unserialize (sencode*);
@@ -373,6 +377,7 @@ public:
 	uint t;
 
 	int encrypt (const bvector&, bvector&, prng&);
+	int encrypt (const bvector&, bvector&, const bvector&);
 	int verify (const bvector&, const bvector&, uint);
 
 	uint cipher_size() {
@@ -386,6 +391,9 @@ public:
 	}
 	uint signature_size() {
 		return plain_size();
+	}
+	uint error_count() {
+		return t;
 	}
 
 	sencode* serialize();
@@ -501,6 +509,7 @@ public:
 	std::vector<uint> support_pos;
 
 	int decrypt (const bvector&, bvector&);
+	int decrypt (const bvector&, bvector&, bvector&);
 	int prepare();
 
 	uint cipher_size() {
@@ -508,6 +517,9 @@ public:
 	}
 	uint plain_size() {
 		return (1 << T) * (hperm.size() - fld.m);
+	}
+	uint error_count() {
+		return 1 << T;
 	}
 
 	sencode* serialize();
@@ -521,12 +533,16 @@ public:
 	matrix qd_sigs;
 
 	int encrypt (const bvector&, bvector&, prng&);
+	int encrypt (const bvector&, bvector&, const bvector&);
 
 	uint cipher_size() {
 		return plain_size() + qd_sigs[0].size();
 	}
 	uint plain_size() {
 		return (1 << T) * qd_sigs.size();
+	}
+	uint error_count() {
+		return 1 << T;
 	}
 
 	sencode* serialize();
