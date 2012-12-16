@@ -21,57 +21,58 @@
 
 #include <vector>
 
-template<class inttype> class arcfour {
+template<class inttype> class arcfour
+{
 	std::vector<inttype> S;
-	inttype I,J;
+	inttype I, J;
 	size_t mod;
 public:
-	bool init(size_t bits) {
-		if(bits>8*sizeof(inttype)) return false;
-		I=J=0;
-		S.resize(1<<bits);
-		mod=1<<bits;
-		for(size_t i=0;i<(1<<bits);++i) {
-			S[i]=i;
+	bool init (size_t bits) {
+		if (bits > 8 * sizeof (inttype) ) return false;
+		I = J = 0;
+		S.resize (1 << bits);
+		mod = 1 << bits;
+		for (size_t i = 0; i < (1 << bits); ++i) {
+			S[i] = i;
 		}
 		return true;
 	}
 
 	void clear() {
-		I=J=0;
-		mod=0;
+		I = J = 0;
+		mod = 0;
 		S.clear();
 	}
 
-	void load_key(const std::vector<inttype>&K) {
-		inttype j=0,t;
-		for(size_t i=0;i<mod;++i) {
-			j=(j+S[i]+K[i%K.size()])%mod;
-			t=S[j];
-			S[j]=S[i];
-			S[i]=t;
+	void load_key (const std::vector<inttype>&K) {
+		inttype j = 0, t;
+		for (size_t i = 0; i < mod; ++i) {
+			j = (j + S[i] + K[i % K.size()]) % mod;
+			t = S[j];
+			S[j] = S[i];
+			S[i] = t;
 		}
 	}
 
 	inttype gen() {
-		I=(I+1)%mod;
-		J=(J+S[I])%mod;
+		I = (I + 1) % mod;
+		J = (J + S[I]) % mod;
 
 		register inttype t;
-		t=S[J];
-		S[J]=S[I];
-		S[I]=t;
+		t = S[J];
+		S[J] = S[I];
+		S[I] = t;
 
-		return S[(S[I]+S[J])%mod];
+		return S[ (S[I] + S[J]) % mod];
 	}
 
-	void discard(size_t n) {
-		for(size_t i=0;i<n;++i) gen();
+	void discard (size_t n) {
+		for (size_t i = 0; i < n; ++i) gen();
 	}
 
-	void gen(size_t n, std::vector<inttype>&out) {
-		out.resize(n);
-		for(size_t i=0;i<n;++i) out[i]=gen();
+	void gen (size_t n, std::vector<inttype>&out) {
+		out.resize (n);
+		for (size_t i = 0; i < n; ++i) out[i] = gen();
 	}
 };
 
