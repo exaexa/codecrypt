@@ -16,37 +16,20 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _qdutils_h_
+#define _qdutils_h_
+
 #include "codecrypt.h"
+#include <set>
 
-using namespace ccr;
+//FWHT matrix mult in O(n log n). parameters MUST be of 2^m size.
+void fwht_dyadic_multiply (const bvector&, const bvector&, bvector&);
 
-void permutation::compute_inversion (permutation&r) const
-{
-	r.resize (size(), 0);
-	for (uint i = 0; i < size(); ++i)
-		r[item (i) ] = i;
-}
+//create a generator using fwht
+bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&matrix);
 
-void permutation::generate_random (uint size, prng&rng)
-{
-	resize (size, 0);
-	uint i;
-	for (i = 0; i < size; ++i) item (i) = i;
+//disjunct random set selector. Doesn't select 0 (thus 0 is returned on failure)
+uint choose_random (uint limit, prng&rng, std::set<uint>&used);
 
-	//knuth shuffle
-	for (i = size - 1; i > 0; --i) {
-		uint j = rng.random (i + 1);
-		if (i != j) {
-			uint t = item (i);
-			item (i) = item (j);
-			item (j) = t;
-		}
-	}
-}
-
-void permutation::permute_rows (const matrix&a, matrix&r) const
-{
-	r.resize (a.size() );
-	for (uint i = 0; i < a.size(); ++i) permute (a[i], r[i]);
-}
+#endif
 

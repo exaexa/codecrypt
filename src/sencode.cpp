@@ -17,7 +17,6 @@
  */
 
 #include "codecrypt.h"
-using namespace ccr;
 
 #include <sstream>
 #include <list>
@@ -66,7 +65,7 @@ fail:
 	pos = -1;
 }
 
-bool ccr::sencode_decode (const std::string& str, sencode**out)
+bool sencode_decode (const std::string& str, sencode**out)
 {
 	std::list<sencode*> stk;
 	int pos = 0;
@@ -125,7 +124,7 @@ bool ccr::sencode_decode (const std::string& str, sencode**out)
 	return false;
 }
 
-void ccr::sencode_destroy (sencode*x)
+void sencode_destroy (sencode*x)
 {
 	x->destroy();
 	delete x;

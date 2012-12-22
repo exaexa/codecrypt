@@ -18,8 +18,6 @@
 
 #include "codecrypt.h"
 
-using namespace ccr;
-
 /*
  * helpful stuff for arithmetic in GF(2^m) - polynomials over GF(2).
  */

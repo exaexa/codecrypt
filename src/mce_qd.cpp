@@ -18,8 +18,7 @@
 
 #include "codecrypt.h"
 
-using namespace ccr;
-using namespace ccr::mce_qd;
+using namespace mce_qd;
 
 #include "decoding.h"
 #include "qd_utils.h"

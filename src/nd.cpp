@@ -18,10 +18,9 @@
 
 #include "codecrypt.h"
 
-#include "decoding.h"
+using namespace nd;
 
-using namespace ccr;
-using namespace ccr::nd;
+#include "decoding.h"
 
 int nd::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
 {

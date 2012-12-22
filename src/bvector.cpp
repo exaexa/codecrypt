@@ -17,7 +17,6 @@
  */
 
 #include "codecrypt.h"
-using namespace ccr;
 
 uint bvector::hamming_weight()
 {

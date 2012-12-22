@@ -20,7 +20,6 @@
 
 #include <iostream>
 using namespace std;
-using namespace ccr;
 
 ostream& operator<< (ostream&o, const polynomial& p)
 {

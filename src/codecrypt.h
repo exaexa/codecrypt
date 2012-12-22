@@ -36,9 +36,6 @@
 		item(size_type n, size_type m) const \
 		{ return (*this)[n][m]; };
 
-namespace ccr
-{
-
 /*
  * data serialization format
  */
@@ -552,157 +549,14 @@ public:
 int generate (pubkey&, privkey&, prng&, uint m, uint T, uint b);
 }
 
-/*
- * QD-CFS
- *
- * according to "Quasi-dyadic CFS signatures" by Baretto, Cayrel, Misoczki,
- * Niebuhr.
- *
- * As always with Niederreiter, hash must be of weight t (=1<<T)
- */
-namespace cfs_qd
-{
-class privkey
-{
-public:
-	std::vector<uint> essence;
-	gf2m fld; //we fix q=2^fld.m=fld.n, n=q/2
-	uint T, t; //size of blocks is 1<<T, t is error correction capability
-	permutation block_perm; //order of blocks
-	std::vector<uint> block_perms; //dyadic permutations of blocks
-
-	//derivable stuff
-	polynomial g; //goppa
-	std::vector<polynomial> sqInv; //sqroot mod g
-	//pre-permuted positions of support rows
-	std::vector<uint> support_pos;
-	std::vector<polynomial> syndS;
-
-	int sign (const bvector&, bvector&, uint d, uint attempts, prng&);
-	int prepare();
-
-	uint hash_size() {
-		return t * fld.m;
-	}
-	uint signature_size() {
-		return (1 << T) * block_perms.size();
-	}
-	uint signature_weight() {
-		return t;
-	}
-
-	sencode* serialize();
-	bool unserialize (sencode*);
-};
-
-class pubkey
-{
-public:
-	uint t, T;
-	//cols of H
-	std::vector<bvector> qd_sigs;
-
-	int verify (const bvector&, const bvector&, uint);
-
-	uint hash_size() {
-		return t * qd_sigs.size();
-	}
-	uint signature_size() {
-		return qd_sigs[0].size();
-	}
-	uint signature_weight() {
-		return t;
-	}
-
-	sencode* serialize();
-	bool unserialize (sencode*);
-};
-
-int generate (pubkey&, privkey&, prng&, uint m, uint T, uint t, uint b);
-}
-
-/*
- * McEliece on Overlapping Chain of Goppa Codes
- *
- * Similar to Hamdi's Chained BCH Codes, but with improvements.
- *
- * This is experimental, unverified, probably insecure, but practical scheme
- * that achieves good speed, probability and non-exponential key size for full
- * decoding that is needed to produce signatures. Technique is described in
- * documentation, with some (probably sufficient) notes in source code.
- *
- * Note that encryption using this scheme is impossible, as there is only an
- * extremely tiny probability of successful decoding.
- */
-namespace mce_oc
-{
-class privkey
-{
-public:
-	matrix Sinv;
-	permutation Pinv;
-	gf2m fld;
-
-	class subcode
-	{
-	public:
-		polynomial g;
-		permutation hperm;
-
-		//derivables
-		matrix h;
-		std::vector<polynomial> sqInv;
-	};
-
-	std::vector<subcode> codes;
-
-	int sign (const bvector&, bvector&, uint, uint, prng&);
-	int prepare();
-
-	uint hash_size() {
-		return Pinv.size();
-	}
-	uint signature_size() {
-		return Sinv.size();
-	}
-
-	sencode* serialize();
-	bool unserialize (sencode*);
-};
-
-class pubkey
-{
-public:
-	matrix G;
-	uint n, t;
-
-	int verify (const bvector&, const bvector&, uint);
-
-	uint hash_size() {
-		return G.width();
-	}
-	uint signature_size() {
-		return G.height();
-	}
-
-	sencode* serialize();
-	bool unserialize (sencode*);
-};
-
-//n is the number of subcodes used
-int generate (pubkey&, privkey&, prng&, uint m, uint t, uint n);
-}
-
-} //namespace ccr
-
 //global overload for iostream operators
 #include <iostream>
 
-std::ostream& operator<< (std::ostream&o, const ccr::polynomial&);
-std::ostream& operator<< (std::ostream&o, const ccr::permutation&);
-std::ostream& operator<< (std::ostream&o, const ccr::gf2m&);
-std::ostream& operator<< (std::ostream&o, const ccr::matrix&);
-std::ostream& operator<< (std::ostream&o, const ccr::bvector&);
+std::ostream& operator<< (std::ostream&o, const polynomial&);
+std::ostream& operator<< (std::ostream&o, const permutation&);
+std::ostream& operator<< (std::ostream&o, const gf2m&);
+std::ostream& operator<< (std::ostream&o, const matrix&);
+std::ostream& operator<< (std::ostream&o, const bvector&);
 
 
 #endif // _CODECRYPT_H_

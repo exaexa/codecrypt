@@ -18,8 +18,6 @@
 
 #include "codecrypt.h"
 
-using namespace ccr;
-
 void matrix::resize2 (uint w, uint h, bool def)
 {
 	resize (w);

@@ -18,8 +18,6 @@
 
 #include "codecrypt.h"
 
-using namespace ccr;
-
 static sencode* serialize_uint_vector (std::vector<uint>*v)
 {
 	sencode_list*l = new sencode_list;
@@ -297,45 +295,5 @@ bool mce_qd::pubkey::unserialize (sencode* s)
 	if (!qd_sigs.unserialize (l->items[1]) ) return false;
 
 	return true;
-}
-
-sencode* cfs_qd::privkey::serialize()
-{
-
-}
-
-bool cfs_qd::privkey::unserialize (sencode* s)
-{
-
-}
-
-sencode* cfs_qd::pubkey::serialize()
-{
-
-}
-
-bool cfs_qd::pubkey::unserialize (sencode* s)
-{
-
-}
-
-sencode* mce_oc::privkey::serialize()
-{
-
-}
-
-bool mce_oc::privkey::unserialize (sencode* s)
-{
-
-}
-
-sencode* mce_oc::pubkey::serialize()
-{
-
-}
-
-bool mce_oc::pubkey::unserialize (sencode* s)
-{
-
 }
 

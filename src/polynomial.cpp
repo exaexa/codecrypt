@@ -18,8 +18,6 @@
 
 #include "codecrypt.h"
 
-using namespace ccr;
-
 int polynomial::degree() const
 {
 	int r = -1;

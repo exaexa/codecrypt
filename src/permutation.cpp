@@ -16,25 +16,35 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _decoding_h_
-#define _decoding_h_
-
 #include "codecrypt.h"
 
-using namespace ccr;
+void permutation::compute_inversion (permutation&r) const
+{
+	r.resize (size(), 0);
+	for (uint i = 0; i < size(); ++i)
+		r[item (i) ] = i;
+}
 
-void compute_goppa_error_locator (polynomial&syndrome,
-                                  gf2m&fld,
-                                  polynomial&goppa,
-                                  std::vector<polynomial>& sqInv,
-                                  polynomial&loc);
+void permutation::generate_random (uint size, prng&rng)
+{
+	resize (size, 0);
+	uint i;
+	for (i = 0; i < size; ++i) item (i) = i;
 
-void compute_alternant_error_locator (polynomial&syndrome,
-                                      gf2m&fld,
-                                      uint tt,
-                                      polynomial&loc);
+	//knuth shuffle
+	for (i = size - 1; i > 0; --i) {
+		uint j = rng.random (i + 1);
+		if (i != j) {
+			uint t = item (i);
+			item (i) = item (j);
+			item (j) = t;
+		}
+	}
+}
 
-bool evaluate_error_locator_dumb (polynomial&el, bvector&ev, gf2m&fld);
-bool evaluate_error_locator_trace (polynomial&el, bvector&ev, gf2m&fld);
+void permutation::permute_rows (const matrix&a, matrix&r) const
+{
+	r.resize (a.size() );
+	for (uint i = 0; i < a.size(); ++i) permute (a[i], r[i]);
+}
 
-#endif
