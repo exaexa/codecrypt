@@ -19,6 +19,14 @@
 #ifndef _fmtseq_h_
 #define _fmtseq_h_
 
+#include <vector>
+#include <map>
+#include "types.h"
+#include "bvector.h"
+#include "sencode.h"
+#include "hash.h"
+#include "prng.h"
+
 /*
  * FMTseq - Merkle signatures with fractal tree traversal, using original
  * Lamport signatures for speed.
@@ -30,24 +38,23 @@ class privkey
 {
 public:
 	std::vector<char> SK; //secret key
-	uint h, l;
+	uint h, l; //l=level count, h=level height (root-leaf path length)
+	//therefore, H = h*l
 	uint sigs_used;
 
-	//FMT cache
-	std::vector<std::map<uint, std::vector<char> > > node_cache;
+	//FMT caches
+	std::vector<std::vector<char> > exist;
+	std::vector<std::vector<char> > desired;
+	std::vector<std::vector<char> > desired_stack;
 
 	int sign (const bvector&, bvector&, hash_func&);
 
 	uint sigs_remaining() {
-		return (1 << h) - sigs_used;
+		return (1 << () ) - sigs_used;
 	}
 
-	uint hash_size (hash_func&) {
-		hf.size();
-	}
-
-	uint signature_size (hash_func&) {
-		//TODO
+	uint hash_size (hash_func&hf) {
+		return hf.size() * 8;
 	}
 
 	sencode* serialize();
@@ -58,14 +65,12 @@ class pubkey
 {
 public:
 	std::vector<char> check; //tree top verification hash
-	uint h;
+	uint H;
 
-	uint hash_size() {
-		return hf.size();
-	}
+	int verify (const bvector&, const bvector&, hash_func&);
 
-	uint signature_size() {
-		//TODO
+	uint hash_size (hash_func&hf) {
+		return hf.size() * 8;
 	}
 
 	sencode* serialize();

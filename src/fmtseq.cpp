@@ -16,21 +16,6 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ccr_hash_h_
-#define _ccr_hash_h_
+#include "fmtseq.h"
 
-#include <vector>
-#include "types.h"
-
-/*
- * hash-providing functor class, meant to be instantiated by user.
- */
-class hash_func
-{
-public:
-	virtual std::vector<char> operator() (const std::vector<char>&) = 0;
-	virtual uint size(); //in bytes
-};
-
-#endif
 
