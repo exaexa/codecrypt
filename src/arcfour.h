@@ -27,29 +27,28 @@ template<class inttype> class arcfour
 {
 	std::vector<inttype> S;
 	inttype I, J;
-	size_t mod;
+	inttype mask;
 public:
-	bool init (size_t bits) {
+	bool init (unsigned bits) {
 		if (bits > 8 * sizeof (inttype) ) return false;
 		I = J = 0;
 		S.resize (1 << bits);
-		mod = 1 << bits;
-		for (size_t i = 0; i < (1 << bits); ++i) {
-			S[i] = i;
-		}
+		mask = ~ (inttype) 0;
+		if ( (inttype) (1 << bits) ) mask %= 1 << bits;
+		for (size_t i = 0; i < (1 << bits); ++i) S[i] = i;
 		return true;
 	}
 
 	void clear() {
 		I = J = 0;
-		mod = 0;
+		mask = 0;
 		S.clear();
 	}
 
 	void load_key (const std::vector<inttype>&K) {
 		inttype j = 0, t;
-		for (size_t i = 0; i < mod; ++i) {
-			j = (j + S[i] + K[i % K.size()]) % mod;
+		for (size_t i = 0; i <= mask; ++i) {
+			j = (j + S[i] + K[i % K.size()]) & mask;
 			t = S[j];
 			S[j] = S[i];
 			S[i] = t;
@@ -57,15 +56,15 @@ public:
 	}
 
 	inttype gen() {
-		I = (I + 1) % mod;
-		J = (J + S[I]) % mod;
+		I = (I + 1) & mask;
+		J = (J + S[I]) & mask;
 
 		register inttype t;
 		t = S[J];
 		S[J] = S[I];
 		S[I] = t;
 
-		return S[ (S[I] + S[J]) % mod];
+		return S[ (S[I] + S[J]) & mask];
 	}
 
 	void discard (size_t n) {
