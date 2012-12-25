@@ -20,7 +20,7 @@
 #define _fmtseq_h_
 
 #include <vector>
-#include <map>
+#include <list>
 #include "types.h"
 #include "bvector.h"
 #include "sencode.h"
@@ -45,12 +45,21 @@ public:
 	//FMT caches
 	std::vector<std::vector<char> > exist;
 	std::vector<std::vector<char> > desired;
-	std::vector<std::vector<char> > desired_stack;
+
+	struct tree_stk_item {
+		uint level;
+		std::vector<char> item;
+		tree_stk_item() {}
+		tree_stk_item (uint L, std::vector<char> i)
+			: level (L), item (i) {}
+	};
+
+	std::vector<std::list<tree_stk_item> > desired_stack;
 
 	int sign (const bvector&, bvector&, hash_func&);
 
 	uint sigs_remaining() {
-		return (1 << () ) - sigs_used;
+		return (1 << (h * l) ) - sigs_used;
 	}
 
 	uint hash_size (hash_func&hf) {
