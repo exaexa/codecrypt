@@ -16,7 +16,9 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "codecrypt.h"
+#include "matrix.h"
+#include "prng.h"
+#include "permutation.h"
 
 void matrix::resize2 (uint w, uint h, bool def)
 {

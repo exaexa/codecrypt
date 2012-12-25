@@ -16,7 +16,9 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "codecrypt.h"
+#include "bvector.h"
+#include "gf2m.h"
+#include "polynomial.h"
 
 uint bvector::hamming_weight()
 {

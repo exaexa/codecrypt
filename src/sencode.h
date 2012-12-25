@@ -16,23 +16,56 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _qdutils_h_
-#define _qdutils_h_
+#ifndef _sencode_h_
+#define _sencode_h_
 
+#include <string>
 #include <vector>
-#include <set>
 
-#include "bvector.h"
-#include "prng.h"
+/*
+ * data serialization format
+ */
 
-//FWHT matrix mult in O(n log n). parameters MUST be of 2^m size.
-void fwht_dyadic_multiply (const bvector&, const bvector&, bvector&);
+class sencode
+{
+public:
+	virtual std::string encode() = 0;
+	virtual void destroy() {}
+};
 
-//create a generator using fwht
-bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&matrix);
+bool sencode_decode (const std::string&, sencode**);
+void sencode_destroy (sencode*);
 
-//disjunct random set selector. Doesn't select 0 (thus 0 is returned on failure)
-uint choose_random (uint limit, prng&rng, std::set<uint>&used);
+class sencode_list: public sencode
+{
+public:
+	std::vector<sencode*> items;
+
+	virtual std::string encode();
+	virtual void destroy();
+};
+
+class sencode_int: public sencode
+{
+public:
+	unsigned int i;
+	sencode_int (unsigned int I) {
+		i = I;
+	}
+
+	virtual std::string encode();
+};
+
+class sencode_bytes: public sencode
+{
+public:
+	std::string b;
+	sencode_bytes (const std::string&s) {
+		b = s;
+	}
+
+	virtual std::string encode();
+};
 
 #endif
 

@@ -16,7 +16,7 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "codecrypt.h"
+#include "mce.h"
 
 using namespace mce;
 

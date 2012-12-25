@@ -21,6 +21,8 @@
 
 #include <vector>
 
+#include <sys/types.h>
+
 template<class inttype> class arcfour
 {
 	std::vector<inttype> S;

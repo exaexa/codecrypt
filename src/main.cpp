@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "codecrypt.h"
 #include "arcfour.h"
+#include "prng.h"
 
 #include <stdlib.h>
 #include <time.h>

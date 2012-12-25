@@ -16,7 +16,16 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "codecrypt.h"
+#include "sencode.h"
+#include "types.h"
+#include "bvector.h"
+#include "matrix.h"
+#include "gf2m.h"
+#include "polynomial.h"
+#include "permutation.h"
+#include "mce.h"
+#include "nd.h"
+#include "mce_qd.h"
 
 static sencode* serialize_uint_vector (std::vector<uint>*v)
 {

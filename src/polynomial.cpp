@@ -16,7 +16,10 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "codecrypt.h"
+#include "polynomial.h"
+#include "gf2m.h"
+#include "prng.h"
+#include "matrix.h"
 
 int polynomial::degree() const
 {

@@ -1,4 +1,5 @@
 
+
 /*
  * This file is part of Codecrypt.
  *
@@ -16,23 +17,16 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _qdutils_h_
-#define _qdutils_h_
+#ifndef _types_h_
+#define _types_h_
 
-#include <vector>
-#include <set>
+/*
+ * typedefs. uint should be able to comfortably hold the GF(2^m) elements of
+ * underlying calculations (esp. with polynomials. Switching to 64bits is
+ * adviseable when computing with m=16 and larger.
+ */
+typedef unsigned int uint;
 
-#include "bvector.h"
-#include "prng.h"
-
-//FWHT matrix mult in O(n log n). parameters MUST be of 2^m size.
-void fwht_dyadic_multiply (const bvector&, const bvector&, bvector&);
-
-//create a generator using fwht
-bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&matrix);
-
-//disjunct random set selector. Doesn't select 0 (thus 0 is returned on failure)
-uint choose_random (uint limit, prng&rng, std::set<uint>&used);
+//TODO add separate type for GF(2^m) elements!
 
 #endif
-

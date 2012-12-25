@@ -16,23 +16,20 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _qdutils_h_
-#define _qdutils_h_
+#ifndef _prng_h_
+#define _prng_h_
 
-#include <vector>
-#include <set>
+#include "types.h"
 
-#include "bvector.h"
-#include "prng.h"
-
-//FWHT matrix mult in O(n log n). parameters MUST be of 2^m size.
-void fwht_dyadic_multiply (const bvector&, const bvector&, bvector&);
-
-//create a generator using fwht
-bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&matrix);
-
-//disjunct random set selector. Doesn't select 0 (thus 0 is returned on failure)
-uint choose_random (uint limit, prng&rng, std::set<uint>&used);
+/*
+ * pseudorandom number generator. Meant to be inherited and
+ * instantiated by the library user
+ */
+class prng
+{
+public:
+	virtual uint random (uint) = 0;
+};
 
 #endif
 

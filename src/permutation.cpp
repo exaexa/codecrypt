@@ -16,7 +16,9 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "codecrypt.h"
+#include "permutation.h"
+#include "prng.h"
+#include "matrix.h"
 
 void permutation::compute_inversion (permutation&r) const
 {

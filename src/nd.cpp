@@ -16,7 +16,7 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "codecrypt.h"
+#include "nd.h"
 
 using namespace nd;
 

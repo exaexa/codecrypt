@@ -19,7 +19,10 @@
 #ifndef _decoding_h_
 #define _decoding_h_
 
-#include "codecrypt.h"
+#include <vector>
+#include "polynomial.h"
+#include "gf2m.h"
+#include "bvector.h"
 
 void compute_goppa_error_locator (polynomial&syndrome,
                                   gf2m&fld,

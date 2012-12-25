@@ -16,23 +16,21 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _qdutils_h_
-#define _qdutils_h_
+#ifndef _ios_h_
+#define _ios_h_
 
-#include <vector>
-#include <set>
-
+//operator overloads very useful for debugging/hacking
+#include <iostream>
+#include "polynomial.h"
+#include "permutation.h"
+#include "gf2m.h"
+#include "matrix.h"
 #include "bvector.h"
-#include "prng.h"
 
-//FWHT matrix mult in O(n log n). parameters MUST be of 2^m size.
-void fwht_dyadic_multiply (const bvector&, const bvector&, bvector&);
-
-//create a generator using fwht
-bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&matrix);
-
-//disjunct random set selector. Doesn't select 0 (thus 0 is returned on failure)
-uint choose_random (uint limit, prng&rng, std::set<uint>&used);
+std::ostream& operator<< (std::ostream&o, const polynomial&);
+std::ostream& operator<< (std::ostream&o, const permutation&);
+std::ostream& operator<< (std::ostream&o, const gf2m&);
+std::ostream& operator<< (std::ostream&o, const matrix&);
+std::ostream& operator<< (std::ostream&o, const bvector&);
 
 #endif
-

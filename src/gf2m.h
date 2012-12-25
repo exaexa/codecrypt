@@ -16,23 +16,36 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _qdutils_h_
-#define _qdutils_h_
+#ifndef _gf2m_h_
+#define _gf2m_h_
 
 #include <vector>
-#include <set>
+#include "types.h"
+#include "sencode.h"
 
-#include "bvector.h"
-#include "prng.h"
+/*
+ * galois field of 2^m elements. Stored in an integer, for convenience.
+ */
 
-//FWHT matrix mult in O(n log n). parameters MUST be of 2^m size.
-void fwht_dyadic_multiply (const bvector&, const bvector&, bvector&);
+class gf2m
+{
+public:
+	uint poly;
+	uint n, m;
 
-//create a generator using fwht
-bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&matrix);
+	bool create (uint m);
 
-//disjunct random set selector. Doesn't select 0 (thus 0 is returned on failure)
-uint choose_random (uint limit, prng&rng, std::set<uint>&used);
+	std::vector<uint> log, antilog;
+
+	uint add (uint, uint);
+	uint mult (uint, uint);
+	uint exp (uint, int);
+	uint exp (int);
+	uint inv (uint);
+	uint sq_root (uint);
+
+	sencode* serialize();
+	bool unserialize (sencode*);
+};
 
 #endif
-

@@ -16,7 +16,7 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "codecrypt.h"
+#include "gf2m.h"
 
 /*
  * helpful stuff for arithmetic in GF(2^m) - polynomials over GF(2).

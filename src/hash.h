@@ -19,27 +19,17 @@
 #ifndef _ccr_hash_h_
 #define _ccr_hash_h_
 
+#include <vector>
+#include "types.h"
+
 /*
- * hash function templates
- *
- * usuable mostly for injection into actual code
+ * hash-providing functor class, meant to be instantiated by user.
  */
-
-class hash {
+class hash_func
+{
 public:
-	hash();
-	virtual ~hash()=0;
-
-	virtual void init()=0;
-	virtual void update(const char*a, size_t len)=0;
-	virtual size_t size()=0;
-	virtual void final(const char*a)=0;
-};
-
-class hash_factory {
-public:
-	hash* create();
-	void free(hash*);
+	virtual std::vector<char> operator() (const std::vector<char>&) = 0;
+	virtual uint size();
 };
 
 #endif

@@ -16,9 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "codecrypt.h"
+#include "ios.h"
 
-#include <iostream>
 using namespace std;
 
 ostream& operator<< (ostream&o, const polynomial& p)
