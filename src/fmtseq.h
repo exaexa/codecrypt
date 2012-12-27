@@ -34,27 +34,38 @@
 namespace fmtseq
 {
 
+//helper function used to calculate hash sizes percisely
+inline uint fmtseq_commitments (uint l)
+{
+	uint x = l;
+	while (x) {
+		++l;
+		x >>= 1;
+	}
+	return l;
+}
+
 class privkey
 {
 public:
-	std::vector<char> SK; //secret key
+	std::vector<byte> SK; //secret key
 	uint h, l; //l=level count, h=level height (root-leaf path length)
 	//therefore, H = h*l
 	uint sigs_used;
+	uint hs;
 
 	//FMT caches
-	std::vector<std::vector<char> > exist;
-	std::vector<std::vector<char> > desired;
+	std::vector<std::vector<std::vector<byte> > > exist, desired;
 
 	struct tree_stk_item {
-		uint level;
-		std::vector<char> item;
+		uint level, pos;
+		std::vector<byte> item;
 		tree_stk_item() {}
-		tree_stk_item (uint L, std::vector<char> i)
-			: level (L), item (i) {}
+		tree_stk_item (uint L, uint P, std::vector<byte> i)
+			: level (L), pos (P), item (i) {}
 	};
-
 	std::vector<std::list<tree_stk_item> > desired_stack;
+	std::vector<uint> desired_progress;
 
 	int sign (const bvector&, bvector&, hash_func&);
 
@@ -62,8 +73,12 @@ public:
 		return (1 << (h * l) ) - sigs_used;
 	}
 
-	uint hash_size (hash_func&hf) {
-		return hf.size() * 8;
+	uint hash_size () {
+		return hs;
+	}
+
+	uint signature_size (hash_func&hf) {
+		return ( (h * l + fmtseq_commitments (hs) ) * hf.size() * 8) + (h * l);
 	}
 
 	sencode* serialize();
@@ -73,20 +88,25 @@ public:
 class pubkey
 {
 public:
-	std::vector<char> check; //tree top verification hash
-	uint H;
+	std::vector<byte> check; //tree top verification hash
+	uint H, hs;
 
 	int verify (const bvector&, const bvector&, hash_func&);
 
-	uint hash_size (hash_func&hf) {
-		return hf.size() * 8;
+	uint hash_size () {
+		return hs;
 	}
+
+	uint signature_size (hash_func&hf) {
+		return ( (H + fmtseq_commitments (hs) ) * hf.size() * 8) + H;
+	}
+
 
 	sencode* serialize();
 	bool unserialize (sencode*);
 };
 
-int generate (pubkey&, privkey&, prng&, hash_func&, uint h, uint l);
+int generate (pubkey&, privkey&, prng&, hash_func&, uint hs, uint h, uint l);
 }
 
 #endif

@@ -16,13 +16,13 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "arcfour.h"
 #include "prng.h"
 
 #include <stdlib.h>
 #include <time.h>
 
-#include <iostream>
+#include "ios.h"
+
 #include <iomanip>
 using namespace std;
 
@@ -38,8 +38,62 @@ public:
 	}
 };
 
+#include "hash.h"
+#include "sha2.h"
+#include <stdint.h>
+
+class sha2hash : public hash_func
+{
+public:
+	uint size() {
+		//return 4;
+		return SHA256_DIGEST_LENGTH;
+	}
+
+	vector<byte> operator() (const vector<byte>&a) {
+		SHA256_CTX ctx;
+		SHA256_Init (&ctx);
+		SHA256_Update (&ctx, (const uint8_t*) & (a[0]), a.size() );
+		vector<byte> r;
+		r.resize (size() );
+		//r.resize (SHA256_DIGEST_LENGTH);
+		SHA256_Final ( (uint8_t*) & (r[0]), &ctx);
+		//r.resize(size());
+		return r;
+	}
+};
+
+#include "fmtseq.h"
+#include "arcfour.h"
+
 int main()
 {
+
+	primitiverng r;
+	r.seed (0);
+	sha2hash sha2;
+	fmtseq::privkey priv;
+	fmtseq::pubkey pub;
+
+	cout << fmtseq::generate (pub, priv, r, sha2, 128, 3, 3) << endl;
+	bvector h, sig;
+	h.resize (priv.hash_size(), 0);
+	h[0] = 1;
+	h[1] = 1;
+	//for (uint i = 0; i < 10; ++i) h[2 * i] = 1;
+
+	cout << "HASH " << h;
+
+	for (uint i = 0; i < 8; ++i) {
+		cout << priv.sign (h, sig, sha2) << endl;
+		//cout << i << "-th SIG " << sig;
+
+		cout << "VERIFY ERROR: " << pub.verify (sig, h, sha2) << endl;
+	}
+
+	return 0;
+
+#if 0
 	arcfour<unsigned short> c;
 	if (!c.init (10) ) {
 		cout << "haha." << endl;
@@ -59,7 +113,6 @@ int main()
 
 	return 0;
 
-#if 0
 	primitiverng r;
 	r.seed (0);
 

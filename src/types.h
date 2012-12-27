@@ -26,6 +26,7 @@
  * adviseable when computing with m=16 and larger.
  */
 typedef unsigned int uint;
+typedef unsigned char byte;
 
 //TODO add separate type for GF(2^m) elements!
 

@@ -28,8 +28,8 @@
 class hash_func
 {
 public:
-	virtual std::vector<char> operator() (const std::vector<char>&) = 0;
-	virtual uint size(); //in bytes
+	virtual std::vector<byte> operator() (const std::vector<byte>&) = 0;
+	virtual uint size() = 0; //in bytes
 };
 
 #endif
