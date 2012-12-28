@@ -64,7 +64,7 @@ public:
 		tree_stk_item (uint L, uint P, std::vector<byte> i)
 			: level (L), pos (P), item (i) {}
 	};
-	std::vector<std::list<tree_stk_item> > desired_stack;
+	std::vector<std::vector<tree_stk_item> > desired_stack;
 	std::vector<uint> desired_progress;
 
 	int sign (const bvector&, bvector&, hash_func&);

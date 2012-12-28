@@ -84,11 +84,12 @@ int main()
 
 	cout << "HASH " << h;
 
-	for (uint i = 0; i < 8; ++i) {
-		cout << priv.sign (h, sig, sha2) << endl;
-		//cout << i << "-th SIG " << sig;
+	while (priv.sigs_remaining() ) {
+		h[r.random (h.size() )] = r.random (2);
 
-		cout << "VERIFY ERROR: " << pub.verify (sig, h, sha2) << endl;
+		priv.sign (h, sig, sha2);
+		//cout << i << "-th SIG " << sig;
+		cout << "VERIFY ERROR: " << pub.verify (sig, h, sha2) << " sigs left: " << priv.sigs_remaining() << endl;
 	}
 
 	return 0;

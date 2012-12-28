@@ -71,10 +71,155 @@ static void store_exist (privkey&priv, const privkey::tree_stk_item&i)
 	priv.exist[level][i.pos + (1 << sublevel) - 2] = i.item;
 }
 
-static void update_trees (privkey&priv, hash_func&hf)
+static void alloc_desired (privkey&priv, hash_func&hf)
 {
-	//TODO
+	//start the desired trees
+	priv.desired.resize (priv.l - 1);
+	priv.desired_stack.resize (priv.l - 1);
+	priv.desired_progress.resize (priv.l - 1, 0);
+	for (uint i = 0; i < priv.l - 1; ++i) {
+		priv.desired[i].resize ( (1 << (priv.h + 1) ) - 2);
+		for (uint j = 0; j < priv.desired[i].size(); ++j)
+			priv.desired[i][j].resize (hf.size(), 0);
+	}
 }
+
+static void store_desired (privkey&priv, uint did,
+                           const privkey::tree_stk_item& i)
+{
+	if ( (i.level / priv.h) != did) return; //too below or above
+	uint depth = priv.h - (i.level % priv.h);
+	if (i.pos >= (1 << depth) ) return; //too far right, omg why?!
+	priv.desired[did][i.pos + (1 << depth) - 2] = i.item;
+}
+
+static void update_privkey (privkey&priv, hash_func&hf)
+{
+	uint i, j;
+	arcfour<byte> generator;
+	std::vector<byte> x, Y;
+	uint commitments = fmtseq_commitments (priv.hs);
+
+	/*
+	 * Perform one calculation step on all subtrees.
+	 *
+	 * Note the difference against original FMTseq:
+	 *
+	 * On every signature, we generate _one_ leaf and squash the subtree
+	 * stack all above it. This brings (on average) the same performance,
+	 * but some signatures are faster and some are slower. Not that much
+	 * that it would actually matter for this purpose. Timing attacks don't
+	 * count as we still publish the signature serial number, from which
+	 * anyone can easily see whether it's going to take a while or not.
+	 *
+	 * Generating one leaf on each signature brings a complete desired tree
+	 * exactly in time when exist tree gets exhausted (they have the same
+	 * number of leaves).
+	 *
+	 * Average time for signature is around 2 units (as in fmtseq), worst
+	 * case is around (h^2)/2 units (which isn't really that bad, for
+	 * practical purposes it's only around 200 and only in one case).
+	 *
+	 * FMTseq instead calculates exactly two of those operations
+	 * every round (e.g. 2 times stack squashing, or gen, gen, or
+	 * gen/squash...) This brings equivalent speed for all signatures (all
+	 * do exactly 2 operations), but storage of internal state and the
+	 * whole algorithm is kindof complex. Omitted for simplicity.
+	 */
+
+	uint d_leaves, d_startpos, d_h;
+	for (i = 0; i < priv.desired.size(); ++i) {
+		d_h = (i + 1) * priv.h;
+		d_leaves = 1 << d_h;
+		if (priv.desired_progress[i] >= d_leaves)
+			continue; //already done
+
+		//create the leaf
+		d_startpos = (1 + (priv.sigs_used >> d_h) ) << d_h;
+		uint leafid = d_startpos + priv.desired_progress[i];
+
+		prepare_keygen (generator, priv.SK, leafid);
+		Y.clear();
+		for (j = 0; j < commitments; ++j) {
+			generator.gen (hf.size(), x);
+			x = hf (x);
+			Y.insert (Y.end(), x.begin(), x.end() );
+		}
+
+
+		std::vector<privkey::tree_stk_item>
+		&stk = priv.desired_stack[i];
+
+		stk.push_back (privkey::tree_stk_item
+		               (0, priv.desired_progress[i], hf (Y) ) );
+		store_desired (priv, i, stk.back() );
+
+		++priv.desired_progress[i];
+
+		//stack squashing
+		for (;;) {
+			if (stk.size() < 2) break;
+			if ( (stk.end() - 1)->level !=
+			     (stk.end() - 2)->level) break;
+
+			Y.clear();
+			Y.insert (Y.end(),
+			          (stk.end() - 2)->item.begin(),
+			          (stk.end() - 2)->item.end() );
+			Y.insert (Y.end(),
+			          (stk.end() - 1)->item.begin(),
+			          (stk.end() - 1)->item.end() );
+			uint l = stk.back().level + 1;
+			uint p = stk.back().pos / 2;
+			stk.pop_back();
+			stk.pop_back();
+			stk.push_back (privkey::tree_stk_item
+			               (l, p, hf (Y) ) );
+			store_desired (priv, i, stk.back() );
+		}
+	}
+
+	//where needed, move desired to exist and reset or erase
+	uint next_sigs_used = priv.sigs_used + 1;
+	uint subtree_changes = priv.sigs_used ^ next_sigs_used;
+
+	uint one_subtree_mask = (1 << priv.h) - 1;
+
+	//go from the topmost subtree.
+	for (uint i = 0; i < priv.l; ++i) {
+		uint idx = priv.l - i - 1;
+
+		//ignore unused top levels
+		if (idx >= priv.desired.size() ) continue;
+
+		//if nothing changed, do nothing
+		if (! ( (subtree_changes >> (priv.h * (1 + idx) ) )
+		        & one_subtree_mask) ) continue;
+
+		//move desired to exist
+		priv.exist[idx] = priv.desired[idx];
+
+		priv.desired_progress[idx] = 0;
+		priv.desired_stack[idx].clear();
+
+		//if there aren't more desired subtrees on this level,
+		//strip it off.
+		uint next_subtree_start =
+		    (1 + (next_sigs_used >> ( (1 + idx) * priv.h) ) )
+		    << ( (1 + idx) * priv.h);
+		if (next_subtree_start >= (1 << (priv.h * priv.l) ) ) {
+			priv.desired.resize (idx);
+			priv.desired_stack.resize (idx);
+			priv.desired_progress.resize (idx);
+		}
+	}
+
+	priv.sigs_used = next_sigs_used;
+}
+
+/*
+ * Key generator
+ */
 
 int fmtseq::generate (pubkey&pub, privkey&priv,
                       prng&rng, hash_func&hf,
@@ -106,10 +251,7 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 	uint commitments = fmtseq_commitments (hs);
 
 	arcfour<byte> generator;
-	std::vector<byte> x, y, Y;
-
-	x.resize (hf.size() );
-	y.resize (hf.size() );
+	std::vector<byte> x, Y;
 
 	alloc_exist (priv);
 
@@ -120,8 +262,8 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 		prepare_keygen (generator, priv.SK, i);
 		for (j = 0; j < commitments; ++j) {
 			generator.gen (hf.size(), x);
-			y = hf (x);
-			Y.insert (Y.end(), y.begin(), y.end() );
+			x = hf (x);
+			Y.insert (Y.end(), x.begin(), x.end() );
 		}
 
 		stk.push_back (privkey::tree_stk_item (0, i, hf (Y) ) );
@@ -130,7 +272,8 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 		//try squashing the stack
 		for (;;) {
 			if (stk.size() < 2) break;
-			if ( (stk.end() - 1)->level != (stk.end() - 2)->level) break;
+			if ( (stk.end() - 1)->level !=
+			     (stk.end() - 2)->level) break;
 
 			Y.clear();
 			Y.insert (Y.end(),
@@ -143,10 +286,13 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 			uint p = stk.back().pos / 2;
 			stk.pop_back();
 			stk.pop_back();
-			stk.push_back (privkey::tree_stk_item (l, p, hf (Y) ) );
+			stk.push_back (privkey::tree_stk_item
+			               (l, p, hf (Y) ) );
 			store_exist (priv, stk.back() );
 		}
 	}
+
+	alloc_desired (priv, hf);
 
 	//now there's the public verification key available in the stack.
 	pub.check = stk.back().item;
@@ -235,10 +381,8 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf)
 		pos >>= 1;
 	}
 
-	//move on to the next signature
-	++sigs_used;
-	//update the cache
-	update_trees (*this, hf);
+	//move to the next signature and update the cache
+	update_privkey (*this, hf);
 	return 0;
 }
 
