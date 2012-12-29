@@ -63,6 +63,9 @@ public:
 		tree_stk_item() {}
 		tree_stk_item (uint L, uint P, std::vector<byte> i)
 			: level (L), pos (P), item (i) {}
+
+		sencode* serialize();
+		bool unserialize (sencode*);
 	};
 	std::vector<std::vector<tree_stk_item> > desired_stack;
 	std::vector<uint> desired_progress;

@@ -26,6 +26,7 @@
 #include "mce.h"
 #include "nd.h"
 #include "mce_qd.h"
+#include "fmtseq.h"
 
 static sencode* serialize_uint_vector (std::vector<uint>*v)
 {
@@ -302,6 +303,238 @@ bool mce_qd::pubkey::unserialize (sencode* s)
 	T = p->i;
 
 	if (!qd_sigs.unserialize (l->items[1]) ) return false;
+
+	return true;
+}
+
+sencode* fmtseq::privkey::tree_stk_item::serialize()
+{
+	sencode_list*l = new sencode_list;
+	l->items.resize (3);
+	l->items[0] = new sencode_int (level);
+	l->items[1] = new sencode_int (pos);
+	l->items[2] = new sencode_bytes (item);
+	return l;
+}
+
+bool fmtseq::privkey::tree_stk_item::unserialize (sencode*s)
+{
+	sencode_list*l = dynamic_cast<sencode_list*> (s);
+	if (!l) return false;
+	if (l->items.size() != 3) return false;
+
+	sencode_int*p;
+	p = dynamic_cast<sencode_int*> (l->items[0]);
+	if (!p) return false;
+	level = p->i;
+
+	p = dynamic_cast<sencode_int*> (l->items[1]);
+	if (!p) return false;
+	pos = p->i;
+
+	sencode_bytes* a = dynamic_cast<sencode_bytes*> (l->items[2]);
+	if (!a) return false;
+	item = std::vector<byte> (a->b.begin(), a->b.end() );
+
+	return true;
+
+}
+
+sencode* fmtseq::privkey::serialize()
+{
+	/*
+	 * fmtseq privkey structure
+	 *
+	 * ( SK h l hs sigs_used
+	 *   ( (exist1 exist exist ...)
+	 *     (exist2 exist exist ...)
+	 *     ...)
+	 *   ( (desired1 ...)
+	 *     ...)
+	 *   ( (stack1 ...)
+	 *     (stack2 ...)
+	 *     ...)
+	 *   ( progress1 progress2 ...)
+	 * )
+	 */
+
+	uint i, j;
+
+	sencode_list*L = new sencode_list;
+	L->items.resize (9);
+	L->items[0] = new sencode_bytes (SK);
+	L->items[1] = new sencode_int (h);
+	L->items[2] = new sencode_int (l);
+	L->items[3] = new sencode_int (hs);
+	L->items[4] = new sencode_int (sigs_used);
+
+	sencode_list *E, *D, *S, *P;
+	L->items[5] = E = new sencode_list;
+	L->items[6] = D = new sencode_list;
+	L->items[7] = S = new sencode_list;
+	L->items[8] = P = new sencode_list;
+
+	E->items.resize (exist.size() );
+	for (i = 0; i < exist.size(); ++i) {
+		sencode_list *t = new sencode_list;
+		E->items[i] = t;
+		t->items.resize (exist[i].size() );
+		for (j = 0; j < exist[i].size(); ++j)
+			t->items[j] = new sencode_bytes (exist[i][j]);
+	}
+
+	D->items.resize (desired.size() );
+	for (i = 0; i < desired.size(); ++i) {
+		sencode_list *t = new sencode_list;
+		D->items[i] = t;
+		t->items.resize (desired[i].size() );
+		for (j = 0; j < desired[i].size(); ++j)
+			t->items[j] = new sencode_bytes (desired[i][j]);
+	}
+
+	S->items.resize (desired_stack.size() );
+	for (i = 0; i < desired_stack.size(); ++i) {
+		sencode_list *t = new sencode_list;
+		S->items[i] = t;
+		t->items.resize (desired_stack[i].size() );
+		for (j = 0; j < desired_stack[i].size(); ++j)
+			t->items[j] = desired_stack[i][j].serialize();
+	}
+
+	P->items.resize (desired_progress.size() );
+	for (i = 0; i < desired_progress.size(); ++i)
+		P->items[i] = new sencode_int (desired_progress[i]);
+
+	return L;
+}
+
+bool fmtseq::privkey::unserialize (sencode*s)
+{
+	uint i, j;
+	sencode_list*L = dynamic_cast<sencode_list*> (s);
+	if (!L) return false;
+	if (L->items.size() != 9) return false;
+
+	sencode_bytes*B;
+	sencode_int*I;
+
+	B = dynamic_cast<sencode_bytes*> (L->items[0]);
+	if (!B) return false;
+	SK = std::vector<byte> (B->b.begin(), B->b.end() );
+
+	I = dynamic_cast<sencode_int*> (L->items[1]);
+	if (!I) return false;
+	h = I->i;
+
+	I = dynamic_cast<sencode_int*> (L->items[2]);
+	if (!I) return false;
+	l = I->i;
+
+	I = dynamic_cast<sencode_int*> (L->items[3]);
+	if (!I) return false;
+	hs = I->i;
+
+	I = dynamic_cast<sencode_int*> (L->items[4]);
+	if (!I) return false;
+	sigs_used = I->i;
+
+	sencode_list*A;
+
+	//exist subtrees
+	A = dynamic_cast<sencode_list*> (L->items[5]);
+	if (!A) return false;
+	exist.clear();
+	exist.resize (A->items.size() );
+	for (i = 0; i < exist.size(); ++i) {
+		sencode_list*e = dynamic_cast<sencode_list*> (A->items[i]);
+		if (!e) return false;
+		exist[i].resize (e->items.size() );
+		for (j = 0; j < exist[i].size(); ++j) {
+			sencode_bytes*item = dynamic_cast<sencode_bytes*>
+			                     (e->items[j]);
+			if (!item) return false;
+			exist[i][j] = std::vector<byte>
+			              (item->b.begin(),
+			               item->b.end() );
+		}
+	}
+
+	//desired subtrees
+	A = dynamic_cast<sencode_list*> (L->items[6]);
+	if (!A) return false;
+	desired.clear();
+	desired.resize (A->items.size() );
+	for (i = 0; i < desired.size(); ++i) {
+		sencode_list*d = dynamic_cast<sencode_list*> (A->items[i]);
+		if (!d) return false;
+		desired[i].resize (d->items.size() );
+		for (j = 0; j < desired[i].size(); ++j) {
+			sencode_bytes*item = dynamic_cast<sencode_bytes*>
+			                     (d->items[j]);
+			if (!item) return false;
+			desired[i][j] = std::vector<byte>
+			                (item->b.begin(),
+			                 item->b.end() );
+		}
+	}
+
+	//desired stacks
+	A = dynamic_cast<sencode_list*> (L->items[7]);
+	if (!A) return false;
+	desired_stack.clear();
+	desired_stack.resize (A->items.size() );
+	for (i = 0; i < desired_stack.size(); ++i) {
+		sencode_list*d = dynamic_cast<sencode_list*> (A->items[i]);
+		if (!d) return false;
+		desired_stack[i].resize (d->items.size() );
+		for (j = 0; j < desired_stack[i].size(); ++j)
+			if (!desired_stack[i][j].unserialize (d->items[j]) )
+				return false;
+	}
+
+	//desired progress
+	A = dynamic_cast<sencode_list*> (L->items[8]);
+	if (!A) return false;
+	desired_progress.clear();
+	desired_progress.resize (A->items.size() );
+	for (i = 0; i < desired_progress.size(); ++i) {
+		I = dynamic_cast<sencode_int*> (A->items[i]);
+		if (!I) return false;
+		desired_progress[i] = I->i;
+	}
+
+	//TODO check the sizes of everything
+	return true;
+}
+
+sencode* fmtseq::pubkey::serialize()
+{
+	sencode_list*l = new sencode_list;
+	l->items.resize (3);
+	l->items[0] = new sencode_int (H);
+	l->items[1] = new sencode_int (hs);
+	l->items[2] = new sencode_bytes (check);
+	return l;
+}
+
+bool fmtseq::pubkey::unserialize (sencode*s)
+{
+	sencode_list*l = dynamic_cast<sencode_list*> (s);
+	if (!l) return false;
+	if (l->items.size() != 3) return false;
+
+	sencode_int*p;
+	p = dynamic_cast<sencode_int*> (l->items[0]);
+	if (!p) return false;
+	H = p->i;
+
+	p = dynamic_cast<sencode_int*> (l->items[1]);
+	if (!p) return false;
+	hs = p->i;
+
+	sencode_bytes* a = dynamic_cast<sencode_bytes*> (l->items[2]);
+	if (!a) return false;
+	check = std::vector<byte> (a->b.begin(), a->b.end() );
 
 	return true;
 }
