@@ -35,6 +35,7 @@ void prepare_keygen (arcfour<byte>& kg, const std::vector<byte>&SK, uint idx)
 	}
 	tmp.resize (16, 0); //prevent chaining to other numbers
 	kg.load_key (tmp);
+	kg.discard (256);
 }
 
 static void add_zero_checksum (bvector& v)
