@@ -1,6 +1,6 @@
 
 AC_PREREQ(2.6)
-AC_INIT([codecrypt], [9999])
+AC_INIT([codecrypt], [devel-1])
 AC_CONFIG_AUX_DIR(.) # because of libtoolize
 
 AM_INIT_AUTOMAKE()

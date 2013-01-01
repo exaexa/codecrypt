@@ -1,5 +1,4 @@
 
-
 /*
  * This file is part of Codecrypt.
  *
@@ -17,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ccr_hash_h_
-#define _ccr_hash_h_
+#ifndef _ccr_enc_h_
+#define _ccr_enc_h_
 
 
 #endif
