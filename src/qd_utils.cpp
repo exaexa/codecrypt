@@ -31,7 +31,6 @@ static void fwht (vector<int> x, vector<int>&r)
 {
 	int bs, s;
 	s = x.size();
-	r.resize (s);
 	bs = s >> 1;
 	r.swap (x);
 	while (bs) {
@@ -46,18 +45,18 @@ static void fwht (vector<int> x, vector<int>&r)
 	}
 }
 
-//we expect correct parameter size and preallocated out.
-void fwht_dyadic_multiply (const bvector& a, const bvector& b, bvector& out)
+/*
+ * we expect correct parameter size and preallocated out. Last 3 parameters are
+ * used as a cache - just supply the same vectors everytime when you're doing
+ * this multiple times.
+ */
+void fwht_dyadic_multiply (const bvector& a, const bvector& b, bvector& out,
+                           vector<int>&t, vector<int>&A, vector<int>&B)
 {
 
-	//lift everyting to Z.
-	vector<int> t, A, B;
 	uint i;
 
-	t.resize (a.size() );
-	A.resize (a.size() );
-	B.resize (a.size() );
-
+	//lift everyting to Z.
 	for (i = 0; i < a.size(); ++i) t[i] = a[i];
 	fwht (t, A);
 
@@ -109,6 +108,12 @@ bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&mat)
 
 	bvector tmp;
 	tmp.resize (bs);
+
+	vector<int> c1, c2, c3;
+	c1.resize (bs);
+	c2.resize (bs);
+	c3.resize (bs);
+
 	for (i = 0; i < h; ++i) { //gauss step
 		//first, find a nonsingular matrix in the column
 		for (j = i; j < h; ++j)
@@ -141,13 +146,13 @@ bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&mat)
 				if (k == w - h + i) continue;
 				fwht_dyadic_multiply
 				(mat[w - h + i][j],
-				 mat[k][j], tmp);
+				 mat[k][j], tmp, c1, c2, c3);
 				mat[k][j] = tmp;
 			}
 			//change the block on the diagonal
 			fwht_dyadic_multiply
 			(mat[w - h + i][j],
-			 mat[w - h + i][j], tmp);
+			 mat[w - h + i][j], tmp, c1, c2, c3);
 			mat[w - h + i][j] = tmp;
 
 			//and zero the column below diagonal
@@ -163,7 +168,7 @@ bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&mat)
 			//we can safely rewrite the diagonal here (nothing's behind it)
 			fwht_dyadic_multiply
 			(mat[w - i - 1][h - i - 1],
-			 mat[k][h - i - 1], tmp);
+			 mat[k][h - i - 1], tmp, c1, c2, c3);
 			mat[k][h - i - 1] = tmp;
 		}
 
@@ -182,7 +187,7 @@ bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&mat)
 				fwht_dyadic_multiply
 				(mat[w - i - 1]
 				 [h - j - 1],
-				 mat[k][h - j - 1], tmp);
+				 mat[k][h - j - 1], tmp, c1, c2, c3);
 				mat[k][h - j - 1] = tmp;
 			}
 			//I+I=0

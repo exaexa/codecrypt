@@ -26,25 +26,31 @@ using namespace mce_qd;
 #include <set>
 
 int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
-                      uint m, uint T, uint block_discard)
+                      uint m, uint T, uint block_count, uint block_discard)
 {
-	priv.fld.create (m);
-	priv.T = T;
-	uint t = 1 << T;
-
 	//convenience
 	gf2m&fld = priv.fld;
 	std::vector<uint>&essence = priv.essence;
+
+	//initial stuff and sizes
+	fld.create (m);
+	priv.T = T;
+	uint t = 1 << T,
+	     block_size = t,
+	     h_block_count = block_count + block_discard,
+	     n = h_block_count * t;
+
+	if (block_count <= m) return 2; //lower bound on block_count
+	if (n > fld.n / 2) return 2; //n <= q/2
 
 	std::vector<uint> support, Hsig;
 	polynomial g;
 	uint i, j;
 
-	//prepare for data
-	Hsig.resize (fld.n / 2);
-	support.resize (fld.n / 2);
+	//prepare data arrays
+	Hsig.resize (n);
+	support.resize (n);
 	essence.resize (m);
-	//note that q=2^m, algo. n=q/2, log n = m-1
 
 	//retry generating until goppa code is produced.
 	for (;;) {
@@ -58,7 +64,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		essence[m - 1] = fld.inv (Hsig[0]);
 		//essence[m-1] is now used as precomputed 1/h_0
 
-		for (uint s = 0; s < m - 1; ++s) {
+		for (uint s = 0; (1 << s) < n; ++s) {
 			i = 1 << s; //i = 2^s
 
 			Hsig[i] = choose_random (fld.n, rng, used);
@@ -66,6 +72,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 			used.insert (fld.inv (essence[s]) );
 
 			for (j = 1; j < i; ++j) {
+				if (i + j >= n) break;
 				Hsig[i + j] = fld.inv
 				              (fld.add
 				               (fld.inv (Hsig[i]),
@@ -103,7 +110,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		if (!consistent) continue; //retry
 
 		//compute the support, retry if it has two equal elements.
-		for (i = 0; i < fld.n / 2; ++i) {
+		for (i = 0; i < n; ++i) {
 			support[i] = fld.add (
 			                 fld.inv (Hsig[i]),
 			                 essence[m - 1]);
@@ -124,12 +131,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		}
 		if (!consistent) continue; //retry
 
-		//now the blocks.
-		uint block_size = 1 << T,
-		     h_block_count = (fld.n / 2) / block_size,
-		     block_count = h_block_count - block_discard;
-
-		//assemble blocks to bl
+		//now the blocks. First assemble blocks to bl
 		std::vector<polynomial> bl, blp;
 		bl.resize (h_block_count);
 		for (i = 0; i < h_block_count; ++i) {
@@ -211,17 +213,20 @@ int privkey::prepare()
 	uint omega;
 
 	uint block_size = 1 << T,
-	     block_count = hperm.size();
+	     block_count = hperm.size(),
+	     h_block_count = block_perm.size(),
+	     n = h_block_count * block_size;
 
 	//compute H signature from essence
-	Hsig.resize (fld.n / 2);
+	Hsig.resize (n);
 	Hsig[0] = fld.inv (essence[fld.m - 1]);
-	for (s = 0; s < fld.m - 1; ++s) {
+	for (s = 0; (1 << s) < n; ++s) {
 		i = 1 << s; //i = 2^s
 
 		Hsig[i] = fld.inv (fld.add (essence[s], essence[fld.m - 1]) );
 
-		for (j = 1; j < i; ++j)
+		for (j = 1; j < i; ++j) {
+			if (i + j >= n) break;
 			Hsig[i + j] = fld.inv
 			              (fld.add
 			               (fld.inv (Hsig[i]),
@@ -229,6 +234,7 @@ int privkey::prepare()
 			                    fld.inv (Hsig[j]),
 			                    essence[fld.m - 1]
 			                ) ) );
+		}
 	}
 
 	//goppa polynomial with omega=0
@@ -249,8 +255,8 @@ int privkey::prepare()
 	}
 
 	//compute the support with omega=0
-	support.resize (fld.n / 2);
-	for (i = 0; i < fld.n / 2; ++i) {
+	support.resize (n);
+	for (i = 0; i < n; ++i) {
 		//don't check discarded support
 		if (block_perm[i / block_size] >= block_count) continue;
 		support[i] = fld.add
@@ -262,7 +268,7 @@ int privkey::prepare()
 		used.insert (support[i]);
 	}
 
-	//choose omega
+	//choose some omega
 	omega = fld.n;
 	for (i = 0; i < fld.n; ++i)
 		if (!used.count (i) ) {
@@ -295,7 +301,7 @@ int privkey::prepare()
 	permuted_support.resize (block_size * block_count);
 
 	//permute support
-	for (i = 0; i < (fld.n / 2) / block_size; ++i) {
+	for (i = 0; i < h_block_count; ++i) {
 		pos = block_perm[i];
 		if (pos >= block_count) continue; //was discarded
 		blk_perm = block_perms[pos];
@@ -376,6 +382,11 @@ int pubkey::encrypt (const bvector & in, bvector & out, const bvector&errors)
 	g.resize (t);
 	r.resize (t);
 
+	std::vector<int> c1, c2, c3;
+	c1.resize (t);
+	c2.resize (t);
+	c3.resize (t);
+
 	for (i = 0; i < qd_sigs.size(); ++i) {
 		//plaintext block
 		in.get_block (i * t, t, p);
@@ -385,7 +396,7 @@ int pubkey::encrypt (const bvector & in, bvector & out, const bvector&errors)
 			qd_sigs[i].get_block (j * t, t, g);
 
 			//block result
-			fwht_dyadic_multiply (p, g, r);
+			fwht_dyadic_multiply (p, g, r, c1, c2, c3);
 			cksum.add_offset (r, t * j);
 		}
 	}

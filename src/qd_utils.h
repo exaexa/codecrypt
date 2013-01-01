@@ -25,8 +25,16 @@
 #include "bvector.h"
 #include "prng.h"
 
-//FWHT matrix mult in O(n log n). parameters MUST be of 2^m size.
-void fwht_dyadic_multiply (const bvector&, const bvector&, bvector&);
+/*
+ * FWHT matrix mult in O(n log n). parameters MUST be of 2^m size.
+ *
+ * c1-c3 are caches. Just supply the same vector objects everytime, it's gonna
+ * be a lot faster.
+ */
+void fwht_dyadic_multiply (const bvector&, const bvector&, bvector&,
+                           std::vector<int>& c1,
+                           std::vector<int>& c2,
+                           std::vector<int>& c3);
 
 //create a generator using fwht
 bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&matrix);

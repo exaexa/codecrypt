@@ -98,7 +98,7 @@ public:
 	bool unserialize (sencode*);
 };
 
-int generate (pubkey&, privkey&, prng&, uint m, uint T, uint b);
+int generate (pubkey&, privkey&, prng&, uint m, uint T, uint b, uint bd);
 }
 
 #endif
