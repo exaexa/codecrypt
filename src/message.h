@@ -19,5 +19,44 @@
 #ifndef _ccr_msg_h_
 #define _ccr_msg_h_
 
+#include <string>
+#include "bvector.h"
+#include "sencode.h"
+#include "keyring.h"
+#include "prng.h"
+
+class encrypted_msg
+{
+public:
+	bvector message;
+	std::string alg_id, key_id;
+
+	int decrypt (bvector&, keyring&);
+	int encrypt (const bvector& msg,
+	             const std::string& alg_id,
+	             const std::string& key_id,
+	             keyring&, prng&);
+
+
+	sencode* serialize();
+	bool unserialize (sencode*);
+};
+
+class signed_msg
+{
+public:
+	bvector message, signature;
+	std::string alg_id, key_id;
+
+	int verify (keyring&);
+	int sign (const bvector&msg,
+	          const std::string&alg_id,
+	          const std::string&key_id,
+	          keyring&, prng&);
+
+	sencode* serialize();
+	bool unserialize (sencode*);
+};
+
 #endif
 

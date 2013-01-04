@@ -16,8 +16,26 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ccr_sigs_h_
-#define _ccr_sigs_h_
+#ifndef _ccr_keys_h_
+#define _ccr_keys_h_
+
+#include <string>
+
+#include "sencode.h"
+
+class keyring
+{
+public:
+	bool disk_sync();
+
+	sencode* get_pubkey (const std::string&key_id);
+	void remove_pubkey (const std::string&key_id);
+	bool store_pubkey (const std::string&key_id, sencode*);
+
+	sencode* get_privkey (const std::string&key_id);
+	void remove_privkey (const std::string&key_id);
+	bool store_privkey (const std::string&key_id, sencode*);
+};
 
 #endif
 
