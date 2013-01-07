@@ -22,6 +22,7 @@
 #include <string>
 #include "bvector.h"
 #include "sencode.h"
+#include "algorithm.h"
 #include "keyring.h"
 #include "prng.h"
 
@@ -31,12 +32,11 @@ public:
 	bvector message;
 	std::string alg_id, key_id;
 
-	int decrypt (bvector&, keyring&);
+	int decrypt (bvector&, algorithm_suite&, keyring&);
 	int encrypt (const bvector& msg,
 	             const std::string& alg_id,
 	             const std::string& key_id,
-	             keyring&, prng&);
-
+	             algorithm_suite&, keyring&, prng&);
 
 	sencode* serialize();
 	bool unserialize (sencode*);
@@ -48,11 +48,11 @@ public:
 	bvector message, signature;
 	std::string alg_id, key_id;
 
-	int verify (keyring&);
+	int verify (algorithm_suite&, keyring&);
 	int sign (const bvector&msg,
 	          const std::string&alg_id,
 	          const std::string&key_id,
-	          keyring&, prng&);
+	          algorithm_suite&, keyring&, prng&);
 
 	sencode* serialize();
 	bool unserialize (sencode*);
