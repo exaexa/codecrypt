@@ -51,10 +51,13 @@ public:
 	                     sencode* privkey) = 0;
 
 	virtual int sign (const bvector&msg, bvector&sig,
-	                  sencode* privkey, prng&rng) = 0;
+	                  sencode* privkey, bool&dirty,
+	                  prng&rng) = 0;
 
 	virtual int verify (const bvector&sig, const bvector&msg,
 	                    sencode* pubkey) = 0;
+
+	virtual int create_keypair (sencode**pub, sencode**priv, prng&rng) = 0;
 };
 
 #endif

@@ -26,18 +26,36 @@ int encrypted_msg::encrypt (const bvector&msg,
 	key_id = Key_id;
 	alg_id = Alg_id;
 
-	sencode*pubkey = kr.get_pubkey (key_id);
-	if (!pubkey) return 1; //PK not found
+	algorithm*alg = NULL;
+	if (algs.count (alg_id) ) {
+		alg = algs[alg_id];
+		if (!alg->provides_encryption() )
+			alg = NULL;
+	}
 
-	return 0;
+	if (!alg) return 1;
+
+	sencode*pubkey = kr.get_pubkey (key_id);
+	if (!pubkey) return 2; //PK not found
+
+	return alg->encrypt (msg, ciphertext, pubkey, rng);
 }
 
 int encrypted_msg::decrypt (bvector& msg, algorithm_suite&algs, keyring& kr)
 {
-	sencode*privkey = kr.get_privkey (key_id);
-	if (!privkey) return 1; //no key found
+	algorithm*alg = NULL;
+	if (algs.count (alg_id) ) {
+		alg = algs[alg_id];
+		if (!alg->provides_encryption() )
+			alg = NULL;
+	}
 
-	return 0;
+	if (!alg) return 1;
+
+	sencode*privkey = kr.get_privkey (key_id);
+	if (!privkey) return 2;
+
+	return alg->decrypt (ciphertext, msg, privkey);
 }
 
 int signed_msg::sign (const bvector&msg,
@@ -49,17 +67,45 @@ int signed_msg::sign (const bvector&msg,
 	alg_id = Alg_id;
 	message = msg;
 
+	algorithm*alg = NULL;
+	if (algs.count (alg_id) ) {
+		alg = algs[alg_id];
+		if (!alg->provides_signatures() )
+			alg = NULL;
+	}
+
+	if (!alg) return 1;
+
 	sencode*privkey = kr.get_privkey (key_id);
-	if (!privkey) return 1;
+	if (!privkey) return 2;
+
+	bool privkey_dirty = false;
+	int r;
+
+	r = alg->sign (message, signature, privkey, privkey_dirty, rng);
+
+	if (r) return r;
+
+	//make sure the modified privkey gets stored correctly
+	//TODO
 
 	return 0;
 }
 
 int signed_msg::verify (algorithm_suite&algs, keyring&kr)
 {
-	sencode*pubkey = kr.get_pubkey (key_id);
-	if (!pubkey) return 1;
+	algorithm*alg = NULL;
+	if (algs.count (alg_id) ) {
+		alg = algs[alg_id];
+		if (!alg->provides_signatures() )
+			alg = NULL;
+	}
 
-	return 0;
+	if (!alg) return 1;
+
+	sencode*pubkey = kr.get_pubkey (key_id);
+	if (!pubkey) return 2;
+
+	return alg->verify (signature, message, pubkey);
 }
 

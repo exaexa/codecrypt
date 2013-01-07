@@ -29,7 +29,7 @@
 class encrypted_msg
 {
 public:
-	bvector message;
+	bvector ciphertext;
 	std::string alg_id, key_id;
 
 	int decrypt (bvector&, algorithm_suite&, keyring&);
