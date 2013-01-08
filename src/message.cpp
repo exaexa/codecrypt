@@ -86,8 +86,13 @@ int signed_msg::sign (const bvector&msg,
 
 	if (r) return r;
 
-	//make sure the modified privkey gets stored correctly
-	//TODO
+	if (privkey_dirty) {
+		kr.remove_privkey (key_id);
+		//this actually shouldn't fail, key_id is not present
+		kr.store_privkey (key_id, privkey);
+		//we can't output a signature without storing privkey changes
+		if (!kr.disk_sync() ) return 3;
+	}
 
 	return 0;
 }
