@@ -21,7 +21,7 @@
 
 #include <string>
 
-void base64_encode (const std::string& in, std::string&out);
+void base64_encode (const std::string& in, std::string&out, int cols = 76);
 bool base64_decode (const std::string& in, std::string&out);
 
 #endif
