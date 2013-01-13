@@ -26,7 +26,7 @@ void base64_encode (const std::string& in, std::string&out, int cols)
 
 	int acc = 0, accbits = 0, idx = 0, idxmax = in.length(), col = 0;
 	out.clear();
-	out.reserve (idxmax + (4 * idxmax / 10) );
+	out.reserve (idxmax + (2 * idxmax / 5) ); //reserve around 140%
 	while (idx < idxmax) {
 		if (accbits < 6) {
 			acc = (acc << 8) | in[idx++];
@@ -35,6 +35,11 @@ void base64_encode (const std::string& in, std::string&out, int cols)
 		while (accbits >= 6) {
 			accbits -= 6;
 			out.push_back (b64str[ (acc >> accbits) & 0x3f]);
+
+			if (cols && ( (++col) >= cols) ) {
+				out.push_back ('\n');
+				col = 0;
+			}
 		}
 	}
 	if (accbits) {
