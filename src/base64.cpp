@@ -125,6 +125,37 @@ static void init_dec_str (char s[256])
 	s['/'] = 63;
 }
 
+static inline bool is_white (char c)
+{
+	return (c == '\n') || (c == '\r') || (c == ' ') || (c == '\t');
+}
+
+static inline bool is_b64 (char c)
+{
+	return (c >= 'a' && c <= 'z')
+	       || (c >= 'A' && c <= 'Z')
+	       || (c >= '0' && c <= '9')
+	       || c == '+' || c == '/'
+	       || c == '=';
+}
+
+static void eat_white (const std::string&in, int&idx, int idxmax)
+{
+	for (; (idx < idxmax) && is_white (in[idx]); ++idx);
+}
+
+static bool eat_4 (const std::string&in, int&idx, int idxmax, char*a)
+{
+	for (int i = 0; i < 4; ++i) {
+		eat_white (in, idx, idxmax);
+		if ( (idx < idxmax) && is_b64 (in[idx]) )
+			a[i] = in[idx];
+		else return false;
+		++idx;
+	}
+	return true;
+}
+
 bool base64_decode (const std::string& in, std::string&out)
 {
 	static char b64d[256];
@@ -135,6 +166,38 @@ bool base64_decode (const std::string& in, std::string&out)
 		b64d_init = true;
 	}
 
-	return false;
+	int idx = 0, idxmax = in.length(), tmp;
+
+	out.clear();
+	out.reserve (3 * in.length() / 4);
+
+	//start parsing
+	char c[4];
+	while (eat_4 (in, idx, idxmax, c) ) {
+		for (int i = 0; i < 4; ++i)
+			c[i] = b64d[c[i]]; // '=' gets converted to -1
+
+		//consistency checks
+		if ( (c[0] == -1) || (c[1] == -1) ) return false;
+		if ( (c[2] == -1) && (c[3] != -1) ) return false;
+
+		tmp = (c[0] << 18) | (c[1] << 12);
+		if (c[2] != -1) tmp |= c[2] << 6;
+		if (c[3] != -1) tmp |= c[3];
+
+		out.push_back ( (tmp >> 16) & 0xff);
+
+		if (c[2] != -1) // middle byte is valid
+			out.push_back ( (tmp >> 8) & 0xff);
+
+		if (c[3] != -1) // last byte is valid
+			out.push_back (tmp & 0xff);
+		else
+			break; //there were ='s, terminate.
+	}
+
+	//there shouldn't be anything more than whitespace now
+	eat_white (in, idx, idxmax);
+	return idx == idxmax;
 }
 
