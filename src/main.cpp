@@ -19,7 +19,7 @@
 #include <iostream>
 
 /*
- * main module. Parse options, fire up stuff, pass commands to it.
+ * output helpers
  */
 
 #define out(x) std::cout << x << std::endl
@@ -39,9 +39,23 @@ void print_help (char*pname)
 	out ("Usage: " << pname << " [options]");
 	outeol;
 	out ("Options consist of:");
-	out (" -h, --help         display this help");
+	out (" -h, --help            display this help");
 	out (" -V,--version          display version information");
+	out (" -T                    perform some testing stuff");
 }
+
+/*
+ * testing
+ */
+
+void test()
+{
+	//stuff gets tested here.
+}
+
+/*
+ * main module. Parse options, fire up stuff, pass commands to it.
+ */
 
 #include <getopt.h>
 
@@ -49,6 +63,7 @@ int main (int argc, char**argv)
 {
 	bool do_help = false;
 	bool do_version = false;
+	bool do_test = false;
 	bool has_opt = false;
 
 	//process options
@@ -60,7 +75,7 @@ int main (int argc, char**argv)
 			{0,		0,	0,	0 }
 		};
 
-		c = getopt_long (argc, argv, "hV", long_opts, &option_index);
+		c = getopt_long (argc, argv, "hVT", long_opts, &option_index);
 		if (c == -1) break;
 
 		has_opt = true;
@@ -72,6 +87,9 @@ int main (int argc, char**argv)
 			break;
 		case 'V':
 			do_version = true;
+			break;
+		case 'T':
+			do_test = true;
 			break;
 		default: //which doesn't just happen.
 			break;
@@ -92,6 +110,12 @@ int main (int argc, char**argv)
 		print_version();
 		return 0;
 	}
+
+	if (do_test) {
+		test();
+		return 0;
+	}
+
 	return 0;
 }
 

@@ -151,6 +151,11 @@ bool polynomial::unserialize (sencode* s)
 	return unserialize_uint_vector (this, s);
 }
 
+/*
+ * TODO -- all keys should have some kind of identification stored with them,
+ * so they don't get mistaken with other key types. Do it.
+ */
+
 sencode* mce::privkey::serialize()
 {
 	sencode_list*l = new sencode_list;
