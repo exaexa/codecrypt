@@ -35,7 +35,7 @@ public:
 		r.clear();
 	}
 
-	void seed (uint bits, bool quick);
+	void seed (uint bits, bool quick = true);
 
 	uint random (uint n) {
 		//rand_max is 2^32.
