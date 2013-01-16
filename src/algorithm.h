@@ -45,19 +45,28 @@ public:
 	 * plaintext/ciphertext/message lengths, usually padding them somehow.
 	 */
 	virtual int encrypt (const bvector&plain, bvector&cipher,
-	                     sencode* pubkey, prng&rng) = 0;
+	                     sencode* pubkey, prng&rng) {
+		return -1;
+	}
 
 	virtual int decrypt (const bvector&cipher, bvector&plain,
-	                     sencode* privkey) = 0;
+	                     sencode* privkey) {
+		return -1;
+	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
-	                  sencode* privkey, bool&dirty,
-	                  prng&rng) = 0;
+	                  sencode* privkey, bool&dirty, prng&rng) {
+		return -1;
+	}
 
 	virtual int verify (const bvector&sig, const bvector&msg,
-	                    sencode* pubkey) = 0;
+	                    sencode* pubkey) {
+		return -1;
+	}
 
-	virtual int create_keypair (sencode**pub, sencode**priv, prng&rng) = 0;
+	virtual int create_keypair (sencode**pub, sencode**priv, prng&rng) {
+		return -1;
+	}
 };
 
 #endif
