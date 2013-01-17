@@ -107,16 +107,17 @@ static void message_pad (const bvector&in, std::vector<byte>&out, prng&rng)
 	//byte stage
 	int overflow = out.size() & 0xff;
 	int pad_block_start = out.size() >> 8;
+	int pad_block_start_byte = pad_block_start << 8;
 
 	//make space for the bytes
 	out.resize ( (pad_block_start + 1) << 8, 0);
 
 	//fill random bytes
 	for (i = overflow; i < 0xff; ++i)
-		out[i + pad_block_start] = rng.random (256);
+		out[i + pad_block_start_byte] = rng.random (256);
 
 	//fill the overflow size byte
-	out[pad_block_start + 0xff] = overflow;
+	out[pad_block_start_byte + 0xff] = overflow;
 }
 
 static bool message_unpad (const std::vector<byte>&in, bvector&out)
