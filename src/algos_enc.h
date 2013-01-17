@@ -55,7 +55,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "MCEQD256FO-SHA256-ARCFOUR";
+		return "MCEQD256FO-SHA512-ARCFOUR";
 	}
 
 	int encrypt (const bvector&plain, bvector&cipher,
