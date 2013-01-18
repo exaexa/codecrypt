@@ -78,7 +78,8 @@ int algo_mceqd256::create_keypair (sencode**pub, sencode**priv, prng&rng)
  *
  * Note that:
  *   - the last block is _always present_
- *     (even if there's no message bytes in it.)
+ *     (even if there are no message bytes in it, there still must be the zero
+ *     1byte number that is telling us.)
  *   - stuff in bytes is always thought about as big-endian
  */
 
@@ -161,11 +162,11 @@ static bool message_unpad (const std::vector<byte>&in, bvector&out)
 #include "arcfour.h"
 
 /*
- * Generic F-O encryption function. Note that ranksize must be equal to
+ * Generic F-O functions. Note that ranksize must be equal to
  *
  * floor(log(comb(ciphersize,errorcount))/log(2))
  *
- * otherwise it probably fails miserably.
+ * otherwise it probably fails. miserably.
  */
 
 template < class pubkey_type,
@@ -207,7 +208,8 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	//prepare the error vector
 	bvector ev_rank;
 	ev_rank.resize (ranksize);
-	for (i = 0; i < ranksize; ++i) ev_rank[i] = 1 & (H[ (i >> 3) % H.size()] >> (i & 0x7) );
+	for (i = 0; i < ranksize; ++i)
+		ev_rank[i] = 1 & (H[ (i >> 3) % H.size()] >> (i & 0x7) );
 
 	bvector ev;
 	ev_rank.colex_unrank (ev, ciphersize, errorcount);
@@ -250,7 +252,6 @@ template < class privkey_type,
 static int fo_decrypt (const bvector&cipher, bvector&plain,
                        sencode* privkey)
 {
-
 	uint i;
 
 	//load the key
@@ -262,14 +263,67 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	if (Priv.cipher_size() != ciphersize) return 1;
 	if (Priv.error_count() != errorcount) return 1;
 
-	//TODO
-	//split the message into McE and Arcfour parts
-	//decrypt the symmetric key
-	//decrypt the message part
-	//check the hash
-	//unpad the message
+	//get the McE part
+	if (cipher.size() < ciphersize) return 2;
+	bvector mce_cipher, mce_plain, ev;
+	mce_cipher.insert (mce_cipher.end(),
+	                   cipher.begin(),
+	                   cipher.begin() + ciphersize);
 
-	return -1;
+	//decrypt the symmetric key
+	if (Priv.decrypt (mce_cipher, mce_plain, ev) ) return 2;
+
+	//convert stuff to byte vectors
+	std::vector<byte> K, M;
+	K.resize (plainsize >> 3, 0);
+	for (i = 0; i < plainsize; ++i)
+		if (mce_plain[i]) K[i >> 3] |= 1 << (i & 0x7);
+
+	uint msize = cipher.size() - ciphersize;
+	if (msize & 0x7) return 2;
+	M.resize (msize >> 3, 0);
+	for (i = 0; i < msize; ++i)
+		if (cipher[ciphersize + i]) M[i >> 3] |= 1 << (i & 0x7);
+
+	//prepare arcfour
+	arcfour<byte> arc;
+	arc.init (8);
+	//stuff in the whole key
+	for (i = 0; i < (K.size() >> 8); ++i) {
+		std::vector<byte> subkey (K.begin() + (i << 8),
+		                          min (K.end(),
+		                               K.begin() + ( (i + 1) << 8) ) );
+		arc.load_key (subkey);
+	}
+	arc.discard (256);
+	//decrypt the message part
+	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ arc.gen();
+
+	//compute the hash of K+M
+	std::vector<byte>H, M2;
+	M2 = M;
+	M2.insert (M2.end(), K.begin(), K.end() );
+	hash_type hf;
+	H = hf (M2);
+
+	/*
+	 * prepare the error vector (again. Avoiding colex ranking which is
+	 * little less deterministic than it could be (produces varying amounts
+	 * of whitespace)
+	 */
+	bvector ev_rank, ev2;
+	ev_rank.resize (ranksize);
+	for (i = 0; i < ranksize; ++i)
+		ev_rank[i] = 1 & (H[ (i >> 3) % H.size()] >> (i & 0x7) );
+	ev_rank.colex_unrank (ev2, ciphersize, errorcount);
+
+	//now it should match, otherwise someone mangled the message.
+	if (ev != ev2) return 3;
+
+	//if the message seems okay, unpad and return it.
+	if (!message_unpad (M, plain) ) return 2;
+
+	return 0;
 }
 
 /*
@@ -315,7 +369,7 @@ int algo_mceqd256::decrypt (const bvector&cipher, bvector&plain,
 	return fo_decrypt
 	       < mce_qd::privkey,
 	       4096, 8192, 256,
-	       sha256hash,
+	       sha512hash,
 	       1638 >
 	       (cipher, plain, privkey);
 }
