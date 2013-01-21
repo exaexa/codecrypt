@@ -18,12 +18,6 @@
 
 #include "keyring.h"
 
-bool keyring::disk_sync()
-{
-
-	return false;
-}
-
 sencode* keyring::get_pubkey (const std::string&key_id)
 {
 
@@ -54,3 +48,40 @@ bool keyring::store_privkey (const std::string&key_id, sencode*)
 
 }
 
+/*
+ * DISK KEYRING STORAGE
+ *
+ * Whole thing is stored in two files just like in GnuPG:
+ *
+ * ~/.ccr/pubkeys
+ * ~/.ccr/private_keyring
+ *
+ * format of the files is raw sencode.
+ *
+ * Public key file is organized as follows:
+ *
+ * (
+ *   "ccr public key storage"
+ *   ( "public-key-id" pubkey_as_embedded_sencode )
+ *   ( "public-key-id" pubkey_as_embedded_sencode )
+ *   ( "public-key-id" pubkey_as_embedded_sencode )
+ *   ...
+ * )
+ *
+ * Private keys are stored together with their pubkeys, so that they don't have
+ * to be generated everytime user asks for them:
+ *
+ * (
+ *   "ccr private keyring"
+ *   ( "public-key-id" privkey pubkey )
+ *   ( "public-key-id" privkey pubkey )
+ *   ( "public-key-id" privkey pubkey )
+ *   ...
+ * )
+ *
+ */
+
+bool keyring::disk_sync()
+{
+	return false;
+}

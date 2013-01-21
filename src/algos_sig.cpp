@@ -16,8 +16,7 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ccr_keys_h_
-#define _ccr_keys_h_
+#include "algos_enc.h"
 
-#endif
+#include "fmtseq.h"
 

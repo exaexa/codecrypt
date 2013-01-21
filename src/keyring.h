@@ -20,11 +20,17 @@
 #define _ccr_keys_h_
 
 #include <string>
+#include <map>
 
 #include "sencode.h"
 
+/* TODO privkeys are actually keypairs! */
+
 class keyring
 {
+	std::multimap<std::string, sencode*>
+	priv_cache, priv_dirty,
+	            pub_cache, pub_dirty;
 public:
 	bool disk_sync();
 
