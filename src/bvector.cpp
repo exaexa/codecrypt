@@ -202,9 +202,10 @@ void bvector::colex_unrank (bvector&res, uint n, uint k) const
 	res.clear();
 	res.resize (n, 0);
 
-	uint p;
 	for (uint i = k; i > 0; --i) {
-		p = i;
+		/* Original code:
+
+		uint p = i;
 		for (;;) {
 			combination_number (p, i, t);
 
@@ -212,10 +213,34 @@ void bvector::colex_unrank (bvector&res, uint n, uint k) const
 			++p;
 		}
 
-		combination_number (p - 1, i, t);
+		 * ...that kindof lacks speed. We're actually trying to find
+		 * the smallest value of p for which comb(p,i)>r.
+		 *
+		 * Computing all combination numbers is KIND OF slow and cache
+		 * (as suggested by Barreto and others) doesn't really make big
+		 * difference here (we're usually doing only one or two runs of
+		 * this stuff in one program run). Storing about 50megs of
+		 * precalculated combination numbers is weird as well.
+		 *
+		 * Therefore, with the knowledge that i <= p <= n, we're
+		 * halving the search interval as usual.
+		 */
+
+		uint p, a = i, b = n;
+		while (a < b) {
+			p = (a + b) / 2;
+
+			combination_number (p, i, t);
+			if (mpz_cmp (t, r) > 0) b = p;
+			else a = p + 1;
+		}
+
+		combination_number (b - 1, i, t);
 		mpz_swap (t2, r);
 		mpz_sub (r, t2, t);
-		if (p > n) continue; //overflow protection
+
+		//overflow protection (result's wrong anyway now)
+		if (p > n) continue;
 		res[p - 1] = 1;
 	}
 
