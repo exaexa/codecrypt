@@ -182,12 +182,12 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 
 	//load the key
 	pubkey_type Pub;
-	if (Pub.unserialize (pubkey) ) return 1;
+	if (!Pub.unserialize (pubkey) ) return 1;
 
 	//verify that key parameters match our scheme
-	if (Pub.plain_size() != plainsize) return 1;
-	if (Pub.cipher_size() != ciphersize) return 1;
-	if (Pub.error_count() != errorcount) return 1;
+	if (Pub.plain_size() != plainsize) return 2;
+	if (Pub.cipher_size() != ciphersize) return 3;
+	if (Pub.error_count() != errorcount) return 4;
 
 	//create the unencrypted message part
 	std::vector<byte> M;
@@ -217,10 +217,10 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	//prepare plaintext
 	bvector mce_plain;
 	mce_plain.resize (plainsize);
-	for (i = 0; i < plainsize; ++i) mce_plain[i] = 1 & (M[i >> 3] >> (i & 0x7) );
+	for (i = 0; i < plainsize; ++i) mce_plain[i] = 1 & (K[i >> 3] >> (i & 0x7) );
 
 	//run McEliece
-	if (Pub.encrypt (mce_plain, cipher, ev) ) return 2;
+	if (Pub.encrypt (mce_plain, cipher, ev) ) return 5;
 
 	//encrypt the message part (xor with arcfour)
 	arcfour<byte> arc;
@@ -256,22 +256,24 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 
 	//load the key
 	privkey_type Priv;
-	if (Priv.unserialize (privkey) ) return 1;
+	if (!Priv.unserialize (privkey) ) return 1;
+
+	if (Priv.prepare() ) return 100;
 
 	//verify that key parameters match the scheme
-	if (Priv.plain_size() != plainsize) return 1;
-	if (Priv.cipher_size() != ciphersize) return 1;
-	if (Priv.error_count() != errorcount) return 1;
+	if (Priv.plain_size() != plainsize) return 2;
+	if (Priv.cipher_size() != ciphersize) return 3;
+	if (Priv.error_count() != errorcount) return 4;
 
 	//get the McE part
-	if (cipher.size() < ciphersize) return 2;
+	if (cipher.size() < ciphersize) return 5;
 	bvector mce_cipher, mce_plain, ev;
 	mce_cipher.insert (mce_cipher.end(),
 	                   cipher.begin(),
 	                   cipher.begin() + ciphersize);
 
 	//decrypt the symmetric key
-	if (Priv.decrypt (mce_cipher, mce_plain, ev) ) return 2;
+	if (Priv.decrypt (mce_cipher, mce_plain, ev) ) return 6;
 
 	//convert stuff to byte vectors
 	std::vector<byte> K, M;
@@ -280,7 +282,7 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 		if (mce_plain[i]) K[i >> 3] |= 1 << (i & 0x7);
 
 	uint msize = cipher.size() - ciphersize;
-	if (msize & 0x7) return 2;
+	if (msize & 0x7) return 7;
 	M.resize (msize >> 3, 0);
 	for (i = 0; i < msize; ++i)
 		if (cipher[ciphersize + i]) M[i >> 3] |= 1 << (i & 0x7);
@@ -318,10 +320,10 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	ev_rank.colex_unrank (ev2, ciphersize, errorcount);
 
 	//now it should match, otherwise someone mangled the message.
-	if (ev != ev2) return 3;
+	if (ev != ev2) return 8;
 
 	//if the message seems okay, unpad and return it.
-	if (!message_unpad (M, plain) ) return 2;
+	if (!message_unpad (M, plain) ) return 9;
 
 	return 0;
 }

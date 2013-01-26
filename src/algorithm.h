@@ -28,7 +28,14 @@
 class algorithm;
 typedef std::map<std::string, algorithm*> algorithm_suite;
 
-//virtual interface definition for all cryptographic algorithm instances
+/*
+ * virtual interface definition for all cryptographic algorithm instances.
+ *
+ * Note that the whole class could be defined static, but we really enjoy
+ * having the tiny virtual pointers stored in some cool structure along with
+ * the handy algorithm name.
+ */
+
 class algorithm
 {
 public:
