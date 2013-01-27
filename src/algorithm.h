@@ -62,7 +62,7 @@ public:
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
-	                  sencode* privkey, bool&dirty, prng&rng) {
+	                  sencode** privkey, bool&dirty, prng&rng) {
 		return -1;
 	}
 

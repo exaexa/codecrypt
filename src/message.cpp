@@ -82,7 +82,7 @@ int signed_msg::sign (const bvector&msg,
 	bool privkey_dirty = false;
 	int r;
 
-	r = alg->sign (message, signature, privkey, privkey_dirty, rng);
+	r = alg->sign (message, signature, &privkey, privkey_dirty, rng);
 
 	if (r) return r;
 
@@ -90,7 +90,7 @@ int signed_msg::sign (const bvector&msg,
 		kr.remove_privkey (key_id);
 		//this actually shouldn't fail, key_id is not present
 		kr.store_privkey (key_id, privkey);
-		//we can't output a signature without storing privkey changes
+		//we can't output a signature without storing privkey changes!
 		if (!kr.disk_sync() ) return 3;
 	}
 

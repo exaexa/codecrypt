@@ -81,7 +81,8 @@ public:
 	}
 
 	uint signature_size (hash_func&hf) {
-		return ( (h * l + fmtseq_commitments (hs) ) * hf.size() * 8) + (h * l);
+		return ( (h * l + fmtseq_commitments (hs) ) * hf.size() * 8)
+		       + (h * l);
 	}
 
 	sencode* serialize();

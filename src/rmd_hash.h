@@ -17,8 +17,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _sha_hash_h_
-#define _sha_hash_h_
+#ifndef _rmd_hash_h_
+#define _rmd_hash_h_
 
 #include "hash.h"
 #include "ripemd128.h"

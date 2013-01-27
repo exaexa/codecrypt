@@ -37,7 +37,7 @@ public:
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
-	                  sencode* privkey, bool&dirty, prng&rng);
+	                  sencode** privkey, bool&dirty, prng&rng);
 	virtual int verify (const bvector&sig, const bvector&msg,
 	                    sencode* pubkey);
 	int create_keypair (sencode**pub, sencode**priv, prng&rng);
@@ -59,7 +59,7 @@ public:
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
-	                  sencode* privkey, bool&dirty, prng&rng);
+	                  sencode** privkey, bool&dirty, prng&rng);
 	virtual int verify (const bvector&sig, const bvector&msg,
 	                    sencode* pubkey);
 	int create_keypair (sencode**pub, sencode**priv, prng&rng);
