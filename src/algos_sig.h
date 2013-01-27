@@ -33,7 +33,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ128-SHA256-SHA256HALF";
+		return "FMTSEQ128-SHA256-RIPEMD128";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
