@@ -24,23 +24,107 @@
 
 #include "sencode.h"
 
-/* TODO privkeys are actually keypairs! */
-
 class keyring
 {
-	std::multimap<std::string, sencode*>
-	priv_cache, priv_dirty,
-	            pub_cache, pub_dirty;
 public:
-	bool disk_sync();
+	struct pubkey_entry {
+		sencode *key;
+		std::string name, keyid;
 
-	sencode* get_pubkey (const std::string&key_id);
-	void remove_pubkey (const std::string&key_id);
-	bool store_pubkey (const std::string&key_id, sencode*);
+		pubkey_entry() {
+			key = NULL;
+		}
 
-	sencode* get_privkey (const std::string&key_id);
-	void remove_privkey (const std::string&key_id);
-	bool store_privkey (const std::string&key_id, sencode*);
+		pubkey_entry (const std::string& KID,
+		              const std::string& N,
+		              sencode*K) {
+			key = K;
+			name = N;
+			keyid = KID;
+		}
+	};
+
+	struct keypair_entry {
+		sencode *privkey;
+		pubkey_entry pub;
+
+		keypair_entry() {
+			privkey = NULL;
+		}
+
+		keypair_entry (const std::string&KID,
+		               const std::string& N,
+		               sencode*PubK,
+		               sencode*PrivK)
+			: pub (KID, N, PubK) {
+			privkey = PrivK;
+		}
+	};
+
+	std::map<std::string, pubkey_entry> pubs;
+	std::map<std::string, keypair_entry> pairs;
+
+	explicit keyring() {
+	}
+
+	~keyring() {
+		clear();
+	}
+
+	bool load();
+	bool save();
+
+	void clear();
+
+	static std::string get_keyid (const std::string& pubkey);
+
+	static std::string get_keyid (sencode* pubkey) {
+		return get_keyid (pubkey->encode() );
+	}
+
+	pubkey_entry* get_pubkey (const std::string&keyid) {
+		// "own first", but there should not be collisions.
+		if (pairs.count (keyid) ) return & (pairs[keyid].pub);
+		if (pubs.count (keyid) ) return & (pubs[keyid]);
+		return NULL;
+	}
+
+	bool store_pubkey (const std::string&keyid,
+	                   const std::string&name, sencode*key) {
+
+		if (pairs.count (keyid) ) return false;
+		if (pubs.count (keyid) ) return false;
+		pubs[keyid] = pubkey_entry (keyid, name, key);
+	}
+
+	void remove_pubkey (const std::string&keyid) {
+		if (pubs.count (keyid) ) {
+			sencode_destroy (pubs[keyid].key);
+			pubs.erase (keyid);
+		}
+	}
+
+	keypair_entry* get_keypair (const std::string&keyid) {
+		if (pairs.count (keyid) ) return & (pairs[keyid]);
+		return NULL;
+	}
+
+	bool store_keypair (const std::string&keyid,
+	                    const std::string&name,
+	                    sencode*pubkey, sencode*privkey) {
+
+		if (pairs.count (keyid) ) return false;
+		if (pubs.count (keyid) ) return false;
+		pairs[keyid] = keypair_entry (keyid, name, pubkey, privkey);
+	}
+
+	void remove_keypair (const std::string&keyid) {
+		if (pairs.count (keyid) ) {
+			sencode_destroy (pairs[keyid].pub.key);
+			sencode_destroy (pairs[keyid].privkey);
+			pairs.erase (keyid);
+		}
+	}
 };
 
 #endif

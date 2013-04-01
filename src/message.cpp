@@ -35,10 +35,10 @@ int encrypted_msg::encrypt (const bvector&msg,
 
 	if (!alg) return 1;
 
-	sencode*pubkey = kr.get_pubkey (key_id);
-	if (!pubkey) return 2; //PK not found
+	keyring::pubkey_entry*pk = kr.get_pubkey (key_id);
+	if (!pk) return 2; //PK not found
 
-	return alg->encrypt (msg, ciphertext, pubkey, rng);
+	return alg->encrypt (msg, ciphertext, pk->key, rng);
 }
 
 int encrypted_msg::decrypt (bvector& msg, algorithm_suite&algs, keyring& kr)
@@ -52,10 +52,10 @@ int encrypted_msg::decrypt (bvector& msg, algorithm_suite&algs, keyring& kr)
 
 	if (!alg) return 1;
 
-	sencode*privkey = kr.get_privkey (key_id);
-	if (!privkey) return 2;
+	keyring::keypair_entry*k = kr.get_keypair (key_id);
+	if (!k) return 2;
 
-	return alg->decrypt (ciphertext, msg, privkey);
+	return alg->decrypt (ciphertext, msg, k->privkey);
 }
 
 int signed_msg::sign (const bvector&msg,
@@ -76,22 +76,19 @@ int signed_msg::sign (const bvector&msg,
 
 	if (!alg) return 1;
 
-	sencode*privkey = kr.get_privkey (key_id);
-	if (!privkey) return 2;
+	keyring::keypair_entry *k = kr.get_keypair (key_id);
+	if (!k) return 2;
 
 	bool privkey_dirty = false;
 	int r;
 
-	r = alg->sign (message, signature, &privkey, privkey_dirty, rng);
+	r = alg->sign (message, signature, & (k->privkey), privkey_dirty, rng);
 
 	if (r) return r;
 
 	if (privkey_dirty) {
-		kr.remove_privkey (key_id);
-		//this actually shouldn't fail, key_id is not present
-		kr.store_privkey (key_id, privkey);
 		//we can't output a signature without storing privkey changes!
-		if (!kr.disk_sync() ) return 3;
+		if (!kr.save() ) return 3;
 	}
 
 	return 0;
@@ -108,9 +105,9 @@ int signed_msg::verify (algorithm_suite&algs, keyring&kr)
 
 	if (!alg) return 1;
 
-	sencode*pubkey = kr.get_pubkey (key_id);
-	if (!pubkey) return 2;
+	keyring::pubkey_entry*pk = kr.get_pubkey (key_id);
+	if (!pk) return 2;
 
-	return alg->verify (signature, message, pubkey);
+	return alg->verify (signature, message, pk->key);
 }
 

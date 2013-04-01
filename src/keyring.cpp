@@ -18,34 +18,46 @@
 
 #include "keyring.h"
 
-sencode* keyring::get_pubkey (const std::string&key_id)
+void keyring::clear()
 {
+	for (std::map<std::string, pubkey_entry>::iterator
+	     i = pubs.begin(), e = pubs.end(); i != e; ++i)
+		sencode_destroy (i->second.key);
+	pubs.clear();
 
+	for (std::map<std::string, keypair_entry>::iterator
+	     i = pairs.begin(), e = pairs.end(); i != e; ++i) {
+		sencode_destroy (i->second.pub.key);
+		sencode_destroy (i->second.privkey);
+	}
+	pairs.clear();
 }
 
-void keyring::remove_pubkey (const std::string&key_id)
+/*
+ * KeyID is SHA256 of pubkey string representation. Also serves as a
+ * simple fingerprint.
+ */
+
+#include "sha2.h"
+#include <stdint.h>
+
+std::string keyring::get_keyid (const std::string&pubkey)
 {
+	SHA256_CTX ctx;
+	uint8_t t;
 
-}
+	SHA256_Init (&ctx);
 
-bool keyring::store_pubkey (const std::string&key_id, sencode*)
-{
+	for (size_t i = 0; i < pubkey.length(); ++i) {
+		t = pubkey[i];
+		SHA256_Update (&ctx, &t, 1);
+	}
 
-}
+	std::string r;
+	r.resize (64, ' ');
+	SHA256_End (&ctx, & (r[0]) );
 
-sencode* keyring::get_privkey (const std::string&key_id)
-{
-
-}
-
-void keyring::remove_privkey (const std::string&key_id)
-{
-
-}
-
-bool keyring::store_privkey (const std::string&key_id, sencode*)
-{
-
+	return r;
 }
 
 /*
@@ -53,8 +65,10 @@ bool keyring::store_privkey (const std::string&key_id, sencode*)
  *
  * Whole thing is stored in two files just like in GnuPG:
  *
- * ~/.ccr/pubkeys
- * ~/.ccr/private_keyring
+ * ${CCR_DIR}/pubring
+ * ${CCR_DIR}/secrets
+ *
+ * CCR_DIR is taken from environment, and defaults to ${HOME}/.ccr
  *
  * format of the files is raw sencode.
  *
@@ -62,9 +76,9 @@ bool keyring::store_privkey (const std::string&key_id, sencode*)
  *
  * (
  *   "ccr public key storage"
- *   ( "public-key-id" pubkey_as_embedded_sencode )
- *   ( "public-key-id" pubkey_as_embedded_sencode )
- *   ( "public-key-id" pubkey_as_embedded_sencode )
+ *   ( "key-name" pubkey_as_embedded_sencode )
+ *   ( "key-name" pubkey_as_embedded_sencode )
+ *   ( "key-name" pubkey_as_embedded_sencode )
  *   ...
  * )
  *
@@ -73,15 +87,22 @@ bool keyring::store_privkey (const std::string&key_id, sencode*)
  *
  * (
  *   "ccr private keyring"
- *   ( "public-key-id" privkey pubkey )
- *   ( "public-key-id" privkey pubkey )
- *   ( "public-key-id" privkey pubkey )
+ *   ( "key-name" privkey pubkey )
+ *   ( "key-name" privkey pubkey )
+ *   ( "key-name" privkey pubkey )
  *   ...
  * )
  *
  */
 
-bool keyring::disk_sync()
+bool keyring::load()
 {
+
+	return false;
+}
+
+bool keyring::save()
+{
+
 	return false;
 }
