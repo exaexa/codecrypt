@@ -314,7 +314,6 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
  * - h*l hashes of verification chain, from bottom to top, h*l times hash size
  * - i (so that we can guess left/right concatenation before hashing) stored as
  *   H-bit number in little endian.
- *   TODO Why cannot the tree be just XORed together? would be WAY simpler!
  *
  * summed up:
  *

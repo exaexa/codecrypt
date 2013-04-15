@@ -63,7 +63,7 @@ void matrix::compute_transpose (matrix&r)
 
 void matrix::mult (const matrix&right)
 {
-	//trivial multiply. TODO strassen algo for larger matrices.
+	//trivial multiply
 	matrix leftT;
 	compute_transpose (leftT);
 	uint w = right.width(), h = leftT.width(), i, j;
