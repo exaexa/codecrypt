@@ -95,14 +95,53 @@ std::string keyring::get_keyid (const std::string&pubkey)
  *
  */
 
+#include <stdlib.h>
+
+static std::string get_user_dir()
+{
+	const char*tmp = getenv ("CCR_DIR");
+	if (tmp) return tmp;
+	const char*home = getenv ("HOME");
+	if (home) return home + "/.ccr";
+	return "./.ccr"; //fallback for desolate systems
+}
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+static bool prepare_user_dir (const string&dir)
+{
+	//try to create the directory
+	mkdir (dir.c_str(), 0777);
+
+	//and no matter what, verify it's there
+	struct stat st;
+	if (stat (dir.c_str(), &st) )
+		return false;
+
+	if (!S_ISDIR (st.st_mode) )
+		return false;
+
+	return true; //seems m'kay
+}
+
 bool keyring::load()
 {
 
-	return false;
 }
 
 bool keyring::save()
 {
 
-	return false;
+}
+
+bool keyring::open()
+{
+
+}
+
+bool keyring::close()
+{
+
 }
