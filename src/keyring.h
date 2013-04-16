@@ -26,7 +26,7 @@
 
 class keyring
 {
-	int fd_priv, fd_pub;
+	int lockfd;
 public:
 	struct pubkey_entry {
 		sencode *key;
@@ -66,7 +66,7 @@ public:
 	std::map<std::string, keypair_entry> pairs;
 
 	keyring() {
-		fd_priv = fd_pub = -1;
+		lockfd = -1;
 	}
 
 	~keyring() {
