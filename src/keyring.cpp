@@ -107,11 +107,12 @@ static std::string get_user_dir()
 	if (tmp) return std::string (tmp);
 	const char*home = getenv ("HOME");
 	if (home) return std::string (home) + "/.ccr";
-	return "./.ccr"; //fallback for desolate systems
+	return "./.ccr"; //fallback for absolutely desolate systems
 }
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/file.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -120,6 +121,7 @@ static std::string get_user_dir()
 
 #define SECRETS_FILENAME "/secrets"
 #define PUBKEYS_FILENAME "/pubkeys"
+#define LOCK_FILENAME "/lock"
 
 
 /*
@@ -128,7 +130,7 @@ static std::string get_user_dir()
  * We try to setup file permissions properly here and don't care about it later
  * (so that the user can override the default value by easy unixy way)
  */
-static bool ensure_empty_sencode_file (const std::string&fn, mode_t mode)
+static bool ensure_empty_sencode_file (const std::string&fn)
 {
 	struct stat st;
 	if (stat (fn.c_str(), &st) ) {
@@ -140,7 +142,7 @@ static bool ensure_empty_sencode_file (const std::string&fn, mode_t mode)
 		std::string emptyfile = l.encode();
 
 		int fd, res;
-		fd = creat (fn.c_str(), mode);
+		fd = creat (fn.c_str(), S_IRUSR | S_IWUSR);
 		if (fd < 0) return false;
 		res = write (fd, emptyfile.c_str(), emptyfile.length() );
 		if (close (fd) ) return false;
@@ -172,9 +174,8 @@ static bool prepare_user_dir (const std::string&dir)
 	//create empty key storages, if not present
 	std::string fn;
 
-	ensure_empty_sencode_file (dir + PUBKEYS_FILENAME, S_IRUSR | S_IWUSR);
-	ensure_empty_sencode_file (dir + SECRETS_FILENAME, S_IRUSR | S_IWUSR);
-	return true; //seems m'kay
+	return ensure_empty_sencode_file (dir + PUBKEYS_FILENAME) &&
+	       ensure_empty_sencode_file (dir + SECRETS_FILENAME);
 }
 
 static bool file_get_sencode (const std::string&fn, sencode**out)
@@ -369,15 +370,28 @@ bool keyring::save()
 bool keyring::open()
 {
 	//ensure the existence of file structure
-
+	std::string dir = get_user_dir();
+	if (!prepare_user_dir (dir) ) return false;
 
 	//create the lock
+	std::string fn = dir + LOCK_FILENAME;
+	lockfd = creat (fn.c_str(), S_IRUSR | S_IWUSR);
+	if (lockfd < 0) return false;
 
+	if (flock (lockfd, LOCK_EX) ) {
+		::close (lockfd);
+		return false;
+	}
 
+	return true;
 }
 
 bool keyring::close()
 {
-	//close the lock
-
+	//close and remove the lock
+	flock (lockfd, LOCK_UN);
+	::close (lockfd);
+	std::string fn = get_user_dir() + LOCK_FILENAME;
+	unlink (fn.c_str() );
+	return true;
 }
