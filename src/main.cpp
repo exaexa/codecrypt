@@ -50,7 +50,11 @@ void print_help (char*pname)
 
 void test()
 {
-	//stuff gets tested here.
+	/*
+	 * Dear hacker,
+	 * use this function for quicktesting your stuff.
+	 * Other places suck for that purpose.
+	 */
 }
 
 /*
@@ -58,6 +62,8 @@ void test()
  */
 
 #include <getopt.h>
+
+#include "keyring.h"
 
 int main (int argc, char**argv)
 {
@@ -111,11 +117,46 @@ int main (int argc, char**argv)
 		return 0;
 	}
 
-	if (do_test) {
-		test();
-		return 0;
+	/*
+	 * something is happening here, therefore init everything
+	 */
+
+	int exitflag=0;
+
+	keyring KR;
+
+	if(!KR.open()) {
+		err("could not open keyring!");
+		return 1;
 	}
 
-	return 0;
+	if(!KR.load()) {
+		err("could not load keyring!");
+		exitflag=1;
+		goto exit_ok;
+	}
+
+	/*
+	 * check the option flags and do whatever was requested
+	 */
+
+	if (do_test) {
+		test();
+		goto exit_ok;
+	}
+
+	/*
+	 * all done.
+	 * keyring is _not_ automatically saved here to prevent frequent
+	 * rewriting and due the fact that everything that modifies it _must_
+	 * also ensure and verify that it was written back correctly.
+	 */
+
+exit_ok:
+	if(!KR.close()) {
+		err("could not close keyring, something weird is going to happen.");
+	}
+
+	return exitflag;
 }
 

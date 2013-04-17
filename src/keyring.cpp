@@ -388,7 +388,10 @@ bool keyring::open()
 
 bool keyring::close()
 {
-	//close and remove the lock
+	/*
+	 * close and remove the lock. Because of temporary lack of proper
+	 * reporting, we just ignore the errors now.
+	 */
 	flock (lockfd, LOCK_UN);
 	::close (lockfd);
 	std::string fn = get_user_dir() + LOCK_FILENAME;
