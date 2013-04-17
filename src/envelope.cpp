@@ -90,18 +90,20 @@ size_t envelope_read (const std::string&data, size_t offset,
 
 		//try to parse the typeident and termident
 		std::string type, term;
-		offset += begin_prefix.length();
+		offset = begin + begin_prefix.length();
 
 		//find and verify possible positions of type and term strings
-		size_t eoterm = data.find (begin_suffix, offset),
-		       eotype = data.find (' ', offset);
-		if (eoterm == data.npos ||
-		    eotype == data.npos ||
-		    eotype > (eoterm - 1) )
-			continue;
+		size_t eoterm, eotype;
 
-		type = data.substr (offset, eotype);
-		term = data.substr (eotype + 1, eoterm);
+		eotype = data.find (' ', offset);
+		if (eotype == data.npos) continue;
+
+		eoterm = data.find (begin_suffix, eotype + 1);
+
+		if (eoterm == data.npos) continue;
+
+		type = data.substr (offset, eotype - offset);
+		term = data.substr (eotype + 1, eoterm - eotype - 1);
 
 		//verify that type&term are only of acceptable characters
 		if (!acceptable_id (type) || !acceptable_id (term) )
@@ -130,12 +132,12 @@ size_t envelope_read (const std::string&data, size_t offset,
 
 			if ( cut_pos != data.npos && cut_pos < end_pos) {
 				//there is cut
-				out_parts.push_back (data.substr (offset,
-				                                  cut_pos) );
+				out_parts.push_back
+				(data.substr (offset, cut_pos - offset) );
 			} else {
 				//no cut, it's till the end
-				out_parts.push_back (data.substr (offset,
-				                                  end_pos) );
+				out_parts.push_back
+				(data.substr (offset, end_pos - offset) );
 			}
 
 			if (cut_pos == data.npos) {
@@ -208,5 +210,7 @@ std::string envelope_format (const std::string&type,
 			}
 		}
 		res += end_sep;
+
+		return res;
 	}
 }
