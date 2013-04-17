@@ -121,18 +121,18 @@ int main (int argc, char**argv)
 	 * something is happening here, therefore init everything
 	 */
 
-	int exitflag=0;
+	int exitflag = 0;
 
 	keyring KR;
 
-	if(!KR.open()) {
-		err("could not open keyring!");
+	if (!KR.open() ) {
+		err ("could not open keyring!");
 		return 1;
 	}
 
-	if(!KR.load()) {
-		err("could not load keyring!");
-		exitflag=1;
+	if (!KR.load() ) {
+		err ("could not load keyring!");
+		exitflag = 1;
 		goto exit_ok;
 	}
 
@@ -153,8 +153,9 @@ int main (int argc, char**argv)
 	 */
 
 exit_ok:
-	if(!KR.close()) {
-		err("could not close keyring, something weird is going to happen.");
+	if (!KR.close() ) {
+		err ("could not close keyring, "
+		     "something weird is going to happen.");
 	}
 
 	return exitflag;
