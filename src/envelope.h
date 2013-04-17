@@ -22,8 +22,10 @@
 #include <string>
 #include <vector>
 
+#include "prng.h"
+
 /*
- * Tools for finding envelopes in ascii/utf-8 text.
+ * Tool for finding envelopes in ascii/utf-8 text.
  *
  * We simply don't care about wide chars in text, UTF-16+, nor conflicting
  * encodings, nor any similar abominations.
@@ -31,11 +33,19 @@
  * envelope_get tries to find an envelope in text data, starting from offset,
  * returning the offset of first possible following envelope or 0 if nothing
  * usuable was found.
+ *
+ * Finally, no one wants to see CRLF line endings here. Ever. ffs.
  */
 
-size_t envelope_get (const std::string& data, size_t offset,
-                     std::string&out_type,
-                     std::vector<std::string>&out_parts);
+size_t envelope_read (const std::string& data, size_t offset,
+                      std::string&out_type,
+                      std::vector<std::string>&out_parts);
+
+/*
+ * this simply formats a compatible envelope
+ */
+std::string envelope_format (const std::string&type,
+                             const std::vector<std::string>& parts,
+                             prng&rng);
 
 #endif
-
