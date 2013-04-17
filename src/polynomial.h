@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _polynomial_h_
-#define _polynomial_h_
+#ifndef _ccr_polynomial_h_
+#define _ccr_polynomial_h_
 
 #include <vector>
 #include "types.h"

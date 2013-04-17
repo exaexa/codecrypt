@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _gf2m_h_
-#define _gf2m_h_
+#ifndef _ccr_gf2m_h_
+#define _ccr_gf2m_h_
 
 #include <vector>
 #include "types.h"

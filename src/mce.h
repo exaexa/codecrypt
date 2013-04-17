@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _mce_h_
-#define _mce_h_
+#ifndef _ccr_mce_h_
+#define _ccr_mce_h_
 
 #include "gf2m.h"
 #include "matrix.h"

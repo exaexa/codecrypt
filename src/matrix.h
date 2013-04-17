@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _matrix_h_
-#define _matrix_h_
+#ifndef _ccr_matrix_h_
+#define _ccr_matrix_h_
 
 #include <vector>
 #include "types.h"

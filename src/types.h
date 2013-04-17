@@ -17,8 +17,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _types_h_
-#define _types_h_
+#ifndef _ccr_types_h_
+#define _ccr_types_h_
 
 /*
  * typedefs. uint should be able to comfortably hold the GF(2^m) elements of

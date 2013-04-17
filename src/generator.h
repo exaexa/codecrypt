@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _generator_h_
-#define _generator_h_
+#ifndef _ccr_generator_h_
+#define _ccr_generator_h_
 
 #include "arcfour.h"
 #include "prng.h"

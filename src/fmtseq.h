@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _fmtseq_h_
-#define _fmtseq_h_
+#ifndef _ccr_fmtseq_h_
+#define _ccr_fmtseq_h_
 
 #include <vector>
 #include <list>

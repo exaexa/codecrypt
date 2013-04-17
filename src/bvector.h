@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _bvector_h_
-#define _bvector_h_
+#ifndef _ccr_bvector_h_
+#define _ccr_bvector_h_
 
 #include <vector>
 #include "types.h"

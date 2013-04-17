@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ios_h_
-#define _ios_h_
+#ifndef _ccr_ios_h_
+#define _ccr_ios_h_
 
 //operator overloads very useful for debugging/hacking
 #include <iostream>

@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _qdutils_h_
-#define _qdutils_h_
+#ifndef _ccr_qdutils_h_
+#define _ccr_qdutils_h_
 
 #include <vector>
 #include <set>

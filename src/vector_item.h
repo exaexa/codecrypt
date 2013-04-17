@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _vector_item_h_
-#define _vector_item_h_
+#ifndef _ccr_vector_item_h_
+#define _ccr_vector_item_h_
 
 //little STL helper, because writing (*this)[i] everywhere is clumsy
 #define _ccr_declare_vector_item \

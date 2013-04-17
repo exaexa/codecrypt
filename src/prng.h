@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _prng_h_
-#define _prng_h_
+#ifndef _ccr_prng_h_
+#define _ccr_prng_h_
 
 #include "types.h"
 

@@ -16,8 +16,8 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _sencode_h_
-#define _sencode_h_
+#ifndef _ccr_sencode_h_
+#define _ccr_sencode_h_
 
 #include <string>
 #include <vector>
