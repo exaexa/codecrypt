@@ -16,16 +16,7 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-
-/*
- * output helpers
- */
-
-#define out(x) std::cout << x << std::endl
-#define outeol std::cout << std::endl
-#define err(x) std::cerr << x << std::endl
-#define erreol std::cerr << std::endl
+#include "outhelpers.h"
 
 void print_version()
 {
@@ -78,10 +69,50 @@ int main (int argc, char**argv)
 		static struct option long_opts[] = {
 			{"help",	0,	0,	'h' },
 			{"version",	0,	0,	'V' },
+			{"test",	0,	0,	'T' },
+
+			//global options
+			{"armor",	0,	0,	'a' },
+			{"recipient",	1,	0,	'r' },
+			{"user",	1,	0,	'u' },
+
+			//I/O redirection from default stdin/out
+			{"input",	1,	0,	'i' },
+			{"output",	1,	0,	'o' },
+
+			//keyring management
+			{"list",	2,	0,	'k' },
+			{"import",	2,	0,	0 },
+			{"export",	2,	0,	0 },
+			{"delete",	1,	0,	0 },
+
+			{"list-secret",	2,	0,	'K' },
+			{"import-secret", 2,	0,	0 },
+			{"export-secret", 2,	0,	0 },
+			{"delete-secret", 1,	0,	0 },
+
+			{"gen-key",	1,	0,	0 }
+
+			{"rename", 	2,	0,	0 },
+			{"name", 	2,	0,	0 },
+
+			{"fingerprint",	0,	0,	0 },
+
+			//actions
+			{"sign",	0,	0,	's' },
+			{"verify",	0,	0,	'v' },
+			{"encrypt",	0,	0,	'e' },
+			{"decrypt",	0,	0,	'd' },
+
+			//action options
+			{"clearsign",	0,	0,	0 },
+			{"detach-sign",	1,	0,	'b' },
+
 			{0,		0,	0,	0 }
 		};
 
-		c = getopt_long (argc, argv, "hVT", long_opts, &option_index);
+		c = getopt_long (argc, argv, "hVTar:u:i:o:k::K::svedb:",
+		                 long_opts, &option_index);
 		if (c == -1) break;
 
 		has_opt = true;
