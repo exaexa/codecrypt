@@ -53,15 +53,24 @@ void test()
  */
 
 #include <getopt.h>
-
 #include "keyring.h"
 
 int main (int argc, char**argv)
 {
-	bool do_help = false;
-	bool do_version = false;
-	bool do_test = false;
-	bool has_opt = false;
+	bool do_help = false,
+	     do_version = false,
+	     do_test = false,
+	     has_opt = false,
+	     opt_armor = false,
+	     opt_fingerprint = false,
+	     opt_clearsign = false,
+	     opt_import_no_action = false;
+
+	std::string recipient, user,
+	    input, output,
+	    name,
+	    action, action_param,
+	    detach_sign;
 
 	//process options
 	int c, option_index;
@@ -91,12 +100,13 @@ int main (int argc, char**argv)
 			{"export-secret", 2,	0,	0 },
 			{"delete-secret", 1,	0,	0 },
 
-			{"gen-key",	1,	0,	0 }
+			{"gen-key",	1,	0,	0 },
 
 			{"rename", 	2,	0,	0 },
 			{"name", 	2,	0,	0 },
 
 			{"fingerprint",	0,	0,	0 },
+			{"no-action",	0,	0,	'n' },
 
 			//actions
 			{"sign",	0,	0,	's' },
