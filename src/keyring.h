@@ -62,8 +62,11 @@ public:
 		}
 	};
 
-	std::map<std::string, pubkey_entry> pubs;
-	std::map<std::string, keypair_entry> pairs;
+	typedef std::map<std::string, pubkey_entry> pubkey_storage;
+	typedef std::map<std::string, keypair_entry> keypair_storage;
+
+	pubkey_storage pubs;
+	keypair_storage pairs;
 
 	keyring() {
 		lockfd = -1;
@@ -85,6 +88,14 @@ public:
 	static std::string get_keyid (sencode* pubkey) {
 		return get_keyid (pubkey->encode() );
 	}
+
+	static void clear_keypairs (keypair_storage&);
+	static void clear_pubkeys (pubkey_storage&);
+
+	static bool parse_keypairs (sencode*, keypair_storage&);
+	static sencode* serialize_keypairs (const keypair_storage&);
+	static bool parse_pubkeys (sencode*, pubkey_storage&);
+	static sencode* serialize_pubkeys (const pubkey_storage&);
 
 	pubkey_entry* get_pubkey (const std::string&keyid) {
 		// "own first", but there should not be collisions.
