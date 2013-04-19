@@ -91,21 +91,22 @@ int main (int argc, char**argv)
 
 			//keyring management
 			{"list",	2,	0,	'k' },
-			{"import",	2,	0,	0 },
-			{"export",	2,	0,	0 },
-			{"delete",	1,	0,	0 },
+			{"import",	2,	0,	'i' },
+			{"export",	2,	0,	'p' },
+			{"delete",	1,	0,	'x' },
 
 			{"list-secret",	2,	0,	'K' },
-			{"import-secret", 2,	0,	0 },
-			{"export-secret", 2,	0,	0 },
-			{"delete-secret", 1,	0,	0 },
+			{"import-secret", 2,	0,	'I' },
+			{"export-secret", 2,	0,	'P' },
+			{"delete-secret", 1,	0,	'X' },
 
-			{"gen-key",	1,	0,	0 },
+			{"gen-key",	1,	0,	'g' },
 
-			{"rename", 	2,	0,	0 },
-			{"name", 	2,	0,	0 },
+			{"rename", 	1,	0,	'm' },
+			{"rename-secret", 1,	0,	'M' },
+			{"name", 	1,	0,	'N' },
 
-			{"fingerprint",	0,	0,	0 },
+			{"fingerprint",	0,	0,	'f' },
 			{"no-action",	0,	0,	'n' },
 
 			//actions
@@ -115,14 +116,16 @@ int main (int argc, char**argv)
 			{"decrypt",	0,	0,	'd' },
 
 			//action options
-			{"clearsign",	0,	0,	0 },
+			{"clearsign",	0,	0,	'C' },
 			{"detach-sign",	1,	0,	'b' },
 
 			{0,		0,	0,	0 }
 		};
 
-		c = getopt_long (argc, argv, "hVTar:u:i:o:k::K::svedb:",
-		                 long_opts, &option_index);
+		c = getopt_long
+		    (argc, argv,
+		     "hVTar:u:i:o:k::i::p::x:K::I::P::X:g:m:M:N:fnsvedCb:",
+		     long_opts, &option_index);
 		if (c == -1) break;
 
 		has_opt = true;
