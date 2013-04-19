@@ -66,6 +66,7 @@ sencode* bvector::serialize()
 
 bool bvector::unserialize (sencode* s)
 {
+	uint i;
 	sencode_list*l = dynamic_cast<sencode_list*> (s);
 	if (!l) return false;
 	if (l->items.size() != 2) return false;
@@ -75,9 +76,18 @@ bool bvector::unserialize (sencode* s)
 	if (bytes->b.size() != ( (size->i + 7) / 8) ) return false;
 	clear();
 	resize (size->i, 0);
-	for (uint i = 0; i < size->i; ++i)
+	for (i = 0; i < size->i; ++i)
 		if ( (bytes->b[i / 8] >> (i % 8) ) & 1)
 			item (i) = 1;
+
+	/*
+	 * the important part. verify that padding is always zero, because
+	 * sencode serialization must be bijective
+	 */
+	for (; i < 8 * bytes->b.size(); ++i)
+		if ( (bytes->b[i / 8] >> (i % 8) ) & 1)
+			return false;
+
 	return true;
 }
 
