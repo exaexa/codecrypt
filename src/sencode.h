@@ -50,7 +50,7 @@ public:
 class sencode_int: public sencode
 {
 public:
-	unsigned int i;
+	uint i;
 	sencode_int (unsigned int I) {
 		i = I;
 	}

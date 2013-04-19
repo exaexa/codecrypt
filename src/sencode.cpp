@@ -27,6 +27,22 @@ static void parse_int (const std::string&str, int&pos, int len,
 	res = 0;
 	++pos; //skip 'i'
 	if (pos >= len) goto fail;
+
+	/*
+	 * Strip special cases: Don't support the "empty zero" in form of 'ie'.
+	 * Also, only purpose for having a leading zero in integers is to have
+	 * actual 'i0e' zero. Other cases are disallowed because serialization
+	 * would not be bijective otherwise.
+	 */
+	if (str[pos] == 'e') goto fail;
+	if (str[pos] == '0') {
+		++pos;
+		if (pos < len && str[pos] == 'e') {
+			res = 0;
+			return;
+		} else goto fail;
+	}
+
 	for (;;) {
 		if (pos >= len) goto fail; //not terminated
 		else if (str[pos] == 'e') break; //done good
