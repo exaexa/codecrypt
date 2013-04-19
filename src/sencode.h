@@ -51,7 +51,7 @@ class sencode_int: public sencode
 {
 public:
 	uint i;
-	sencode_int (unsigned int I) {
+	sencode_int (uint I) {
 		i = I;
 	}
 
