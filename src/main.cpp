@@ -21,6 +21,11 @@
 void print_version()
 {
 	out ("codecrypt " PACKAGE_VERSION);
+	out ("Copyright (C) 2013 Mirek Kratochvil <exa.exa@gmail.com>");
+	out ("This is free software; see the source "
+	     "for copying conditions.  There is NO");
+	out ("warranty; not even for MERCHANTABILITY "
+	     "or FITNESS FOR A PARTICULAR PURPOSE.");
 }
 
 void print_help (char*pname)
@@ -29,10 +34,49 @@ void print_help (char*pname)
 	outeol;
 	out ("Usage: " << pname << " [options]");
 	outeol;
-	out ("Options consist of:");
-	out (" -h, --help            display this help");
-	out (" -V,--version          display version information");
-	out (" -T                    perform some testing stuff");
+	out ("Common options:");
+	out (" -h, --help     display this help");
+	out (" -V, --version  display version information");
+	out (" -T, --test     perform (probably nonexistent) testing/debugging stuff");
+	outeol;
+	out ("Global options:");
+	out (" -i, --input   input file, default is stdin");
+	out (" -o, --output  output file, default is stdout");
+	out (" -a, --armor   use ascii-armored I/O");
+	out (" -y, --yes     assume that answer is `yes' everytime");
+	outeol;
+	out ("Actions:");
+	out (" -s, --sign     sign a message");
+	out (" -v, --verify   verify a signed message");
+	out (" -e, --encrypt  encrypt a message");
+	out (" -d, --decrypt  decrypt an encrypted message");
+	outeol;
+	out ("Action options:");
+	out (" -r, --recipient    encrypt for given user");
+	out (" -u, --user         use specified secret key");
+	out (" -C, --clearsign    work with cleartext signatures");
+	out (" -b, --detach-sign  specify file with detached signature");
+	outeol;
+	out ("Key management:");
+	out (" -g, --gen-key        generate specified keypair");
+	out (" -k, --list           list matching keys");
+	out (" -K, --list-secret");
+	out (" -i, --import         import keys (optionally rename them)");
+	out (" -I, --import-secret");
+	out (" -p, --export         export matching keys");
+	out (" -P, --export-secret");
+	out (" -x, --delete         delete matching keys");
+	out (" -X, --delete-secret");
+	out (" -m, --rename         rename matching keys");
+	out (" -M, --rename-secret");
+	outeol;
+	out ("Key management options:");
+	out (" -n, --no-action    on import, only show what would be imported");
+	out (" -N, --name         specify a new name for renaming");
+	out (" -f, --fingerprint  format key IDs nicely for human eyes");
+	outeol;
+	out ("Codecrypt eats data. Use it with caution.");
+	outeol;
 }
 
 /*
@@ -82,6 +126,7 @@ int main (int argc, char**argv)
 
 			//global options
 			{"armor",	0,	0,	'a' },
+			{"yes",		0,	0,	'y' },
 			{"recipient",	1,	0,	'r' },
 			{"user",	1,	0,	'u' },
 
@@ -124,7 +169,7 @@ int main (int argc, char**argv)
 
 		c = getopt_long
 		    (argc, argv,
-		     "hVTar:u:i:o:k::i::p::x:K::I::P::X:g:m:M:N:fnsvedCb:",
+		     "hVTayr:u:i:o:k::i::p::x:K::I::P::X:g:m:M:N:fnsvedCb:",
 		     long_opts, &option_index);
 		if (c == -1) break;
 
