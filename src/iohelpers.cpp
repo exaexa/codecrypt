@@ -16,19 +16,22 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ccr_outhelpers_h_
-#define _ccr_outhelpers_h_
+#include "iohelpers.h"
 
-/*
- * output helpers
- */
+bool redirect_cin (const std::string& fn)
+{
+	static std::ifstream alt_cin;
+	alt_cin.open (fn.c_str(), std::ios::in | std::ios::binary);
+	if (alt_cin.fail() ) return false;
+	std::cin.rdbuf (alt_cin.rdbuf() );
+	return true;
+}
 
-#include <iostream>
-
-#define out(x) std::cout << x << std::endl
-#define outeol std::cout << std::endl
-#define err(x) std::cerr << x << std::endl
-#define erreol std::cerr << std::endl
-#define progerr(x) std::cerr << argv[0] << ": " << x << std::endl
-
-#endif
+bool redirect_cout (const std::string& fn)
+{
+	static std::ifstream alt_cout;
+	alt_cout.open (fn.c_str(), std::ios::out | std::ios::binary);
+	if (alt_cout.fail() ) return false;
+	std::cout.rdbuf (alt_cout.rdbuf() );
+	return true;
+}

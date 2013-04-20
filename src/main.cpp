@@ -16,7 +16,7 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "outhelpers.h"
+#include "iohelpers.h"
 
 void print_version()
 {
@@ -301,11 +301,27 @@ int main (int argc, char**argv)
 	if (!KR.load() ) {
 		err ("could not load keyring!");
 		exitval = 1;
-		goto exit_ok;
+		goto exit;
 	}
 
 	//register all available algorithms
 	fill_algorithm_suite (AS);
+
+	/*
+	 * cin/cout redirection
+	 */
+
+	if (input.length() && !redirect_cin (input) ) {
+		progerr ("could not open input file");
+		exitval = 1;
+		goto exit;
+	}
+
+	if (output.length() && !redirect_cout (output) ) {
+		progerr ("could not redirect to output file");
+		exitval = 1;
+		goto exit;
+	}
 
 	/*
 	 * check the option flags and do whatever was requested
@@ -313,7 +329,7 @@ int main (int argc, char**argv)
 
 	if (do_test) {
 		test();
-		goto exit_ok;
+		goto exit;
 	}
 
 	switch (action) {
@@ -402,7 +418,7 @@ int main (int argc, char**argv)
 	 * also ensure and verify that it was written back correctly.
 	 */
 
-exit_ok:
+exit:
 	if (!KR.close() ) {
 		err ("could not close keyring, "
 		     "something weird is going to happen.");
