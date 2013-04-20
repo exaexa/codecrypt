@@ -43,6 +43,7 @@ static void parse_int (const std::string&str, int&pos, int len,
 		} else goto fail;
 	}
 
+	//parse the number
 	for (;;) {
 		if (pos >= len) goto fail; //not terminated
 		else if (str[pos] == 'e') break; //done good
@@ -62,6 +63,23 @@ static void parse_string (const std::string&str, int&pos, int len,
 {
 	//first, read the amount of bytes
 	unsigned int bytes = 0;
+
+	/*
+	 * we need to keep this bijective, therefore avoid parsing of any
+	 * incorrect cases with leading zeroes except for a single zero. Such
+	 * cases can be distinguished very simply by having zero at first
+	 * position and not having colon right after.
+	 */
+	if (pos >= len) goto fail;
+	if (str[pos] == '0') {
+		++pos;
+		if (pos < len && str[pos] == ':') {
+			bytes = 0;
+			return;
+		} else goto bytes_done;
+	}
+
+	//parse the number.
 	for (;;) {
 		if (pos >= len) goto fail;
 		else if (str[pos] == ':') break; //got it
@@ -70,6 +88,8 @@ static void parse_string (const std::string&str, int&pos, int len,
 		else goto fail; //weird!
 		++pos;
 	}
+
+bytes_done:
 
 	++pos;
 	if (pos + bytes >= len) goto fail;
