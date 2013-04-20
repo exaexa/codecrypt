@@ -459,10 +459,14 @@ bool keyring::close()
 	/*
 	 * close and remove the lock. Because of temporary lack of proper
 	 * reporting, we just ignore the errors now.
+	 *
+	 * Note that unlink goes first, so that the lock disappears atomically.
 	 */
-	flock (lockfd, LOCK_UN);
-	::close (lockfd);
+
 	std::string fn = get_user_dir() + LOCK_FILENAME;
 	unlink (fn.c_str() );
+
+	flock (lockfd, LOCK_UN);
+	::close (lockfd);
 	return true;
 }
