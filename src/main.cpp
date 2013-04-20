@@ -270,7 +270,7 @@ int main (int argc, char**argv)
 
 	if (optind != argc) {
 		for (int i = 0; i < argc; ++i) out (argv[i]);
-		err (argv[0] << ": unmatched non-option parameters");
+		progerr ("unmatched non-option parameters");
 		do_help = true;
 	}
 
@@ -294,7 +294,7 @@ int main (int argc, char**argv)
 
 	//keyring initialization
 	if (!KR.open() ) {
-		err ("could not open keyring!");
+		progerr ("could not open keyring!");
 		return 1;
 	}
 
@@ -420,8 +420,8 @@ int main (int argc, char**argv)
 
 exit:
 	if (!KR.close() ) {
-		err ("could not close keyring, "
-		     "something weird is going to happen.");
+		progerr ("could not close keyring, "
+		         "something weird is going to happen.");
 	}
 
 	return exitval;
