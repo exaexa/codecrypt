@@ -292,7 +292,7 @@ int main (int argc, char**argv)
 	 * something will be happening, therefore init everything
 	 */
 
-	int exitflag = 0;
+	int exitval = 0;
 	keyring KR;
 	algorithm_suite AS;
 
@@ -304,7 +304,7 @@ int main (int argc, char**argv)
 
 	if (!KR.load() ) {
 		err ("could not load keyring!");
-		exitflag = 1;
+		exitval = 1;
 		goto exit_ok;
 	}
 
@@ -320,6 +320,36 @@ int main (int argc, char**argv)
 		goto exit_ok;
 	}
 
+	switch (action) {
+	case 'g':
+		exitval = action_keygen (action_param, name, KR, AS);
+		break;
+
+	case 'e':
+	case 'd':
+	case 's':
+	case 'v':
+	case 'E':
+	case 'D':
+
+	case 'k':
+	case 'i':
+	case 'p':
+	case 'x':
+	case 'm':
+	case 'K':
+	case 'I':
+	case 'P':
+	case 'X':
+	case 'M':
+
+	default:
+		progerr ("no action specified, use `--help'");
+		exitval = 1;
+		break;
+
+	}
+
 	/*
 	 * all done.
 	 * keyring is _not_ automatically saved here to prevent frequent
@@ -333,6 +363,6 @@ exit_ok:
 		     "something weird is going to happen.");
 	}
 
-	return exitflag;
+	return exitval;
 }
 
