@@ -38,6 +38,8 @@ int encrypted_msg::encrypt (const bvector&msg,
 	keyring::pubkey_entry*pk = kr.get_pubkey (key_id);
 	if (!pk) return 2; //PK not found
 
+	if (pk->alg != alg_id) return 3; //algorithm mismatch
+
 	return alg->encrypt (msg, ciphertext, pk->key, rng);
 }
 
@@ -54,6 +56,8 @@ int encrypted_msg::decrypt (bvector& msg, algorithm_suite&algs, keyring& kr)
 
 	keyring::keypair_entry*k = kr.get_keypair (key_id);
 	if (!k) return 2;
+
+	if (k->pub.alg != alg_id) return 3;
 
 	return alg->decrypt (ciphertext, msg, k->privkey);
 }
@@ -79,6 +83,8 @@ int signed_msg::sign (const bvector&msg,
 	keyring::keypair_entry *k = kr.get_keypair (key_id);
 	if (!k) return 2;
 
+	if (k->pub.alg != alg_id) return 3;
+
 	bool privkey_dirty = false;
 	int r;
 
@@ -88,7 +94,7 @@ int signed_msg::sign (const bvector&msg,
 
 	if (privkey_dirty) {
 		//we can't output a signature without storing privkey changes!
-		if (!kr.save() ) return 3;
+		if (!kr.save() ) return 4;
 	}
 
 	return 0;
@@ -107,6 +113,8 @@ int signed_msg::verify (algorithm_suite&algs, keyring&kr)
 
 	keyring::pubkey_entry*pk = kr.get_pubkey (key_id);
 	if (!pk) return 2;
+
+	if (pk->alg != alg_id) return 3;
 
 	return alg->verify (signature, message, pk->key);
 }

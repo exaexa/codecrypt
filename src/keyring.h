@@ -30,7 +30,7 @@ class keyring
 public:
 	struct pubkey_entry {
 		sencode *key;
-		std::string name, keyid;
+		std::string name, alg, keyid;
 
 		pubkey_entry() {
 			key = NULL;
@@ -38,9 +38,11 @@ public:
 
 		pubkey_entry (const std::string& KID,
 		              const std::string& N,
+		              const std::string& A,
 		              sencode*K) {
 			key = K;
 			name = N;
+			alg = A;
 			keyid = KID;
 		}
 	};
@@ -55,9 +57,10 @@ public:
 
 		keypair_entry (const std::string&KID,
 		               const std::string& N,
+		               const std::string& A,
 		               sencode*PubK,
 		               sencode*PrivK)
-			: pub (KID, N, PubK) {
+			: pub (KID, N, A, PubK) {
 			privkey = PrivK;
 		}
 	};
@@ -105,11 +108,13 @@ public:
 	}
 
 	bool store_pubkey (const std::string&keyid,
-	                   const std::string&name, sencode*key) {
+	                   const std::string&name,
+	                   const std::string&alg,
+	                   sencode*key) {
 
 		if (pairs.count (keyid) ) return false;
 		if (pubs.count (keyid) ) return false;
-		pubs[keyid] = pubkey_entry (keyid, name, key);
+		pubs[keyid] = pubkey_entry (keyid, name, alg, key);
 	}
 
 	void remove_pubkey (const std::string&keyid) {
@@ -126,11 +131,13 @@ public:
 
 	bool store_keypair (const std::string&keyid,
 	                    const std::string&name,
+	                    const std::string&alg,
 	                    sencode*pubkey, sencode*privkey) {
 
 		if (pairs.count (keyid) ) return false;
 		if (pubs.count (keyid) ) return false;
-		pairs[keyid] = keypair_entry (keyid, name, pubkey, privkey);
+		pairs[keyid] = keypair_entry (keyid, name, alg,
+		                              pubkey, privkey);
 	}
 
 	void remove_keypair (const std::string&keyid) {

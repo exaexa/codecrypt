@@ -134,14 +134,15 @@ bool keyring::parse_keypairs (sencode*keypairs, keypair_storage&pairs)
 
 		sencode_list*entry = dynamic_cast<sencode_list*> (*i);
 		if (!entry) goto failure;
-		if (entry->items.size() != 3) goto failure;
+		if (entry->items.size() != 4) goto failure;
 
 		sencode_bytes
 		*ident = dynamic_cast<sencode_bytes*> (entry->items[0]),
-		 *privkey = dynamic_cast<sencode_bytes*> (entry->items[1]),
-		  *pubkey = dynamic_cast<sencode_bytes*> (entry->items[2]);
+		 *alg = dynamic_cast<sencode_bytes*> (entry->items[1]),
+		  *privkey = dynamic_cast<sencode_bytes*> (entry->items[2]),
+		   *pubkey = dynamic_cast<sencode_bytes*> (entry->items[3]);
 
-		if (! (ident && privkey && pubkey) ) goto failure;
+		if (! (ident && alg && privkey && pubkey) ) goto failure;
 
 		std::string keyid = get_keyid (pubkey->b);
 		sencode *priv, *pub;
@@ -155,7 +156,8 @@ bool keyring::parse_keypairs (sencode*keypairs, keypair_storage&pairs)
 			goto failure;
 		}
 
-		pairs[keyid] = keypair_entry (keyid, ident->b, pub, priv);
+		pairs[keyid] = keypair_entry (keyid, ident->b, alg->b,
+		                              pub, priv);
 	}
 
 	return true;
@@ -173,10 +175,11 @@ sencode* keyring::serialize_keypairs (const keypair_storage&pairs)
 	     i = pairs.begin(), e = pairs.end();
 	     i != e; ++i) {
 		sencode_list*a = new sencode_list;
-		a->items.resize (3);
+		a->items.resize (4);
 		a->items[0] = new sencode_bytes (i->second.pub.name);
-		a->items[1] = new sencode_bytes (i->second.privkey->encode() );
-		a->items[2] = new sencode_bytes (i->second.pub.key->encode() );
+		a->items[1] = new sencode_bytes (i->second.pub.alg);
+		a->items[2] = new sencode_bytes (i->second.privkey->encode() );
+		a->items[3] = new sencode_bytes (i->second.pub.key->encode() );
 		L->items.push_back (a);
 	}
 
@@ -205,20 +208,21 @@ bool keyring::parse_pubkeys (sencode* pubkeys, pubkey_storage&pubs)
 		sencode_list*entry = dynamic_cast<sencode_list*> (*i);
 		if (!entry) goto failure;
 
-		if (entry->items.size() != 2) goto failure;
+		if (entry->items.size() != 3) goto failure;
 
 		sencode_bytes
 		*ident = dynamic_cast<sencode_bytes*> (entry->items[0]),
-		 *pubkey = dynamic_cast<sencode_bytes*> (entry->items[1]);
+		 *alg = dynamic_cast<sencode_bytes*> (entry->items[1]),
+		  *pubkey = dynamic_cast<sencode_bytes*> (entry->items[2]);
 
-		if (! (ident && pubkey) ) goto failure;
+		if (! (ident && alg && pubkey) ) goto failure;
 
 		std::string keyid = get_keyid (pubkey->b);
 		sencode*key;
 		key = sencode_decode (pubkey->b);
 		if (!key) goto failure;
 
-		pubs[keyid] = pubkey_entry (keyid, ident->b, key);
+		pubs[keyid] = pubkey_entry (keyid, ident->b, alg->b, key);
 	}
 
 	return true;
@@ -237,9 +241,10 @@ sencode* keyring::serialize_pubkeys (const pubkey_storage&pubs)
 	     i = pubs.begin(), e = pubs.end();
 	     i != e; ++i) {
 		sencode_list*a = new sencode_list();
-		a->items.resize (2);
+		a->items.resize (3);
 		a->items[0] = new sencode_bytes (i->second.name);
-		a->items[1] = new sencode_bytes (i->second.key->encode() );
+		a->items[1] = new sencode_bytes (i->second.alg);
+		a->items[2] = new sencode_bytes (i->second.key->encode() );
 		L->items.push_back (a);
 	}
 
