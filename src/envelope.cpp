@@ -33,6 +33,7 @@ inline static bool acceptable_char (char c)
 
 static bool acceptable_id (const std::string&a)
 {
+	if (!a.length() ) return false;
 	for (size_t i = 0; i < a.length(); ++i)
 		if (!acceptable_char (a[i]) ) return false;
 	return true;
@@ -152,7 +153,8 @@ size_t envelope_read (const std::string&data, size_t offset,
 
 		if (retry) continue;
 
-		//return the modified offset
+		//return type and modified offset
+		out_type = type;
 		return offset;
 	}
 }
