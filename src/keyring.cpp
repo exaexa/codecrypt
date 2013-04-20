@@ -134,9 +134,12 @@ bool keyring::parse_keypairs (sencode*keypairs, keypair_storage&pairs)
 
 		std::string keyid = get_keyid (pubkey->b);
 		sencode *priv, *pub;
-		if (!sencode_decode (privkey->b, &priv) )
-			goto failure;
-		if (!sencode_decode (pubkey->b, &pub) ) {
+
+		priv = sencode_decode (privkey->b);
+		if (!priv) goto failure;
+
+		pub = sencode_decode (pubkey->b);
+		if (!pub) {
 			sencode_destroy (priv);
 			goto failure;
 		}
@@ -191,8 +194,8 @@ bool keyring::parse_pubkeys (sencode* pubkeys, pubkey_storage&pubs)
 
 		std::string keyid = get_keyid (pubkey->b);
 		sencode*key;
-		if (!sencode_decode (pubkey->b, &key) )
-			goto failure;
+		key = sencode_decode (pubkey->b);
+		if (!key) goto failure;
 
 		pubs[keyid] = pubkey_entry (keyid, ident->b, key);
 	}
@@ -303,30 +306,27 @@ static bool prepare_user_dir (const std::string&dir)
 	       ensure_empty_sencode_file (dir + SECRETS_FILENAME);
 }
 
-static bool file_get_sencode (const std::string&fn, sencode**out)
+static sencode* file_get_sencode (const std::string&fn)
 {
 	//check whether it is a file first
 	struct stat st;
 	if (stat (fn.c_str(), &st) )
-		return false;
+		return NULL;
 
 	if (!S_ISREG (st.st_mode) )
-		return false;
+		return NULL;
 
 	//not we got the size, prepare buffer space
 	std::string data;
 	data.resize (st.st_size, 0);
 
 	std::ifstream in (fn.c_str(), std::ios::in | std::ios::binary);
-	if (!in) return false;
+	if (!in) return NULL;
 	in.read (&data[0], st.st_size);
 	in.close();
 
 	//and decode it
-	if (!sencode_decode (data, out) )
-		return false;
-
-	return true;
+	return sencode_decode (data);
 }
 
 static bool file_put_sencode (const std::string&fn, sencode*in)
@@ -353,9 +353,9 @@ bool keyring::load()
 	 * pubkeys loading
 	 */
 	fn = dir + PUBKEYS_FILENAME;
-	sencode* pubkeys;
-	if (!file_get_sencode (fn, &pubkeys) )
-		return false;
+
+	sencode* pubkeys = file_get_sencode (fn);
+	if (!pubkeys) return false;
 
 	res = parse_pubkeys (pubkeys, pubs);
 	sencode_destroy (pubkeys);
@@ -366,9 +366,9 @@ bool keyring::load()
 	 * keypairs loading
 	 */
 	fn = dir + SECRETS_FILENAME;
-	sencode*keypairs;
-	if (!file_get_sencode (fn, &keypairs) )
-		return false;
+
+	sencode*keypairs = file_get_sencode (fn);
+	if (!keypairs) return false;
 
 	res = parse_keypairs (keypairs, pairs);
 	sencode_destroy (keypairs);

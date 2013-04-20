@@ -35,7 +35,7 @@ public:
 	virtual void destroy() {}
 };
 
-bool sencode_decode (const std::string&, sencode**);
+sencode* sencode_decode (const std::string&);
 void sencode_destroy (sencode*);
 
 class sencode_list: public sencode

@@ -81,7 +81,7 @@ fail:
 	pos = -1;
 }
 
-bool sencode_decode (const std::string& str, sencode**out)
+sencode* sencode_decode (const std::string& str)
 {
 	std::list<sencode*> stk;
 	int pos = 0;
@@ -126,8 +126,7 @@ bool sencode_decode (const std::string& str, sencode**out)
 			se->items.push_back (tos);
 			stk.pop_back();
 		} else if (pos + 1 == len) {
-			*out = stk.front();
-			return true;
+			return stk.front();
 		}
 	}
 
@@ -137,7 +136,7 @@ bool sencode_decode (const std::string& str, sencode**out)
 	     i != e; ++i)
 		sencode_destroy (*i);
 
-	return false;
+	return NULL;
 }
 
 void sencode_destroy (sencode*x)
