@@ -18,9 +18,131 @@
 
 #include "actions.h"
 
-int action_keygen (const std::string& algspec, const std::string&name,
+int action_gen_key (const std::string& algspec, const std::string&name,
+                    keyring&, algorithm_suite&)
+{
+	return 0;
+}
+
+/*
+ * signatures/encryptions
+ */
+
+int action_encrypt (const std::string&recipient, bool armor,
+                    keyring&, algorithm_suite&)
+{
+	return 0;
+}
+
+
+int action_decrypt (bool armor,
+                    keyring&, algorithm_suite&)
+{
+	return 0;
+}
+
+
+int action_sign (const std::string&user, bool armor, const std::string&detach,
+                 keyring&, algorithm_suite&)
+{
+	return 0;
+}
+
+
+int action_verify (bool armor, const std::string&detach,
                    keyring&, algorithm_suite&)
 {
+	return 0;
+}
 
+
+int action_sign_encrypt (const std::string&user, const std::string&recipient,
+                         bool armor, keyring&, algorithm_suite&)
+{
+	return 0;
+}
+
+
+int action_decrypt_verify (bool armor, keyring&, algorithm_suite&)
+{
+	return 0;
+}
+
+
+/*
+ * keyring stuff
+ */
+
+int action_list (bool nice_fingerprint, const std::string&filter,
+                 keyring&)
+{
+	return 0;
+}
+
+
+int action_import (bool armor, bool no_action, bool yes,
+                   const std::string&filter, const std::string&name,
+                   keyring&)
+{
+	return 0;
+}
+
+
+int action_export (bool armor,
+                   const std::string&filter, const std::string&name,
+                   keyring&)
+{
+	return 0;
+}
+
+
+int action_delete (bool yes, const std::string&filter, keyring&)
+{
+	return 0;
+}
+
+
+int action_rename (bool yes,
+                   const std::string&filter, const std::string&name,
+                   keyring&)
+{
+	return 0;
+}
+
+
+
+int action_list_sec (bool nice_fingerprint, const std::string&filter,
+                     keyring&)
+{
+	return 0;
+}
+
+
+int action_import_sec (bool armor, bool no_action, bool yes,
+                       const std::string&filter, const std::string&name,
+                       keyring&)
+{
+	return 0;
+}
+
+
+int action_export_sec (bool armor,
+                       const std::string&filter, const std::string&name,
+                       keyring&)
+{
+	return 0;
+}
+
+
+int action_delete_sec (bool yes, const std::string&filter, keyring&)
+{
+	return 0;
+}
+
+
+int action_rename_sec (bool yes,
+                       const std::string&filter, const std::string&name,
+                       keyring&)
+{
 	return 0;
 }

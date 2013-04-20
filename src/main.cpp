@@ -318,26 +318,75 @@ int main (int argc, char**argv)
 
 	switch (action) {
 	case 'g':
-		exitval = action_keygen (action_param, name, KR, AS);
+		exitval = action_gen_key (action_param, name, KR, AS);
 		break;
 
 	case 'e':
+		exitval = action_encrypt (recipient, opt_armor, KR, AS);
+		break;
+
 	case 'd':
+		exitval = action_decrypt (opt_armor, KR, AS);
+		break;
+
 	case 's':
+		exitval = action_sign (user, opt_armor, detach_sign, KR, AS);
+		break;
+
 	case 'v':
+		exitval = action_verify (opt_armor, detach_sign, KR, AS);
+		break;
+
 	case 'E':
+		exitval = action_sign_encrypt (user, recipient, opt_armor,
+		                               KR, AS);
+		break;
+
 	case 'D':
+		exitval = action_decrypt_verify (opt_armor, KR, AS);
+		break;
 
 	case 'k':
+		exitval = action_list (opt_fingerprint, filter, KR);
+		break;
+
 	case 'i':
+		exitval = action_import (opt_armor, opt_import_no_action,
+		                         opt_yes, filter, name, KR);
+		break;
+
 	case 'p':
+		exitval = action_export (opt_armor, filter, name, KR);
+		break;
+
 	case 'x':
+		exitval = action_delete (opt_yes, action_param, KR);
+		break;
+
 	case 'm':
+		exitval = action_rename (opt_yes, action_param, name, KR);
+		break;
+
 	case 'K':
+		exitval = action_list_sec (opt_fingerprint, filter, KR);
+		break;
+
 	case 'I':
+		exitval = action_import_sec (opt_armor, opt_import_no_action,
+		                             opt_yes, filter, name, KR);
+		break;
+
 	case 'P':
+		exitval = action_export_sec (opt_armor, filter, name, KR);
+		break;
+
 	case 'X':
+		exitval = action_delete_sec (opt_yes, action_param, KR);
+		break;
+
 	case 'M':
+		exitval = action_rename_sec (opt_yes, action_param, name, KR);
+		break;
 
 	default:
 		progerr ("no action specified, use `--help'");
