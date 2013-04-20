@@ -97,7 +97,9 @@ void test()
  */
 
 #include <getopt.h>
+
 #include "keyring.h"
+#include "algo_suite.h"
 
 int main (int argc, char**argv)
 {
@@ -207,13 +209,14 @@ int main (int argc, char**argv)
 	}
 
 	/*
-	 * something is happening here, therefore init everything
+	 * something will be happening, therefore init everything
 	 */
 
 	int exitflag = 0;
-
 	keyring KR;
+	algorithm_suite AS;
 
+	//keyring initialization
 	if (!KR.open() ) {
 		err ("could not open keyring!");
 		return 1;
@@ -224,6 +227,9 @@ int main (int argc, char**argv)
 		exitflag = 1;
 		goto exit_ok;
 	}
+
+	//register all available algorithms
+	fill_algorithm_suite (AS);
 
 	/*
 	 * check the option flags and do whatever was requested
