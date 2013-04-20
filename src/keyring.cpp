@@ -30,7 +30,7 @@ void keyring::clear()
  */
 
 #include "sha2.h"
-#include <stdint.h>
+#include <inttypes.h>
 
 std::string keyring::get_keyid (const std::string&pubkey)
 {

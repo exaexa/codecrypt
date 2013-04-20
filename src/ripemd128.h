@@ -24,7 +24,7 @@ extern "C" {
 
 #define RIPEMD128_DIGEST_LENGTH 16
 #include <stddef.h>
-#include <stdint.h>
+#include <inttypes.h>
 
 	struct ampheck_ripemd128 {
 		uint32_t h[4];

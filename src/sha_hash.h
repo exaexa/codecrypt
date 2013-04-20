@@ -21,7 +21,7 @@
 
 #include "hash.h"
 #include "sha2.h"
-#include <stdint.h>
+#include <inttypes.h>
 
 class sha256hash : public hash_func
 {
