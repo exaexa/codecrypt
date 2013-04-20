@@ -27,6 +27,7 @@
 #include "nd.h"
 #include "mce_qd.h"
 #include "fmtseq.h"
+#include "message.h"
 
 static sencode* serialize_uint_vector (std::vector<uint>*v)
 {
@@ -592,3 +593,75 @@ bool fmtseq::pubkey::unserialize (sencode*s)
 	return true;
 }
 
+#define ENC_MSG_IDENT "CCR-ENCRYPTED-MSG"
+#define SIG_MSG_IDENT "CCR-SIGNED-MSG"
+
+sencode* encrypted_msg::serialize()
+{
+	sencode_list*L = new sencode_list();
+	L->items.resize (4);
+	L->items[0] = new sencode_bytes (ENC_MSG_IDENT);
+	L->items[1] = new sencode_bytes (alg_id);
+	L->items[2] = new sencode_bytes (key_id);
+	L->items[3] = ciphertext.serialize();
+	return L;
+}
+
+bool encrypted_msg::unserialize (sencode*s)
+{
+	sencode_list*L = dynamic_cast<sencode_list*> (s);
+	if (!L) return false;
+	if (L->items.size() != 4) return false;
+
+	sencode_bytes*B;
+
+	B = dynamic_cast<sencode_bytes*> (L->items[0]);
+	if (!B) return false;
+	if (B->b != ENC_MSG_IDENT) return false;
+
+	B = dynamic_cast<sencode_bytes*> (L->items[1]);
+	if (!B) return false;
+	alg_id = B->b;
+
+	B = dynamic_cast<sencode_bytes*> (L->items[2]);
+	if (!B) return false;
+	key_id = B->b;
+
+	return ciphertext.unserialize (L->items[3]);
+}
+
+sencode* signed_msg::serialize()
+{
+	sencode_list*L = new sencode_list();
+	L->items.resize (5);
+	L->items[0] = new sencode_bytes (SIG_MSG_IDENT);
+	L->items[1] = new sencode_bytes (alg_id);
+	L->items[2] = new sencode_bytes (key_id);
+	L->items[3] = message.serialize();
+	L->items[4] = signature.serialize();
+	return L;
+}
+
+bool signed_msg::unserialize (sencode*s)
+{
+	sencode_list*L = dynamic_cast<sencode_list*> (s);
+	if (!L) return false;
+	if (L->items.size() != 5) return false;
+
+	sencode_bytes*B;
+
+	B = dynamic_cast<sencode_bytes*> (L->items[0]);
+	if (!B) return false;
+	if (B->b != SIG_MSG_IDENT) return false;
+
+	B = dynamic_cast<sencode_bytes*> (L->items[1]);
+	if (!B) return false;
+	alg_id = B->b;
+
+	B = dynamic_cast<sencode_bytes*> (L->items[2]);
+	if (!B) return false;
+	key_id = B->b;
+
+	return message.unserialize (L->items[3]) &&
+	       signature.unserialize (L->items[4]);
+}
