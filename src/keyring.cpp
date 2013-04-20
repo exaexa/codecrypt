@@ -66,10 +66,10 @@ std::string keyring::get_keyid (const std::string&pubkey)
  * Public key file is organized as follows:
  *
  * (
- *   "ccr public key storage"
- *   ( "key-name" pubkey_in_string_encoded_as_sencode )
- *   ( "key-name" pubkey_in_... )
- *   ( "key-name" pubkey )
+ *   "CCR-PUBKEYS"
+ *   ( "key-name" "algorithm-id" pubkey_in_string_encoded_as_sencode )
+ *   ( "key-name" "algorithm-id" pubkey_in_... )
+ *   ( "key-name" "algorithm-id" pubkey )
  *   ...
  * )
  *
@@ -81,16 +81,19 @@ std::string keyring::get_keyid (const std::string&pubkey)
  * to be generated everytime user asks for them:
  *
  * (
- *   "ccr private keyring"
- *   ( "key-name" privkey pubkey )
- *   ( "key-name" privkey pubkey )
- *   ( "key-name" privkey pubkey )
+ *   "CCR-KEYPAIRS"
+ *   ( "key-name" "algorithm-id" privkey pubkey )
+ *   ( "key-name" "algorithm-id" privkey pubkey )
+ *   ( "key-name" "algorithm-id" privkey pubkey )
  *   ...
  * )
  *
  * --------
  * Serialization stuff first.
  */
+
+#define KEYPAIRS_ID "CCR-KEYPAIRS"
+#define PUBKEYS_ID "CCR-PUBKEYS"
 
 void keyring::clear_keypairs (keypair_storage&pairs)
 {
@@ -112,13 +115,21 @@ void keyring::clear_pubkeys (pubkey_storage&pubs)
 
 bool keyring::parse_keypairs (sencode*keypairs, keypair_storage&pairs)
 {
+	sencode_bytes *ID;
+	sencode_list *L;
+
 	clear_keypairs (pairs);
 
-	sencode_list *L = dynamic_cast<sencode_list*> (keypairs);
+	L = dynamic_cast<sencode_list*> (keypairs);
 	if (!L) goto failure;
 
+	if (!L->items.size() ) goto failure;
+	ID = dynamic_cast<sencode_bytes*> (L->items[0]);
+	if (!ID) goto failure;
+	if (ID->b != KEYPAIRS_ID) goto failure;
+
 	for (std::vector<sencode*>::iterator
-	     i = L->items.begin(), e = L->items.end();
+	     i = L->items.begin() + 1, e = L->items.end();
 	     i != e; ++i) {
 
 		sencode_list*entry = dynamic_cast<sencode_list*> (*i);
@@ -156,6 +167,8 @@ failure:
 sencode* keyring::serialize_keypairs (const keypair_storage&pairs)
 {
 	sencode_list*L = new sencode_list();
+	L->items.push_back (new sencode_bytes (KEYPAIRS_ID) );
+
 	for (keypair_storage::const_iterator
 	     i = pairs.begin(), e = pairs.end();
 	     i != e; ++i) {
@@ -172,13 +185,21 @@ sencode* keyring::serialize_keypairs (const keypair_storage&pairs)
 
 bool keyring::parse_pubkeys (sencode* pubkeys, pubkey_storage&pubs)
 {
+	sencode_bytes *ID;
+	sencode_list *L;
+
 	clear_pubkeys (pubs);
 
-	sencode_list* L = dynamic_cast<sencode_list*> (pubkeys);
+	L = dynamic_cast<sencode_list*> (pubkeys);
 	if (!L) goto failure;
 
+	if (!L->items.size() ) goto failure;
+	ID = dynamic_cast<sencode_bytes*> (L->items[0]);
+	if (!ID) goto failure;
+	if (ID->b != PUBKEYS_ID) goto failure;
+
 	for (std::vector<sencode*>::iterator
-	     i = L->items.begin(), e = L->items.end();
+	     i = L->items.begin() + 1, e = L->items.end();
 	     i != e; ++i) {
 
 		sencode_list*entry = dynamic_cast<sencode_list*> (*i);
@@ -210,6 +231,8 @@ failure:
 sencode* keyring::serialize_pubkeys (const pubkey_storage&pubs)
 {
 	sencode_list*L = new sencode_list();
+	L->items.push_back (new sencode_bytes (PUBKEYS_ID) );
+
 	for (pubkey_storage::const_iterator
 	     i = pubs.begin(), e = pubs.end();
 	     i != e; ++i) {
@@ -257,7 +280,8 @@ static std::string get_user_dir()
  * We try to setup file permissions properly here and don't care about it later
  * (so that the user can override the default value by easy unixy way)
  */
-static bool ensure_empty_sencode_file (const std::string&fn)
+static bool ensure_empty_sencode_file (const std::string&fn,
+                                       const std::string&ident)
 {
 	struct stat st;
 	if (stat (fn.c_str(), &st) ) {
@@ -266,6 +290,8 @@ static bool ensure_empty_sencode_file (const std::string&fn)
 
 		//if it simply doesn't exist, create it
 		sencode_list l;
+		sencode_bytes b (ident);
+		l.items.push_back (&b);
 		std::string emptyfile = l.encode();
 
 		int fd, res;
@@ -302,8 +328,10 @@ static bool prepare_user_dir (const std::string&dir)
 		return false;
 
 	//finally create empty key storages, if not present
-	return ensure_empty_sencode_file (dir + PUBKEYS_FILENAME) &&
-	       ensure_empty_sencode_file (dir + SECRETS_FILENAME);
+	return ensure_empty_sencode_file (dir + PUBKEYS_FILENAME,
+	                                  PUBKEYS_ID) &&
+	       ensure_empty_sencode_file (dir + SECRETS_FILENAME,
+	                                  KEYPAIRS_ID);
 }
 
 static sencode* file_get_sencode (const std::string&fn)
