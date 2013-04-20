@@ -19,7 +19,10 @@
 #ifndef _ccr_algo_suite_h_
 #define _ccr_algo_suite_h_
 
-#include "algorithm.h"
+#include <map>
+#include <string>
+class algorithm;
+typedef std::map<std::string, algorithm*> algorithm_suite;
 
 void fill_algorithm_suite (algorithm_suite&);
 

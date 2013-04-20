@@ -19,14 +19,10 @@
 #ifndef _ccr_algorithm_h_
 #define _ccr_algorithm_h_
 
+#include "algo_suite.h"
 #include "bvector.h"
 #include "prng.h"
 #include "sencode.h"
-
-#include <map>
-#include <string>
-class algorithm;
-typedef std::map<std::string, algorithm*> algorithm_suite;
 
 /*
  * virtual interface definition for all cryptographic algorithm instances.

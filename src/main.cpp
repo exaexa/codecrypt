@@ -99,11 +99,12 @@ void test()
 
 #include <getopt.h>
 
-#include "keyring.h"
+#include "actions.h"
 #include "algo_suite.h"
 
 int main (int argc, char**argv)
 {
+	//option variables
 	bool do_help = false,
 	     do_version = false,
 	     do_test = false,
@@ -122,7 +123,6 @@ int main (int argc, char**argv)
 
 	char action = 0;
 
-	//process options
 	int c, option_index;
 	for (;;) {
 		static struct option long_opts[] = {
