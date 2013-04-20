@@ -54,8 +54,7 @@ void print_help (char*pname)
 	out ("Action options:");
 	out (" -r, --recipient    encrypt for given user");
 	out (" -u, --user         use specified secret key");
-	out (" -C, --clearsign    work with cleartext signatures");
-	out (" -b, --detach-sign  specify file with detached signature");
+	out (" -b, --detach-sign  specify detached signature file");
 	outeol;
 	out ("Key management:");
 	out (" -g, --gen-key        generate specified keypair");
@@ -112,7 +111,6 @@ int main (int argc, char**argv)
 	     opt_armor = false,
 	     opt_yes = false,
 	     opt_fingerprint = false,
-	     opt_clearsign = false,
 	     opt_import_no_action = false;
 
 	std::string recipient, user,
@@ -168,7 +166,6 @@ int main (int argc, char**argv)
 			{"decrypt",	0,	0,	'd' },
 
 			//action options
-			{"clearsign",	0,	0,	'C' },
 			{"detach-sign",	1,	0,	'b' },
 
 			{0,		0,	0,	0 }
@@ -177,7 +174,7 @@ int main (int argc, char**argv)
 		option_index = -1;
 		c = getopt_long
 		    (argc, argv,
-		     "hVTayr:u:R:o:kipx:m:KIPX:M:g:N:F:fnsvedCb:",
+		     "hVTayr:u:R:o:kipx:m:KIPX:M:g:N:F:fnsvedb:",
 		     long_opts, &option_index);
 		if (c == -1) break;
 
@@ -258,7 +255,6 @@ int main (int argc, char**argv)
 			read_action_comb ('e', 's', 'E')
 			read_action_comb ('d', 'v', 'D')
 
-			read_flag ('C', opt_clearsign)
 			read_single_opt ('b', detach_sign,
 			                 "specify only one detach-sign file")
 
