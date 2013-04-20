@@ -284,20 +284,21 @@ static bool ensure_empty_sencode_file (const std::string&fn)
 
 static bool prepare_user_dir (const std::string&dir)
 {
-	//try to create the directory
-	mkdir (dir.c_str(), 0777);
+	//try to create the directory, continue if it's already there
+	if (mkdir (dir.c_str(), 0777) ) {
+		if (errno != EEXIST) return false;
+	}
 
 	//and no matter what, verify it's there
 	struct stat st;
 	if (stat (dir.c_str(), &st) )
 		return false;
 
+	//and is really a directory.
 	if (!S_ISDIR (st.st_mode) )
 		return false;
 
-	//create empty key storages, if not present
-	std::string fn;
-
+	//finally create empty key storages, if not present
 	return ensure_empty_sencode_file (dir + PUBKEYS_FILENAME) &&
 	       ensure_empty_sencode_file (dir + SECRETS_FILENAME);
 }
@@ -321,6 +322,7 @@ static bool file_get_sencode (const std::string&fn, sencode**out)
 	in.read (&data[0], st.st_size);
 	in.close();
 
+	//and decode it
 	if (!sencode_decode (data, out) )
 		return false;
 
