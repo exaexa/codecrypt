@@ -89,6 +89,7 @@ int action_gen_key (const std::string& algspec, const std::string&name,
 	}
 
 	KR.store_keypair (keyring::get_keyid (pub), name, algname, pub, priv);
+	//pub&priv data will get destroyed along with keyring
 
 	if (!KR.save() ) {
 		err ("error: couldn't save keyring");
@@ -242,6 +243,7 @@ int action_export (bool armor,
 	sencode*S = keyring::serialize_pubkeys (s);
 	if (!S) return 1;
 	std::string data = S->encode();
+	sencode_destroy (S);
 
 	if (armor) {
 		std::vector<std::string> parts;
@@ -398,6 +400,7 @@ int action_export_sec (bool armor,
 	sencode*S = keyring::serialize_keypairs (s);
 	if (!S) return 1; //weird.
 	std::string data = S->encode();
+	sencode_destroy (S);
 
 	if (armor) {
 		std::vector<std::string> parts;
