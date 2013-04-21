@@ -30,9 +30,9 @@ bool algorithm_name_matches (const std::string& search,
 	return true;
 }
 
-bool key_matches (const std::string&search,
-                  const std::string&name,
-                  const std::string&keyid)
+bool keyspec_matches (const std::string&search,
+                      const std::string&name,
+                      const std::string&keyid)
 {
 	if (!search.length() ) return true;
 	if (search[0] == '@') { //match for keyID

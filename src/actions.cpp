@@ -180,6 +180,32 @@ int action_rename (bool yes,
 int action_list_sec (bool nice_fingerprint, const std::string&filter,
                      keyring&KR)
 {
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+
+		if (!keyspec_matches (filter, i->second.pub.name, i->first) )
+			continue;
+
+		if (!nice_fingerprint)
+			out ("keypair\t"
+			     << i->second.pub.alg << '\t'
+			     << '@' << i->first.substr (0, 22) << "...\t"
+			     << "\"" << i->second.pub.name << "\"");
+		else {
+			out ("key pair with algorithm " << i->second.pub.alg
+			     << ", name `" << i->second.pub.name << "'");
+
+			std::cout << "  fingerprint ";
+			for (size_t j = 0; j < i->first.length(); ++j) {
+				std::cout << i->first[j];
+				if (! ( (j + 1) % 4) &&
+				    j < i->first.length() - 1)
+					std::cout << ':';
+			}
+			std::cout << std::endl << std::endl;
+		}
+	}
 	return 0;
 }
 
