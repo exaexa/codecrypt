@@ -57,7 +57,7 @@ void print_help (char*pname)
 	out (" -b, --detach-sign  specify detached signature file");
 	outeol;
 	out ("Key management:");
-	out (" -g, --gen-key        generate specified keypair");
+	out (" -g, --gen-key        generate specified keypair, `help' lists algorithms");
 	out (" -k, --list           list matching keys");
 	out (" -K, --list-secret");
 	out (" -i, --import         import keys (optionally rename them)");
