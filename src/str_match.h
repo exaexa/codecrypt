@@ -24,4 +24,8 @@
 bool algorithm_name_matches (const std::string& search,
                              const std::string&name);
 
+bool key_matches (const std::string&search,
+                  const std::string&name,
+                  const std::string&keyid);
+
 #endif

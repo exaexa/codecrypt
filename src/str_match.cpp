@@ -29,3 +29,20 @@ bool algorithm_name_matches (const std::string& search,
 		if (tolower (search[i]) != tolower (name[i]) ) return false;
 	return true;
 }
+
+bool key_matches (const std::string&search,
+                  const std::string&name,
+                  const std::string&keyid)
+{
+	if (!search.length() ) return true;
+	if (search[0] == '@') { //match for keyID
+		if (search.length() > keyid.length() + 1) return false;
+		for (size_t i = 1; i < search.length(); ++i)
+			if (tolower (search[i] != tolower (keyid[i - 1]) ) )
+				return false;
+		return true;
+	}
+
+	//TODO maybe get case-insensitive
+	return name.find (search) != name.npos;
+}
