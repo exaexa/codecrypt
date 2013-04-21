@@ -28,6 +28,7 @@
 #include <string>
 
 #define out(x) std::cout << x << std::endl
+#define out_bin(x) std::cout << x
 #define outeol std::cout << std::endl
 #define err(x) std::cerr << x << std::endl
 #define erreol std::cerr << std::endl
@@ -39,5 +40,7 @@
 
 bool redirect_cin (const std::string& fn);
 bool redirect_cout (const std::string& fn);
+
+bool read_all_input (std::string&);
 
 #endif

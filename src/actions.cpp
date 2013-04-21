@@ -252,7 +252,7 @@ int action_export (bool armor,
 		data = envelope_format (ENVELOPE_PUBKEYS, parts, r);
 	}
 
-	out (data);
+	out_bin (data);
 
 	return 0;
 }
@@ -408,7 +408,7 @@ int action_export_sec (bool armor,
 		data = envelope_format (ENVELOPE_SECRETS, parts, r);
 	}
 
-	out (data);
+	out_bin (data);
 
 	return 0;
 }

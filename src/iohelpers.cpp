@@ -35,3 +35,18 @@ bool redirect_cout (const std::string& fn)
 	std::cout.rdbuf (alt_cout.rdbuf() );
 	return true;
 }
+
+#define bufsize 1024
+bool read_all_input (std::string&data)
+{
+	data.clear();
+	char buf[bufsize];
+	for (;;) {
+		std::cin.read (buf, bufsize);
+		if (std::cin) data.append (buf, bufsize);
+		else if (std::cin.eof() ) {
+			data.append (buf, std::cin.gcount() );
+			return true;
+		} else return false;
+	}
+}
