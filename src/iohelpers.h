@@ -34,7 +34,7 @@
 #define erreol std::cerr << std::endl
 #define progerr(x) std::cerr << argv[0] << ": " << x << std::endl
 
-#define ask_for_yes(ok,x) do {std::cout << x << " (y/n): "; \
+#define ask_for_yes(ok,x) do {std::cerr << x << " (y/n): "; \
 	std::string answer; std::cin >> answer; \
 	ok=(answer=="y");} while(0)
 
