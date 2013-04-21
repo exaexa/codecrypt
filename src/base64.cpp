@@ -24,12 +24,13 @@ void base64_encode (const std::string& in, std::string&out, int cols)
 	static const char b64str[65] =
 	    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-	int acc = 0, accbits = 0, idx = 0, idxmax = in.length(), col = 0;
+	unsigned int acc = 0;
+	int accbits = 0, idx = 0, idxmax = in.length(), col = 0;
 	out.clear();
 	out.reserve (idxmax + (2 * idxmax / 5) ); //reserve around 140%
 	while (idx < idxmax) {
 		if (accbits < 6) {
-			acc = (acc << 8) | in[idx++];
+			acc = (acc << 8) | (unsigned char) in[idx++];
 			accbits += 8;
 		}
 		while (accbits >= 6) {
