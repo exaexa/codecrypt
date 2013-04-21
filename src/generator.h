@@ -39,7 +39,8 @@ public:
 
 	uint random (uint n) {
 		//rand_max is 2^32.
-		return ( (r.gen() << 24) | (r.gen() << 16) | (r.gen() << 8) | r.gen() ) % n;
+		return ( (r.gen() << 24) | (r.gen() << 16)
+		         | (r.gen() << 8) | r.gen() ) % n;
 	}
 };
 
