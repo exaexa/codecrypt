@@ -216,6 +216,7 @@ int algo_fmtseq128::create_keypair (sencode**pub, sencode**priv, prng&rng)
 
 	*pub = Pub.serialize();
 	*priv = Priv.serialize();
+	return 0;
 }
 
 int algo_fmtseq256::create_keypair (sencode**pub, sencode**priv, prng&rng)
@@ -230,5 +231,6 @@ int algo_fmtseq256::create_keypair (sencode**pub, sencode**priv, prng&rng)
 
 	*pub = Pub.serialize();
 	*priv = Priv.serialize();
+	return 0;
 }
 
