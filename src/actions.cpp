@@ -21,8 +21,14 @@
 #include "iohelpers.h"
 #include "generator.h"
 #include "str_match.h"
+#include "envelope.h"
+#include "base64.h"
 
 #include <list>
+
+#define ENVELOPE_SECRETS "secrets"
+#define ENVELOPE_PUBKEYS "publickeys"
+//...
 
 int action_gen_key (const std::string& algspec, const std::string&name,
                     keyring&KR, algorithm_suite&AS)
@@ -206,7 +212,48 @@ int action_export (bool armor,
                    const std::string&filter, const std::string&name,
                    keyring&KR)
 {
-	//TODO
+	keyring::pubkey_storage s;
+
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
+			s[i->first] = i->second.pub;
+			if (name.length() )
+				s[i->first].name = name;
+		}
+	}
+
+	for (keyring::pubkey_storage::iterator
+	     i = KR.pubs.begin(), e = KR.pubs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.name, i->first) ) {
+			s[i->first] = i->second;
+			if (name.length() )
+				s[i->first].name = name;
+		}
+	}
+
+	if (!s.size() ) {
+		err ("error: no such public keys");
+		return 1;
+	}
+
+	sencode*S = keyring::serialize_pubkeys (s);
+	if (!S) return 1;
+	std::string data = S->encode();
+
+	if (armor) {
+		std::vector<std::string> parts;
+		parts.resize (1);
+		base64_encode (data, parts[0]);
+		arcfour_rng r;
+		r.seed (128);
+		data = envelope_format (ENVELOPE_PUBKEYS, parts, r);
+	}
+
+	out (data);
+
 	return 0;
 }
 
@@ -327,7 +374,42 @@ int action_export_sec (bool armor,
                        const std::string&filter, const std::string&name,
                        keyring&KR)
 {
-	//TODO
+	keyring::keypair_storage s;
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
+			s[i->first] = i->second;
+			if (name.length() )
+				s[i->first].pub.name = name;
+		}
+	}
+
+	if (!s.size() ) {
+		err ("error: no such secret");
+		return 1;
+	}
+
+	bool okay = false;
+	ask_for_yes (okay, "This will export " << s.size()
+	             << " secret keys! Continue?");
+	if (!okay) return 0;
+
+	sencode*S = keyring::serialize_keypairs (s);
+	if (!S) return 1; //weird.
+	std::string data = S->encode();
+
+	if (armor) {
+		std::vector<std::string> parts;
+		parts.resize (1);
+		base64_encode (data, parts[0]);
+		arcfour_rng r;
+		r.seed (128);
+		data = envelope_format (ENVELOPE_SECRETS, parts, r);
+	}
+
+	out (data);
+
 	return 0;
 }
 
