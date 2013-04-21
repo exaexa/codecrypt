@@ -22,6 +22,8 @@
 #include "generator.h"
 #include "str_match.h"
 
+#include <list>
+
 int action_gen_key (const std::string& algspec, const std::string&name,
                     keyring&KR, algorithm_suite&AS)
 {
@@ -204,12 +206,49 @@ int action_export (bool armor,
                    const std::string&filter, const std::string&name,
                    keyring&KR)
 {
+	//TODO
 	return 0;
 }
 
 
 int action_delete (bool yes, const std::string&filter, keyring&KR)
 {
+	int kc = 0;
+	for (keyring::pubkey_storage::iterator
+	     i = KR.pubs.begin(), e = KR.pubs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.name, i->first) )
+			++kc;
+	}
+	if (!kc) {
+		err ("no such key");
+		return 0;
+	}
+	if (kc > 1 && !yes) {
+		bool okay = false;
+		ask_for_yes (okay, "This will delete " << kc
+		             << " pubkeys from your keyring. Continue?");
+		if (!okay) return 0;
+	}
+
+	//all clear, delete them
+	std::list<keyring::pubkey_storage::iterator> todel;
+	for (keyring::pubkey_storage::iterator
+	     i = KR.pubs.begin(), e = KR.pubs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.name, i->first) )
+			todel.push_back (i);
+	}
+
+	for (std::list<keyring::pubkey_storage::iterator>::iterator
+	     i = todel.begin(), e = todel.end(); i != e; ++i)
+		KR.pubs.erase (*i);
+
+	if (!KR.save() ) {
+		err ("error: couldn't save keyring");
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -252,12 +291,49 @@ int action_export_sec (bool armor,
                        const std::string&filter, const std::string&name,
                        keyring&KR)
 {
+	//TODO
 	return 0;
 }
 
 
 int action_delete_sec (bool yes, const std::string&filter, keyring&KR)
 {
+	int kc = 0;
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first) )
+			++kc;
+	}
+	if (!kc) {
+		err ("no such key");
+		return 0;
+	}
+	if (!yes) {
+		bool okay = false;
+		ask_for_yes (okay, "This will delete " << kc
+		             << " secrets from your keyring. Continue?");
+		if (!okay) return 0;
+	}
+
+	//all clear, delete them
+	std::list<keyring::keypair_storage::iterator> todel;
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first) )
+			todel.push_back (i);
+	}
+
+	for (std::list<keyring::keypair_storage::iterator>::iterator
+	     i = todel.begin(), e = todel.end(); i != e; ++i)
+		KR.pairs.erase (*i);
+
+	if (!KR.save() ) {
+		err ("error: couldn't save keyring");
+		return 1;
+	}
+
 	return 0;
 }
 

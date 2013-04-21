@@ -32,7 +32,10 @@
 #define err(x) std::cerr << x << std::endl
 #define erreol std::cerr << std::endl
 #define progerr(x) std::cerr << argv[0] << ": " << x << std::endl
-#define in(x) std::cin >> x;
+
+#define ask_for_yes(ok,x) do {std::cout << x << " (y/n): "; \
+	std::string answer; std::cin >> answer; \
+	ok=(answer=="y");} while(0)
 
 bool redirect_cin (const std::string& fn);
 bool redirect_cout (const std::string& fn);
