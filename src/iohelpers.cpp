@@ -29,7 +29,7 @@ bool redirect_cin (const std::string& fn)
 
 bool redirect_cout (const std::string& fn)
 {
-	static std::ifstream alt_cout;
+	static std::ofstream alt_cout;
 	alt_cout.open (fn.c_str(), std::ios::out | std::ios::binary);
 	if (alt_cout.fail() ) return false;
 	std::cout.rdbuf (alt_cout.rdbuf() );
