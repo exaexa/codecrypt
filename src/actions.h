@@ -57,7 +57,7 @@ int action_decrypt_verify (bool armor, keyring&, algorithm_suite&);
 int action_list (bool nice_fingerprint, const std::string&filter,
                  keyring&);
 
-int action_import (bool armor, bool no_action, bool yes,
+int action_import (bool armor, bool no_action, bool yes, bool fp,
                    const std::string&filter, const std::string&name,
                    keyring&);
 
@@ -75,11 +75,11 @@ int action_rename (bool yes,
 int action_list_sec (bool nice_fingerprint, const std::string&filter,
                      keyring&);
 
-int action_import_sec (bool armor, bool no_action, bool yes,
+int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
                        const std::string&filter, const std::string&name,
                        keyring&);
 
-int action_export_sec (bool armor,
+int action_export_sec (bool armor, bool yes,
                        const std::string&filter, const std::string&name,
                        keyring&);
 

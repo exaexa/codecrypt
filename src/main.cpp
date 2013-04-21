@@ -288,7 +288,6 @@ int main (int argc, char**argv)
 	 * something will be happening, therefore init everything
 	 */
 
-	int exitval = 0;
 	keyring KR;
 	algorithm_suite AS;
 
@@ -297,6 +296,8 @@ int main (int argc, char**argv)
 		progerr ("could not open keyring!");
 		return 1;
 	}
+
+	int exitval = 0;
 
 	if (!KR.load() ) {
 		err ("could not load keyring!");
@@ -368,7 +369,8 @@ int main (int argc, char**argv)
 
 	case 'i':
 		exitval = action_import (opt_armor, opt_import_no_action,
-		                         opt_yes, filter, name, KR);
+		                         opt_yes, opt_fingerprint,
+		                         filter, name, KR);
 		break;
 
 	case 'p':
@@ -389,11 +391,13 @@ int main (int argc, char**argv)
 
 	case 'I':
 		exitval = action_import_sec (opt_armor, opt_import_no_action,
-		                             opt_yes, filter, name, KR);
+		                             opt_yes, opt_fingerprint,
+		                             filter, name, KR);
 		break;
 
 	case 'P':
-		exitval = action_export_sec (opt_armor, filter, name, KR);
+		exitval = action_export_sec (opt_armor, opt_yes,
+		                             filter, name, KR);
 		break;
 
 	case 'X':

@@ -201,17 +201,107 @@ int action_list (bool nice_fingerprint, const std::string&filter,
 }
 
 
-int action_import (bool armor, bool no_action, bool yes,
+int action_import (bool armor, bool no_action, bool yes, bool fp,
                    const std::string&filter, const std::string&name,
                    keyring&KR)
 {
+	std::string data;
+	read_all_input (data);
+
+	if (armor) {
+		std::string type;
+		std::vector<std::string> parts;
+		if (!envelope_read (data, 0, type, parts) ) {
+			err ("error: no data envelope found");
+			return 1;
+		}
+
+		if (type != ENVELOPE_SECRETS || parts.size() != 1) {
+			err ("error: wrong envelope format");
+			return 1;
+		}
+
+		if (!base64_decode (parts[0], data) ) {
+			err ("error: malformed data");
+			return 1;
+		}
+	}
+
+	sencode*S = sencode_decode (data);
+	if (!S) {
+		err ("error: could not parse input sencode");
+		return 1;
+	}
+
+	keyring::pubkey_storage p;
+	if (!keyring::parse_pubkeys (S, p) ) {
+		err ("error: could not parse input structure");
+		return 1;
+	}
+	sencode_destroy (S);
+
+	if (!p.size() ) {
+		err ("notice: keyring was empty");
+		return 0;
+	}
+
+	if (no_action) {
+		for (keyring::pubkey_storage::iterator
+		     i = p.begin(), e = p.end(); i != e; ++i) {
+			if (keyspec_matches (filter, i->second.name,
+			                     i->first) )
+				output_key (fp,
+				            "pubkey", "public key",
+				            i->second.alg, i->first,
+				            i->second.name);
+		}
+		return 0;
+	}
+
+	//informatively count how much stuff is this going to destroy.
+	int rewrites = 0, privs = 0;
+	for (keyring::pubkey_storage::iterator
+	     i = p.begin(), e = p.end(); i != e; ++i) {
+		if (keyspec_matches (filter, i->second.name, i->first) ) {
+			if (KR.pairs.count (i->first) ) {
+				++privs;
+				++rewrites;
+			} else if (KR.pubs.count (i->first) ) {
+				++rewrites;
+			}
+		}
+	}
+
+	if (rewrites && !yes) {
+		err ("error: this would overwrite "
+		     << rewrites << " of your keys "
+		     "(including " << privs << " private keys). "
+		     "Use Yes option to confirm.");
+		return 1;
+	}
+
+	//merge into KR. Also prevent keyID collisions
+	for (keyring::pubkey_storage::iterator
+	     i = p.begin(), e = p.end(); i != e; ++i) {
+		if (keyspec_matches (filter, i->second.name, i->first) ) {
+			KR.pubs.erase (i->first);
+			KR.pairs.erase (i->first);
+			KR.pubs[i->first] = i->second;
+		}
+	}
+
+	if (!KR.save() ) {
+		err ("error: couldn't save keyring");
+		return 1;
+	}
+
 	return 0;
 }
 
 
 int action_export (bool armor,
-                   const std::string&filter, const std::string&name,
-                   keyring&KR)
+                   const std::string & filter, const std::string & name,
+                   keyring & KR)
 {
 	keyring::pubkey_storage s;
 
@@ -260,7 +350,7 @@ int action_export (bool armor,
 }
 
 
-int action_delete (bool yes, const std::string&filter, keyring&KR)
+int action_delete (bool yes, const std::string & filter, keyring & KR)
 {
 	int kc = 0;
 	for (keyring::pubkey_storage::iterator
@@ -303,8 +393,8 @@ int action_delete (bool yes, const std::string&filter, keyring&KR)
 
 
 int action_rename (bool yes,
-                   const std::string&filter, const std::string&name,
-                   keyring&KR)
+                   const std::string & filter, const std::string & name,
+                   keyring & KR)
 {
 	if (name.length() ) {
 		err ("error: missing new name specification");
@@ -347,8 +437,8 @@ int action_rename (bool yes,
 
 
 
-int action_list_sec (bool nice_fingerprint, const std::string&filter,
-                     keyring&KR)
+int action_list_sec (bool nice_fingerprint, const std::string & filter,
+                     keyring & KR)
 {
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
@@ -364,17 +454,101 @@ int action_list_sec (bool nice_fingerprint, const std::string&filter,
 }
 
 
-int action_import_sec (bool armor, bool no_action, bool yes,
-                       const std::string&filter, const std::string&name,
-                       keyring&KR)
+int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
+                       const std::string & filter, const std::string & name,
+                       keyring & KR)
 {
+	std::string data;
+	read_all_input (data);
+
+	if (armor) {
+		std::string type;
+		std::vector<std::string> parts;
+		if (!envelope_read (data, 0, type, parts) ) {
+			err ("error: no data envelope found");
+			return 1;
+		}
+
+		if (type != ENVELOPE_SECRETS || parts.size() != 1) {
+			err ("error: wrong envelope format");
+			return 1;
+		}
+
+		if (!base64_decode (parts[0], data) ) {
+			err ("error: malformed data");
+			return 1;
+		}
+	}
+
+	sencode*S = sencode_decode (data);
+	if (!S) {
+		err ("error: could not parse input sencode");
+		return 1;
+	}
+
+	keyring::keypair_storage s;
+	if (!keyring::parse_keypairs (S, s) ) {
+		err ("error: could not parse input structure");
+		return 1;
+	}
+	sencode_destroy (S);
+
+	if (!s.size() ) {
+		err ("notice: keyring was empty");
+		return 0;
+	}
+
+	if (no_action) {
+		for (keyring::keypair_storage::iterator
+		     i = s.begin(), e = s.end(); i != e; ++i) {
+			if (keyspec_matches (filter, i->second.pub.name,
+			                     i->first) )
+				output_key (fp,
+				            "keypair", "key pair",
+				            i->second.pub.alg, i->first,
+				            i->second.pub.name);
+		}
+		return 0;
+	}
+
+	int rewrites = 0;
+	for (keyring::keypair_storage::iterator
+	     i = s.begin(), e = s.end(); i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first)
+		    && (KR.pubs.count (i->first)
+		        || KR.pairs.count (i->first) ) )
+			++rewrites;
+	}
+
+	if (rewrites && !yes) {
+		err ("error: this would overwrite "
+		     << rewrites << " of your keys. "
+		     "Use Yes option to confirm.");
+		return 1;
+	}
+
+	//merge into KR. Also prevent keyID collisions
+	for (keyring::keypair_storage::iterator
+	     i = s.begin(), e = s.end(); i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
+			KR.pubs.erase (i->first);
+			KR.pairs.erase (i->first);
+			KR.pairs[i->first] = i->second;
+		}
+	}
+
+	if (!KR.save() ) {
+		err ("error: couldn't save keyring");
+		return 1;
+	}
+
 	return 0;
 }
 
 
-int action_export_sec (bool armor,
-                       const std::string&filter, const std::string&name,
-                       keyring&KR)
+int action_export_sec (bool armor, bool yes,
+                       const std::string & filter, const std::string & name,
+                       keyring & KR)
 {
 	keyring::keypair_storage s;
 	for (keyring::keypair_storage::iterator
@@ -392,10 +566,12 @@ int action_export_sec (bool armor,
 		return 1;
 	}
 
-	bool okay = false;
-	ask_for_yes (okay, "This will export " << s.size()
-	             << " secret keys! Continue?");
-	if (!okay) return 0;
+	if (!yes) {
+		bool okay = false;
+		ask_for_yes (okay, "This will export " << s.size()
+		             << " secret keys! Continue?");
+		if (!okay) return 0;
+	}
 
 	sencode*S = keyring::serialize_keypairs (s);
 	if (!S) return 1; //weird.
@@ -417,7 +593,7 @@ int action_export_sec (bool armor,
 }
 
 
-int action_delete_sec (bool yes, const std::string&filter, keyring&KR)
+int action_delete_sec (bool yes, const std::string & filter, keyring & KR)
 {
 	int kc = 0;
 	for (keyring::keypair_storage::iterator
@@ -460,8 +636,8 @@ int action_delete_sec (bool yes, const std::string&filter, keyring&KR)
 
 
 int action_rename_sec (bool yes,
-                       const std::string&filter, const std::string&name,
-                       keyring&KR)
+                       const std::string & filter, const std::string & name,
+                       keyring & KR)
 {
 	if (!name.length() ) {
 		err ("error: missing new name specification");
