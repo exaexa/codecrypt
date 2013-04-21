@@ -257,6 +257,42 @@ int action_rename (bool yes,
                    const std::string&filter, const std::string&name,
                    keyring&KR)
 {
+	if (name.length() ) {
+		err ("error: missing new name specification");
+		return 1;
+	}
+	int kc = 0;
+	for (keyring::pubkey_storage::iterator
+	     i = KR.pubs.begin(), e = KR.pubs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.name, i->first) )
+			++kc;
+	}
+	if (!kc) {
+		err ("error: no such key");
+		return 0;
+	}
+	if (kc > 1 && !yes) {
+		bool okay = false;
+		ask_for_yes (okay, "This will rename " << kc
+		             << " pubkeys from your keyring to `"
+		             << name << "'. Continue?");
+		if (!okay) return 0;
+	}
+
+	//do the renaming
+	for (keyring::pubkey_storage::iterator
+	     i = KR.pubs.begin(), e = KR.pubs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.name, i->first) )
+			i->second.name = name;
+	}
+
+	if (!KR.save() ) {
+		err ("error: couldn't save keyring");
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -306,7 +342,7 @@ int action_delete_sec (bool yes, const std::string&filter, keyring&KR)
 			++kc;
 	}
 	if (!kc) {
-		err ("no such key");
+		err ("error: no such key");
 		return 0;
 	}
 	if (!yes) {
@@ -342,5 +378,41 @@ int action_rename_sec (bool yes,
                        const std::string&filter, const std::string&name,
                        keyring&KR)
 {
+	if (!name.length() ) {
+		err ("error: missing new name specification");
+		return 1;
+	}
+
+	int kc = 0;
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first) )
+			++kc;
+	}
+	if (!kc) {
+		err ("error: no such key");
+		return 0;
+	}
+	if (!yes) {
+		bool okay = false;
+		ask_for_yes (okay, "This will rename " << kc
+		             << " secrets from your keyring to `"
+		             << name << "'. Continue?");
+		if (!okay) return 0;
+	}
+
+	//do the renaming
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first) )
+			i->second.pub.name = name;
+	}
+
+	if (!KR.save() ) {
+		err ("error: couldn't save keyring");
+		return 1;
+	}
 	return 0;
 }
