@@ -231,6 +231,15 @@ int action_decrypt (bool armor,
 		return 1;
 	}
 
+	//and the algorithm
+	if ( (!AS.count (msg.alg_id) )
+	     || (!AS[msg.alg_id]->provides_encryption() ) ) {
+		err ("error: decryption algorithm unsupported");
+		err ("info: requires algorithm " << msg.alg_id);
+		return 1;
+	}
+
+
 	//actual decryption
 	bvector plaintext;
 	if (msg.decrypt (plaintext, AS, KR) ) {
