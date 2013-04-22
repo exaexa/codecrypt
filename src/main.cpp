@@ -273,7 +273,6 @@ int main (int argc, char**argv)
 	}
 
 	if (optind != argc) {
-		for (int i = 0; i < argc; ++i) out (argv[i]);
 		progerr ("unmatched non-option parameters");
 		do_help = true;
 	}
