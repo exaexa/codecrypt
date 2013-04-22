@@ -24,6 +24,7 @@
 #include "envelope.h"
 #include "base64.h"
 #include "message.h"
+#include "bvector.h"
 
 #include <list>
 
@@ -109,6 +110,75 @@ int action_gen_key (const std::string& algspec, const std::string&name,
 int action_encrypt (const std::string&recipient, bool armor,
                     keyring&KR, algorithm_suite&AS)
 {
+	//first, find a recipient
+	keyring::pubkey_entry *recip = NULL;
+
+	//search both publickeys and keypairs
+	for (keyring::pubkey_storage::iterator
+	     i = KR.pubs.begin(), e = KR.pubs.end(); i != e; ++i) {
+		if (keyspec_matches (recipient, i->second.name, i->first) ) {
+			if (recip) {
+				err ("error: ambiguous recipient specified");
+				return 1;
+			} else recip = & (i->second);
+		}
+	}
+
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end(); i != e; ++i) {
+		if (keyspec_matches (recipient, i->second.pub.name, i->first) ) {
+			if (recip) {
+				err ("error: ambiguous recipient specified");
+				return 1;
+			} else recip = & (i->second.pub);
+		}
+	}
+
+	if (!recip) {
+		err ("error: no such recipient");
+		return 1;
+	}
+
+	//verify algorithm existence
+	if (!AS.count (recip->alg) ) {
+		err ("error: unsupported algorithm");
+		return 1;
+	}
+
+	//verify that algorithm can encrypt
+	if (!AS[recip->alg]->provides_encryption() ) {
+		err ("error: selected key not suitable for encryption");
+		return 1;
+	}
+
+	//read plaintext
+	std::string data;
+	read_all_input (data);
+
+	encrypted_msg msg;
+	arcfour_rng r;
+	r.seed (256);
+
+	bvector plaintext;
+	plaintext.from_string (data);
+
+	if (msg.encrypt (plaintext, recip->alg, recip->keyid, AS, KR, r) ) {
+		err ("error: encryption failed");
+		return 1;
+	}
+
+	sencode*M = msg.serialize();
+	data = M->encode();
+	sencode_destroy (M);
+
+	if (armor) {
+		std::vector<std::string> parts;
+		parts.resize (1);
+		base64_encode (data, parts[0]);
+		data = envelope_format (ENVELOPE_ENC, parts, r);
+	}
+
+	out_bin (data);
 	return 0;
 }
 
