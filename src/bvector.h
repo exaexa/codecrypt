@@ -20,6 +20,7 @@
 #define _ccr_bvector_h_
 
 #include <vector>
+#include <string>
 #include "types.h"
 #include "vector_item.h"
 #include "sencode.h"
@@ -55,6 +56,9 @@ public:
 
 	void colex_rank (bvector&) const;
 	void colex_unrank (bvector&, uint n, uint k) const;
+
+	bool to_string (std::string&) const;
+	void from_string (const std::string&);
 
 	sencode* serialize();
 	bool unserialize (sencode*);

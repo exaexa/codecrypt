@@ -113,6 +113,28 @@ void bvector::from_poly_cotrace (const polynomial&r, gf2m&fld)
 		item (i) = (r[i % s] >> (i / s) ) & 1;
 }
 
+bool bvector::to_string (std::string& out) const
+{
+	if (size() & 0x7) return false;
+
+	out.clear();
+	out.resize (size() >> 3, 0);
+
+	for (uint i = 0; i < size(); ++i)
+		if (item (i) ) out[i >> 3] |= (1 << (i & 0x7) );
+
+	return true;
+}
+
+void bvector::from_string (const std::string&in)
+{
+	clear();
+	resize (in.length() << 3);
+
+	for (uint i = 0; i < size(); ++i)
+		item (i) = (in[i >> 3] >> (i & 0x7) ) & 1;
+}
+
 /*
  * utility colex (un)ranking for niederreiter and workalikes.
  * see Ruskey's Combinatorial Generation, algorithm 4.10
