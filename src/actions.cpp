@@ -378,6 +378,7 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 	keyring::pubkey_storage p;
 	if (!keyring::parse_pubkeys (S, p) ) {
 		err ("error: could not parse input structure");
+		sencode_destroy (S);
 		return 1;
 	}
 	sencode_destroy (S);
@@ -632,6 +633,7 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 	keyring::keypair_storage s;
 	if (!keyring::parse_keypairs (S, s) ) {
 		err ("error: could not parse input structure");
+		sencode_destroy (S);
 		return 1;
 	}
 	sencode_destroy (S);
