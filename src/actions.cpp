@@ -228,7 +228,7 @@ int action_decrypt (bool armor,
 	if (!kpe) {
 		err ("error: decryption privkey unavailable");
 		err ("info: requires key @" << msg.key_id);
-		return 1;
+		return 2; //missing key flag
 	}
 
 	//and the algorithm
@@ -404,7 +404,223 @@ int action_verify (bool armor, const std::string&detach,
                    bool clearsign, bool yes,
                    keyring&KR, algorithm_suite&AS)
 {
-	return 0;
+	/*
+	 * check flags validity, open detach if possible
+	 */
+	if (clearsign && (detach.length() || armor) ) {
+		err ("error: clearsign cannot be combined "
+		     "with armor or detach-sign");
+		return 1;
+	}
+
+	std::ifstream detf;
+	if (detach.length() ) {
+		detf.open (detach.c_str(), std::ios::in | std::ios::binary);
+		if (!detf) {
+			err ("error: can't open detached signature file");
+			return 1;
+		}
+	}
+
+	/*
+	 * read input and unpack the whole thing into message.
+	 * Takes a lot of effort. :)
+	 */
+
+	signed_msg msg;
+	std::string data;
+
+	read_all_input (data);
+
+	if (clearsign) {
+		std::string type;
+		std::vector<std::string> parts;
+
+		if (!envelope_read (data, 0, type, parts) ) {
+			err ("error: no data envelope found");
+			return 1;
+		}
+
+		if (type != ENVELOPE_CLEARSIGN || parts.size() != 2) {
+			err ("error: wrong envelope format");
+			return 1;
+		}
+
+		std::string sig;
+		if (!base64_decode (parts[1], sig) ) {
+			err ("error: malformed data");
+			return 1;
+		}
+
+		sencode*M = sencode_decode (sig);
+		if (!M) {
+			err ("error: could not parse input sencode");
+			return 1;
+		}
+
+		if (!msg.unserialize (M) ) {
+			err ("error: could not parse input structure");
+			sencode_destroy (M);
+			return 1;
+		}
+
+		sencode_destroy (M);
+
+		std::string tmp;
+		if (!msg.message.to_string (tmp) || tmp != MSG_CLEARTEXT) {
+			err ("error: malformed cleartext signature");
+			return 1;
+		}
+
+		msg.message.from_string (parts[0]);
+
+	} else if (detach.length() ) {
+
+		std::string sig;
+		if (!read_all_input (sig, detf) ) {
+			err ("error: can't read detached signature file");
+			return 1;
+		}
+
+		detf.close();
+
+		if (armor) {
+			std::vector<std::string> parts;
+			std::string type;
+			if (!envelope_read (sig, 0, type, parts) ) {
+				err ("error: no data envelope found");
+				return 1;
+			}
+
+			if (type != ENVELOPE_DETACHSIGN || parts.size() != 1) {
+				err ("error: wrong envelope format");
+				return 1;
+			}
+
+			if (!base64_decode (parts[0], sig) ) {
+				err ("error: malformed data");
+				return 1;
+			}
+		}
+
+		sencode*M = sencode_decode (sig);
+		if (!M) {
+			err ("error: could not parse input sencode");
+			return 1;
+		}
+
+		if (!msg.unserialize (M) ) {
+			err ("error: could not parse input structure");
+			sencode_destroy (M);
+			return 1;
+		}
+
+		sencode_destroy (M);
+
+		std::string tmp;
+		if (!msg.message.to_string (tmp) || tmp != MSG_DETACHED) {
+			err ("error: malformed detached signature");
+			return 1;
+		}
+
+		msg.message.from_string (data);
+
+	} else {
+		//classical sig
+		if (armor) {
+			std::string type;
+			std::vector<std::string> parts;
+
+			if (!envelope_read (data, 0, type, parts) ) {
+				err ("error: no data envelope found");
+				return 1;
+			}
+
+			if (type != ENVELOPE_SIG || parts.size() != 1) {
+				err ("error: wrong envelope format");
+				return 1;
+			}
+
+			if (!base64_decode (parts[0], data) ) {
+				err ("error: malformed data");
+				return 1;
+			}
+		}
+
+		sencode*M = sencode_decode (data);
+		if (!M) {
+			err ("error: could not parse input sencode");
+			return 1;
+		}
+
+		if (!msg.unserialize (M) ) {
+			err ("error: could not parse input structure");
+			sencode_destroy (M);
+			return 1;
+		}
+
+		sencode_destroy (M);
+	}
+
+	//check that the message can be converted to bytes
+	if (msg.message.size() & 0x7) {
+		err ("error: bad message size");
+		return 1;
+	}
+
+	//check pubkey availability
+	keyring::pubkey_entry*pke;
+	pke = KR.get_pubkey (msg.key_id);
+	if (!pke) {
+		err ("error: verification pubkey unavailable");
+		err ("info: requires key @" << msg.key_id);
+		if (!yes) {
+			err ("notice: not displaying unverified message");
+			err ("info: to see it, use yes option");
+		} else {
+			err ("warning: following message is UNVERIFIED");
+			msg.message.to_string (data);
+			out_bin (data);
+		}
+		return 2; //missing key flag
+	}
+
+	if ( (!AS.count (msg.alg_id) )
+	     || (!AS[msg.alg_id]->provides_signatures() ) ) {
+		err ("error: verification algorithm unsupported");
+		err ("info: requires algorithm " << msg.alg_id
+		     << " with signature support");
+		return 1;
+	}
+
+	//do the verification
+	int r = msg.verify (AS, KR);
+
+	err ("incoming signed message details:");
+	err ("  algorithm: " << msg.alg_id);
+	err ("  signed by: @" << msg.key_id);
+	err ("  signed local name: `" << pke->name << "'");
+	err ("  verification status: "
+	     << (r == 0 ?
+	         "GOOD signature ;-)" :
+	         "BAD signature :-(") );
+
+	if (r) {
+		if (!yes) {
+			err ("notice: not displaying unverified message");
+			err ("info: to see it, use yes option");
+		} else {
+			err ("warning: following message is UNVERIFIED");
+		}
+	}
+
+	if (yes || !r) {
+		msg.message.to_string (data);
+		out_bin (data);
+	}
+
+	if (r) return 3; //verification failed flag
+	else return 0;
 }
 
 

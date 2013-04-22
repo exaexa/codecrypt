@@ -41,6 +41,6 @@
 bool redirect_cin (const std::string& fn);
 bool redirect_cout (const std::string& fn);
 
-bool read_all_input (std::string&);
+bool read_all_input (std::string&, std::istream&in = std::cin);
 
 #endif
