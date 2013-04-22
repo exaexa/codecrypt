@@ -235,7 +235,8 @@ int action_decrypt (bool armor,
 	if ( (!AS.count (msg.alg_id) )
 	     || (!AS[msg.alg_id]->provides_encryption() ) ) {
 		err ("error: decryption algorithm unsupported");
-		err ("info: requires algorithm " << msg.alg_id);
+		err ("info: requires algorithm " << msg.alg_id
+		     << " with encryption support");
 		return 1;
 	}
 
@@ -256,7 +257,7 @@ int action_decrypt (bool armor,
 	err ("incoming encrypted message details:");
 	err ("  algorithm: " << msg.alg_id);
 	err ("  recipient: @" << msg.key_id);
-	keyring::pubkey_entry*pke;
+	keyring::pubkey_entry * pke;
 	pke = KR.get_pubkey (msg.key_id);
 	if (pke) //should be always good
 		err ("  recipient local name: `" << pke->name << "'");
