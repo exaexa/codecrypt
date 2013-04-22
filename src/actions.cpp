@@ -117,10 +117,14 @@ int action_encrypt (const std::string&recipient, bool armor,
 	//first, find a recipient
 	keyring::pubkey_entry *recip = NULL;
 
-	//search both publickeys and keypairs
+	//search both publickeys and keypairs that are valid for encryption
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end(); i != e; ++i) {
 		if (keyspec_matches (recipient, i->second.name, i->first) ) {
+			if (!AS.count (i->second.alg) ) continue;
+			if (!AS[i->second.alg]->provides_encryption() )
+				continue;
+
 			if (recip) {
 				err ("error: ambiguous recipient specified");
 				return 1;
@@ -131,6 +135,10 @@ int action_encrypt (const std::string&recipient, bool armor,
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end(); i != e; ++i) {
 		if (keyspec_matches (recipient, i->second.pub.name, i->first) ) {
+			if (!AS.count (i->second.pub.alg) ) continue;
+			if (!AS[i->second.pub.alg]->provides_encryption() )
+				continue;
+
 			if (recip) {
 				err ("error: ambiguous recipient specified");
 				return 1;
@@ -139,19 +147,7 @@ int action_encrypt (const std::string&recipient, bool armor,
 	}
 
 	if (!recip) {
-		err ("error: no such recipient");
-		return 1;
-	}
-
-	//verify algorithm existence
-	if (!AS.count (recip->alg) ) {
-		err ("error: unsupported algorithm");
-		return 1;
-	}
-
-	//verify that algorithm can encrypt
-	if (!AS[recip->alg]->provides_encryption() ) {
-		err ("error: selected key not suitable for encryption");
+		err ("error: no such recipient with suitable pubkey");
 		return 1;
 	}
 
@@ -308,6 +304,16 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end(); i != e; ++i) {
 		if (keyspec_matches (user, i->second.pub.name, i->first) ) {
+			/*
+			 * also match having signature alg availability,
+			 * because it saves time when you only have one locally
+			 * available signature privkey. Also, no need to check
+			 * it again later.
+			 */
+			if (!AS.count (i->second.pub.alg) ) continue;
+			if (!AS[i->second.pub.alg]->provides_signatures() )
+				continue;
+
 			if (u) {
 				err ("error: ambiguous local user specified");
 				return 1;
@@ -316,18 +322,7 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 	}
 
 	if (!u) {
-		err ("error: no such local user");
-		return 1;
-	}
-
-	//check if algorithm exists and is suitable
-	if (!AS.count (u->pub.alg) ) {
-		err ("error: unsupported algorithm");
-		return 1;
-	}
-
-	if (!AS[u->pub.alg]->provides_signatures() ) {
-		err ("error: selected key not suitable for signatures");
+		err ("error: no such supported local privkey");
 		return 1;
 	}
 
