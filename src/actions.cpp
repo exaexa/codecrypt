@@ -257,10 +257,7 @@ int action_decrypt (bool armor,
 	err ("incoming encrypted message details:");
 	err ("  algorithm: " << msg.alg_id);
 	err ("  recipient: @" << msg.key_id);
-	keyring::pubkey_entry * pke;
-	pke = KR.get_pubkey (msg.key_id);
-	if (pke) //should be always good
-		err ("  recipient local name: `" << pke->name << "'");
+	err ("  recipient local name: `" << kpe->pub.name << "'");
 
 	/*
 	 * because there's no possibility to distinguish encrypted from
@@ -638,6 +635,12 @@ int action_verify (bool armor, const std::string&detach,
 	else return 0;
 }
 
+/*
+ * Combined functions for Sign+Encrypt and Decrypt+Verify.
+ *
+ * Mostly a copypasta from above primitives.
+ * Keep it that way. :)
+ */
 
 int action_sign_encrypt (const std::string&user, const std::string&recipient,
                          bool armor, keyring&KR, algorithm_suite&AS)
@@ -752,7 +755,149 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 int action_decrypt_verify (bool armor, bool yes,
                            keyring&KR, algorithm_suite&AS)
 {
-	return 0;
+	std::string data;
+	read_all_input (data);
+
+	if (armor) {
+		std::string type;
+		std::vector<std::string> parts;
+		if (!envelope_read (data, 0, type, parts) ) {
+			err ("error: no data envelope found");
+			return 1;
+		}
+
+		if (type != ENVELOPE_ENC || parts.size() != 1) {
+			err ("error: wrong envelope format");
+			return 1;
+		}
+		if (!base64_decode (parts[0], data) ) {
+			err ("error: malformed data");
+			return 1;
+		}
+	}
+
+	sencode*M = sencode_decode (data);
+	if (!M) {
+		err ("error: could not parse input sencode");
+		return 1;
+	}
+
+	encrypted_msg emsg;
+	if (!emsg.unserialize (M) ) {
+		err ("error: could not parse input structure");
+		sencode_destroy (M);
+		return 1;
+	}
+
+	sencode_destroy (M);
+
+	//check if we will be able to decrypt
+	keyring::keypair_entry*kpe;
+	kpe = KR.get_keypair (emsg.key_id);
+	if (!kpe) {
+		err ("error: decryption privkey unavailable");
+		err ("info: requires key @" << emsg.key_id);
+		return 2; //missing key flag
+	}
+
+	if ( (!AS.count (emsg.alg_id) )
+	     || (!AS[emsg.alg_id]->provides_encryption() ) ) {
+		err ("error: decryption algorithm unsupported");
+		err ("info: requires algorithm " << emsg.alg_id
+		     << " with encryption support");
+		return 1;
+	}
+
+	bvector bv;
+	if (emsg.decrypt (bv, AS, KR) ) {
+		err ("error: decryption failed");
+		return 1;
+	}
+
+	if (!bv.to_string (data) ) {
+		err ("error: malformed data");
+		return 1;
+	}
+
+	//looks okay, print decryption status
+	err ("incoming encrypted message details:");
+	err ("  algorithm: " << emsg.alg_id);
+	err ("  recipient: @" << emsg.key_id);
+	err ("  recipient local name: `" << kpe->pub.name << "'");
+
+	//continue with verification
+	M = sencode_decode (data);
+	if (!M) {
+		err ("error: could not parse input sencode");
+		return 1;
+	}
+
+	signed_msg smsg;
+	if (!smsg.unserialize (M) ) {
+		err ("error: could not parse input structure");
+		sencode_destroy (M);
+		return 1;
+	}
+
+	sencode_destroy (M);
+
+	if (smsg.message.size() & 0x7) {
+		err ("error: bad message size");
+		return 1;
+	}
+
+	keyring::pubkey_entry*pke;
+	pke = KR.get_pubkey (smsg.key_id);
+	if (!pke) {
+		err ("error: verification pubkey unavailable");
+		err ("info: requires key @" << smsg.key_id);
+		if (!yes) {
+			err ("notice: not displaying unverified message");
+			err ("info: to see it, use yes option");
+		} else {
+			err ("warning: following message is UNVERIFIED");
+			smsg.message.to_string (data);
+			out_bin (data);
+		}
+		return 2; //missing key flag
+	}
+
+	if ( (!AS.count (smsg.alg_id) )
+	     || (!AS[smsg.alg_id]->provides_signatures() ) ) {
+		err ("error: verification algorithm unsupported");
+		err ("info: requires algorithm " << smsg.alg_id
+		     << " with signature support");
+		return 1;
+	}
+
+	//do the verification
+	int r = smsg.verify (AS, KR);
+
+	err ("incoming signed message details:");
+	err ("  algorithm: " << smsg.alg_id);
+	err ("  signed by: @" << smsg.key_id);
+	err ("  signed local name: `" << pke->name << "'");
+	err ("  verification status: "
+	     << (r == 0 ?
+	         "GOOD signature ;-)" :
+	         "BAD signature :-(") );
+
+	if (r) {
+		if (!yes) {
+			err ("notice: not displaying unverified message");
+			err ("info: to see it, use yes option");
+		} else {
+			err ("warning: following message is UNVERIFIED");
+		}
+	}
+
+	if (yes || !r) {
+		smsg.message.to_string (data);
+		out_bin (data);
+	}
+
+	if (r) return 3; //verification failed flag
+	else return 0;
 }
 
 
