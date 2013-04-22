@@ -186,6 +186,75 @@ int action_encrypt (const std::string&recipient, bool armor,
 int action_decrypt (bool armor,
                     keyring&KR, algorithm_suite&AS)
 {
+	std::string data;
+	read_all_input (data);
+
+	if (armor) {
+		std::string type;
+		std::vector<std::string> parts;
+		if (!envelope_read (data, 0, type, parts) ) {
+			err ("error: no data envelope found");
+			return 1;
+		}
+
+		if (type != ENVELOPE_ENC || parts.size() != 1) {
+			err ("error: wrong envelope format");
+			return 1;
+		}
+		if (!base64_decode (parts[0], data) ) {
+			err ("error: malformed data");
+			return 1;
+		}
+	}
+
+	sencode*M = sencode_decode (data);
+	if (!M) {
+		err ("error: could not parse input sencode");
+		return 1;
+	}
+
+	encrypted_msg msg;
+	if (!msg.unserialize (M) ) {
+		err ("error: could not parse input structure");
+		sencode_destroy (M);
+		return 1;
+	}
+
+	sencode_destroy (M);
+
+	//check if we have the privkey
+	keyring::keypair_entry*kpe;
+	kpe = KR.get_keypair (msg.key_id);
+	if (!kpe) {
+		err ("error: decryption privkey unavailable");
+		err ("info: requires key @" << msg.key_id);
+		return 1;
+	}
+
+	//actual decryption
+	bvector plaintext;
+	if (msg.decrypt (plaintext, AS, KR) ) {
+		err ("error: decryption failed");
+		return 1;
+	}
+
+	if (!plaintext.to_string (data) ) {
+		err ("error: malformed data");
+		return 1;
+	}
+
+	//SEEMS OKAY, let's print some info.
+	err ("incoming encrypted message details:");
+	err ("  algorithm: " << msg.alg_id);
+	err ("  recipient: @" << msg.key_id);
+	keyring::pubkey_entry*pke;
+	pke = KR.get_pubkey (msg.key_id);
+	if (pke) //should be always good
+		err ("  recipient local name: `" << pke->name << "'");
+
+	//and pump the decrypted stuff to stdout
+	out_bin (data);
+
 	return 0;
 }
 
