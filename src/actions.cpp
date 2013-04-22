@@ -32,7 +32,11 @@
 #define ENVELOPE_PUBKEYS "publickeys"
 #define ENVELOPE_ENC "encrypted"
 #define ENVELOPE_SIG "signed"
-//...
+#define ENVELOPE_CLEARSIGN "clearsigned"
+#define ENVELOPE_DETACHSIGN "detachsign"
+
+#define MSG_CLEARTEXT "MESSAGE-IN-CLEARTEXT"
+#define MSG_DETACHED "MESSAGE-DETACHED"
 
 int action_gen_key (const std::string& algspec, const std::string&name,
                     keyring&KR, algorithm_suite&AS)
@@ -272,11 +276,137 @@ int action_decrypt (bool armor,
 int action_sign (const std::string&user, bool armor, const std::string&detach,
                  bool clearsign, keyring&KR, algorithm_suite&AS)
 {
+
+	/*
+	 * check detach/armor/clearsign validity first.
+	 * Allowed combinations are:
+	 *  - nothing
+	 *  - armor
+	 *  - detach
+	 *  - armor+detach
+	 *  - clearsign (which is always armored)
+	 */
+
+	if (clearsign && (detach.length() || armor) ) {
+		err ("error: clearsign cannot be combined "
+		     "with armor or detach-sign");
+		return 1;
+	}
+
+	std::ofstream detf;
+	if (detach.length() ) {
+		detf.open (detach.c_str(), std::ios::out | std::ios::binary);
+		if (!detf) {
+			err ("error: can't open detached signature file");
+			return 1;
+		}
+	}
+
+	//some common checks on user key
+	keyring::keypair_entry *u = NULL;
+
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end(); i != e; ++i) {
+		if (keyspec_matches (user, i->second.pub.name, i->first) ) {
+			if (u) {
+				err ("error: ambiguous local user specified");
+				return 1;
+			} else u = & (i->second);
+		}
+	}
+
+	if (!u) {
+		err ("error: no such local user");
+		return 1;
+	}
+
+	//check if algorithm exists and is suitable
+	if (!AS.count (u->pub.alg) ) {
+		err ("error: unsupported algorithm");
+		return 1;
+	}
+
+	if (!AS[u->pub.alg]->provides_signatures() ) {
+		err ("error: selected key not suitable for signatures");
+		return 1;
+	}
+
+	//eat data
+	std::string data;
+	read_all_input (data);
+
+	signed_msg msg;
+	arcfour_rng r;
+	r.seed (256);
+
+	bvector message;
+	message.from_string (data);
+
+	if (msg.sign (message, u->pub.alg, u->pub.keyid, AS, KR, r) ) {
+		err ("error: digital signature failed");
+		return 1;
+	}
+
+	//now deal with all the output possibilities
+
+	if (clearsign) {
+		std::vector<std::string> parts;
+		parts.resize (2);
+
+		msg.message.to_string (parts[0]);
+		msg.message.from_string (MSG_CLEARTEXT);
+
+		sencode*M = msg.serialize();
+		base64_encode (M->encode(), parts[1]);
+		sencode_destroy (M);
+
+		out_bin (envelope_format (ENVELOPE_CLEARSIGN, parts, r) );
+
+	} else if (detach.length() ) {
+		msg.message.from_string (MSG_DETACHED);
+		sencode*M = msg.serialize();
+		data = M->encode();
+		sencode_destroy (M);
+
+		if (armor) {
+			std::vector<std::string> parts;
+			parts.resize (1);
+			base64_encode (data, parts[0]);
+			data = envelope_format (ENVELOPE_DETACHSIGN, parts, r);
+		}
+
+		detf << data;
+		if (!detf.good() ) {
+			err ("error: could not write detached signature file");
+			return 1;
+		}
+		detf.close();
+		if (!detf.good() ) {
+			err ("error: could not close detached signature file");
+			return 1;
+		}
+
+	} else {
+		sencode*M = msg.serialize();
+		data = M->encode();
+		sencode_destroy (M);
+
+		if (armor) {
+			std::vector<std::string> parts;
+			parts.resize (1);
+			base64_encode (data, parts[0]);
+			data = envelope_format (ENVELOPE_SIG, parts, r);
+		}
+
+		out_bin (data);
+	}
+
 	return 0;
 }
 
 
-int action_verify (bool armor, const std::string&detach, bool clearsign,
+int action_verify (bool armor, const std::string&detach,
+                   bool clearsign, bool yes,
                    keyring&KR, algorithm_suite&AS)
 {
 	return 0;
@@ -290,7 +420,8 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 }
 
 
-int action_decrypt_verify (bool armor, keyring&KR, algorithm_suite&AS)
+int action_decrypt_verify (bool armor, bool yes,
+                           keyring&KR, algorithm_suite&AS)
 {
 	return 0;
 }

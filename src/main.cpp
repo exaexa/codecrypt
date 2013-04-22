@@ -356,7 +356,8 @@ int main (int argc, char**argv)
 
 	case 'v':
 		exitval = action_verify (opt_armor, detach_sign,
-		                         opt_clearsign, KR, AS);
+		                         opt_clearsign, opt_yes,
+		                         KR, AS);
 		break;
 
 	case 'E':
@@ -365,7 +366,8 @@ int main (int argc, char**argv)
 		break;
 
 	case 'D':
-		exitval = action_decrypt_verify (opt_armor, KR, AS);
+		exitval = action_decrypt_verify (opt_armor, opt_yes,
+		                                 KR, AS);
 		break;
 
 	case 'k':
