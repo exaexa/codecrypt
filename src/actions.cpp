@@ -262,7 +262,22 @@ int action_decrypt (bool armor,
 	if (pke) //should be always good
 		err ("  recipient local name: `" << pke->name << "'");
 
-	//and pump the decrypted stuff to stdout
+	/*
+	 * because there's no possibility to distinguish encrypted from
+	 * sign+encrypted messages, just try to parse a message out of this,
+	 * and if it comes out, give user a hint.
+	 */
+	M = sencode_decode (data);
+	if (M) {
+		signed_msg m;
+		if (m.unserialize (M) ) {
+			err ("notice: message content looks signed");
+			err ("hint: try also decrypt+verify operation");
+		}
+		sencode_destroy (M);
+	}
+
+	//finally pump the decrypted stuff to stdout
 	out_bin (data);
 
 	return 0;
@@ -627,6 +642,109 @@ int action_verify (bool armor, const std::string&detach,
 int action_sign_encrypt (const std::string&user, const std::string&recipient,
                          bool armor, keyring&KR, algorithm_suite&AS)
 {
+	/*
+	 * Signed+encrypted messages must not have a separate envelope header
+	 * (it would leak the information that inner message is signed).
+	 */
+
+	//find some good local user
+	keyring::keypair_entry *u = NULL;
+
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end(); i != e; ++i) {
+		if (keyspec_matches (user, i->second.pub.name, i->first) ) {
+			if (!AS.count (i->second.pub.alg) ) continue;
+			if (!AS[i->second.pub.alg]->provides_signatures() )
+				continue;
+
+			if (u) {
+				err ("error: ambiguous local user specified");
+				return 1;
+			} else u = & (i->second);
+		}
+	}
+
+	if (!u) {
+		err ("error: no such supported local privkey");
+		return 1;
+	}
+
+	//find a recipient (don't waste a signature if it'd fail anyway)
+	keyring::pubkey_entry *recip = NULL;
+
+	for (keyring::pubkey_storage::iterator
+	     i = KR.pubs.begin(), e = KR.pubs.end(); i != e; ++i) {
+		if (keyspec_matches (recipient, i->second.name, i->first) ) {
+			if (!AS.count (i->second.alg) ) continue;
+			if (!AS[i->second.alg]->provides_encryption() )
+				continue;
+
+			if (recip) {
+				err ("error: ambiguous recipient specified");
+				return 1;
+			} else recip = & (i->second);
+		}
+	}
+
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end(); i != e; ++i) {
+		if (keyspec_matches (recipient, i->second.pub.name, i->first) ) {
+			if (!AS.count (i->second.pub.alg) ) continue;
+			if (!AS[i->second.pub.alg]->provides_encryption() )
+				continue;
+
+			if (recip) {
+				err ("error: ambiguous recipient specified");
+				return 1;
+			} else recip = & (i->second.pub);
+		}
+	}
+
+	if (!recip) {
+		err ("error: no such recipient with suitable pubkey");
+		return 1;
+	}
+
+	//make a signature
+	std::string data;
+	read_all_input (data);
+
+	signed_msg smsg;
+	arcfour_rng r;
+	r.seed (256);
+
+	bvector bv;
+	bv.from_string (data);
+
+	if (smsg.sign (bv, u->pub.alg, u->pub.keyid, AS, KR, r) ) {
+		err ("error: digital signature failed");
+		return 1;
+	}
+
+	sencode*M = smsg.serialize();
+	data = M->encode();
+	sencode_destroy (M);
+
+	//encrypt it
+	encrypted_msg emsg;
+	bv.from_string (data);
+	if (emsg.encrypt (bv, recip->alg, recip->keyid, AS, KR, r) ) {
+		err ("error: encryption failed");
+		return 1;
+	}
+
+	M = emsg.serialize();
+	data = M->encode();
+	sencode_destroy (M);
+
+	if (armor) {
+		std::vector<std::string> parts;
+		parts.resize (1);
+		base64_encode (data, parts[0]);
+		data = envelope_format (ENVELOPE_ENC, parts, r);
+	}
+
+	out_bin (data);
 	return 0;
 }
 
