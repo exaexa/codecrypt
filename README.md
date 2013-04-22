@@ -4,7 +4,7 @@ The post-quantum cryptography tool
 
 ## Why this?
 
-Go read http:/pqcrypto.org/
+Go read http://pqcrypto.org/
 
 ## Quick How-To
 
@@ -20,7 +20,7 @@ Everything is meant to work mostly like GnuPG, but with some good simplicity mar
 	ccr -K  #watch the generated keys
 	ccr -k
 
-	ccr -p -a -o my_pubkeys.asc    # and send it to friends
+	ccr -p -a -o my_pubkeys.asc    # and send pubkeys to friends
 
 	#see what people sent us
 	ccr -ina < friends_pubkeys.asc
