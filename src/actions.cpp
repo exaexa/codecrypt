@@ -121,13 +121,13 @@ int action_decrypt (bool armor,
 
 
 int action_sign (const std::string&user, bool armor, const std::string&detach,
-                 keyring&KR, algorithm_suite&AS)
+                 bool clearsign, keyring&KR, algorithm_suite&AS)
 {
 	return 0;
 }
 
 
-int action_verify (bool armor, const std::string&detach,
+int action_verify (bool armor, const std::string&detach, bool clearsign,
                    keyring&KR, algorithm_suite&AS)
 {
 	return 0;

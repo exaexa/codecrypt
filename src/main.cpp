@@ -351,11 +351,13 @@ int main (int argc, char**argv)
 		break;
 
 	case 's':
-		exitval = action_sign (user, opt_armor, detach_sign, KR, AS);
+		exitval = action_sign (user, opt_armor, detach_sign,
+		                       opt_clearsign, KR, AS);
 		break;
 
 	case 'v':
-		exitval = action_verify (opt_armor, detach_sign, KR, AS);
+		exitval = action_verify (opt_armor, detach_sign,
+		                         opt_clearsign, KR, AS);
 		break;
 
 	case 'E':
