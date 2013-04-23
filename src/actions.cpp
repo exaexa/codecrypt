@@ -975,7 +975,7 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 			return 1;
 		}
 
-		if (type != ENVELOPE_SECRETS || parts.size() != 1) {
+		if (type != ENVELOPE_PUBKEYS || parts.size() != 1) {
 			err ("error: wrong envelope format");
 			return 1;
 		}
