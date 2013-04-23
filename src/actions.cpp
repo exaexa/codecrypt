@@ -303,7 +303,8 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 
 	std::ofstream detf;
 	if (detach.length() ) {
-		detf.open (detach.c_str(), std::ios::out | std::ios::binary);
+		detf.open (detach == "-" ? "/dev/stdout" : detach.c_str(),
+		           std::ios::out | std::ios::binary);
 		if (!detf) {
 			err ("error: can't open detached signature file");
 			return 1;
@@ -427,7 +428,8 @@ int action_verify (bool armor, const std::string&detach,
 
 	std::ifstream detf;
 	if (detach.length() ) {
-		detf.open (detach.c_str(), std::ios::in | std::ios::binary);
+		detf.open (detach == "-" ? "/dev/stdin" : detach.c_str(),
+		           std::ios::in | std::ios::binary);
 		if (!detf) {
 			err ("error: can't open detached signature file");
 			return 1;
