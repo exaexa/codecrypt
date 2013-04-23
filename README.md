@@ -1,17 +1,29 @@
 
 # Codecrypt
-The post-quantum cryptography tool
 
-## Why this?
+The post-quantum cryptography tool.
+
+#### About
+
+This is a GnuPG-like unix program for encryption and signing that uses only
+quantum-computer-resistant algorithms:
+
+ - McEliece cryptosystem (compact quasi-dyadic variant) for encryption
+ - Hash-based Merkle tree algorithm (FMTSeq variant) for digital signatures
+
+#### Why this?
 
 Go read http://pqcrypto.org/
 
+#### Links
+
+ - infopage: http://e-x-a.org/codecrypt/
+ - *package downloads*: http://e-x-a.org/codecrypt/files/
+
 ## Quick How-To
 
-Codecrypt uses hash-based signatures (FMTSeq) and McEliece code-based
-encryption (McE-quasidyadic).
-
-Everything is meant to work mostly like GnuPG, but with some good simplicity margin. Let's play with random data!
+Everything is meant to work mostly like GnuPG, but with some good simplicity
+margin. Let's play with random data!
 
 	ccr -g help
 	ccr -g fmtseq128 --name "John Doe"    # your signature key
@@ -42,7 +54,8 @@ Everything is meant to work mostly like GnuPG, but with some good simplicity mar
 
 ## Option reference
 
-For completeness I add listing of all options here (also available at ccr --help)
+For completeness I add listing of all options here (also available from
+@ccr --help@)
 
 	Copyright (C) 2013 Mirek Kratochvil <exa.exa@gmail.com>
 	This is free software; see the source for copying conditions.  There is NO
