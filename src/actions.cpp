@@ -1159,7 +1159,7 @@ int action_rename (bool yes,
                    const std::string & filter, const std::string & name,
                    keyring & KR)
 {
-	if (name.length() ) {
+	if (!name.length() ) {
 		err ("error: missing new name specification");
 		return 1;
 	}
