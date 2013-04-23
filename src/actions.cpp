@@ -1046,7 +1046,9 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 		if (keyspec_matches (filter, i->second.name, i->first) ) {
 			KR.remove_pubkey (i->first);
 			KR.remove_keypair (i->first);
-			KR.store_pubkey (i->first, i->second.name,
+			KR.store_pubkey (i->first,
+			                 name.length() ?
+			                 name : i->second.name,
 			                 i->second.alg, i->second.key);
 		}
 	}
@@ -1295,7 +1297,9 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
 			KR.remove_pubkey (i->first);
 			KR.remove_keypair (i->first);
-			KR.store_keypair (i->first, i->second.pub.name,
+			KR.store_keypair (i->first,
+			                  name.length() ?
+			                  name : i->second.pub.name,
 			                  i->second.pub.alg,
 			                  i->second.pub.key, i->second.privkey);
 		}
