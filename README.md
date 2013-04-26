@@ -32,7 +32,7 @@ margin. Let's play with random data!
 	ccr -K  #watch the generated keys
 	ccr -k
 
-	ccr -p -a -o my_pubkeys.asc    # and send pubkeys to friends
+	ccr -p -a -o my_pubkeys.asc -F Doe  # export your pubkeys for friends
 
 	#see what people sent us
 	ccr -ina < friends_pubkeys.asc

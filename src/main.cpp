@@ -59,11 +59,11 @@ void print_help (char*pname)
 	outeol;
 	out ("Key management:");
 	out (" -g, --gen-key        generate specified keypair, `help' lists algorithms");
-	out (" -k, --list           list matching keys");
+	out (" -k, --list           list keys");
 	out (" -K, --list-secret");
-	out (" -i, --import         import keys (optionally rename them)");
+	out (" -i, --import         import keys");
 	out (" -I, --import-secret");
-	out (" -p, --export         export matching keys");
+	out (" -p, --export         export keys");
 	out (" -P, --export-secret");
 	out (" -x, --delete         delete matching keys");
 	out (" -X, --delete-secret");
@@ -74,7 +74,7 @@ void print_help (char*pname)
 	out (" -n, --no-action    on import, only show what would be imported");
 	out (" -N, --name         specify a new name for renaming or importing");
 	out (" -F, --filter       only work with keys with matching names");
-	out (" -f, --fingerprint  format key IDs nicely for human eyes");
+	out (" -f, --fingerprint  format full key IDs nicely for human eyes");
 	outeol;
 	out ("Codecrypt eats data. Use it with caution.");
 	outeol;
