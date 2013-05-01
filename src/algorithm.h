@@ -37,6 +37,9 @@ class algorithm
 public:
 	virtual bool provides_signatures() = 0;
 	virtual bool provides_encryption() = 0;
+
+	// virtual bool provides_identification() = 0; // TODO
+
 	virtual std::string get_alg_id() = 0;
 
 	void register_into_suite (algorithm_suite&s) {
