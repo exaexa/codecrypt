@@ -21,6 +21,7 @@
 #include "fmtseq.h"
 #include "sha_hash.h"
 #include "rmd_hash.h"
+#include "tiger_hash.h"
 #include "arcfour.h"
 
 /*
@@ -184,6 +185,26 @@ int algo_fmtseq128::verify (const bvector&sig,
 	       (sig, msg, pubkey);
 }
 
+int algo_fmtseq192::sign (const bvector&msg,
+                          bvector&sig,
+                          sencode**privkey,
+                          bool&dirty,
+                          prng&rng)
+{
+	return fmtseq_generic_sign
+	       <4, 4, 384, sha384hash, tiger192hash>
+	       (msg, sig, privkey, dirty, rng);
+}
+
+int algo_fmtseq192::verify (const bvector&sig,
+                            const bvector&msg,
+                            sencode*pubkey)
+{
+	return fmtseq_generic_verify
+	       <4, 4, 384, sha384hash, tiger192hash>
+	       (sig, msg, pubkey);
+}
+
 int algo_fmtseq256::sign (const bvector&msg,
                           bvector&sig,
                           sencode**privkey,
@@ -212,6 +233,21 @@ int algo_fmtseq128::create_keypair (sencode**pub, sencode**priv, prng&rng)
 	rmd128hash hf;
 
 	if (fmtseq::generate (Pub, Priv, rng, hf, 256, 4, 4) )
+		return 1;
+
+	*pub = Pub.serialize();
+	*priv = Priv.serialize();
+	return 0;
+}
+
+int algo_fmtseq192::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	fmtseq::pubkey Pub;
+	fmtseq::privkey Priv;
+
+	tiger192hash hf;
+
+	if (fmtseq::generate (Pub, Priv, rng, hf, 384, 4, 4) )
 		return 1;
 
 	*pub = Pub.serialize();

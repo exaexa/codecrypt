@@ -24,15 +24,18 @@
 void fill_algorithm_suite (algorithm_suite&s)
 {
 
-	static algo_mceqd128 mce1;
-	mce1.register_into_suite (s);
+	static algo_mceqd128 mce128;
+	mce128.register_into_suite (s);
 
-	static algo_mceqd256 mce2;
-	mce2.register_into_suite (s);
+	static algo_mceqd256 mce256;
+	mce256.register_into_suite (s);
 
-	static algo_fmtseq128 fmt1;
-	fmt1.register_into_suite (s);
+	static algo_fmtseq128 fmt128;
+	fmt128.register_into_suite (s);
 
-	static algo_fmtseq256 fmt2;
-	fmt2.register_into_suite (s);
+	static algo_fmtseq192 fmt192;
+	fmt192.register_into_suite (s);
+
+	static algo_fmtseq256 fmt256;
+	fmt256.register_into_suite (s);
 }
