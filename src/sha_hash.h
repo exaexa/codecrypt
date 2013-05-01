@@ -41,6 +41,24 @@ public:
 	}
 };
 
+class sha384hash : public hash_func
+{
+public:
+	uint size() {
+		return SHA384_DIGEST_LENGTH;
+	}
+
+	std::vector<byte> operator() (const std::vector<byte>&a) {
+		SHA384_CTX ctx;
+		SHA384_Init (&ctx);
+		SHA384_Update (&ctx, (const uint8_t*) & (a[0]), a.size() );
+		std::vector<byte> r;
+		r.resize (size() );
+		SHA384_Final ( (uint8_t*) & (r[0]), &ctx);
+		return r;
+	}
+};
+
 class sha512hash : public hash_func
 {
 public:
