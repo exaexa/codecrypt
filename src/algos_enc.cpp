@@ -37,6 +37,19 @@ int algo_mceqd128::create_keypair (sencode**pub, sencode**priv, prng&rng)
 	return 0;
 }
 
+int algo_mceqd192::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	mce_qd::pubkey Pub;
+	mce_qd::privkey Priv;
+
+	if (mce_qd::generate (Pub, Priv, rng, 16, 8, 27, 4) )
+		return 1;
+
+	*pub = Pub.serialize();
+	*priv = Priv.serialize();
+	return 0;
+}
+
 int algo_mceqd256::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
 	mce_qd::pubkey Pub;
@@ -377,6 +390,17 @@ int algo_mceqd128::encrypt (const bvector&plain, bvector&cipher,
 	       (plain, cipher, pubkey, rng);
 }
 
+int algo_mceqd192::encrypt (const bvector&plain, bvector&cipher,
+                            sencode* pubkey, prng&rng)
+{
+	return fo_encrypt
+	       < mce_qd::pubkey,
+	       2816, 6912, 256,
+	       sha384hash,
+	       1574 >
+	       (plain, cipher, pubkey, rng);
+}
+
 int algo_mceqd256::encrypt (const bvector&plain, bvector&cipher,
                             sencode* pubkey, prng&rng)
 {
@@ -396,6 +420,17 @@ int algo_mceqd128::decrypt (const bvector&cipher, bvector&plain,
 	       2048, 4096, 128,
 	       sha256hash,
 	       816 >
+	       (cipher, plain, privkey);
+}
+
+int algo_mceqd192::decrypt (const bvector&cipher, bvector&plain,
+                            sencode* privkey)
+{
+	return fo_decrypt
+	       < mce_qd::privkey,
+	       2816, 6912, 256,
+	       sha384hash,
+	       1574 >
 	       (cipher, plain, privkey);
 }
 

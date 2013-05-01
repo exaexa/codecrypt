@@ -43,6 +43,28 @@ public:
 	int create_keypair (sencode**pub, sencode**priv, prng&rng);
 };
 
+class algo_mceqd192 : public algorithm
+{
+public:
+	bool provides_signatures() {
+		return false;
+	}
+
+	bool provides_encryption() {
+		return true;
+	}
+
+	std::string get_alg_id() {
+		return "MCEQD192FO-SHA384-ARCFOUR";
+	}
+
+	int encrypt (const bvector&plain, bvector&cipher,
+	             sencode* pubkey, prng&rng);
+	int decrypt (const bvector&cipher, bvector&plain,
+	             sencode* privkey);
+	int create_keypair (sencode**pub, sencode**priv, prng&rng);
+};
+
 class algo_mceqd256 : public algorithm
 {
 public:

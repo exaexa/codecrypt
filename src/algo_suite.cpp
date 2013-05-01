@@ -23,9 +23,11 @@
 
 void fill_algorithm_suite (algorithm_suite&s)
 {
-
 	static algo_mceqd128 mce128;
 	mce128.register_into_suite (s);
+
+	static algo_mceqd192 mce192;
+	mce192.register_into_suite (s);
 
 	static algo_mceqd256 mce256;
 	mce256.register_into_suite (s);
