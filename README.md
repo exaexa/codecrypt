@@ -57,10 +57,6 @@ margin. Let's play with random data!
 For completeness I add listing of all options here (also available from
 @ccr --help@)
 
-	Copyright (C) 2013 Mirek Kratochvil <exa.exa@gmail.com>
-	This is free software; see the source for copying conditions.  There is NO
-	warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
 	Usage: ./ccr [options]
 
 	Common options:
@@ -88,11 +84,11 @@ For completeness I add listing of all options here (also available from
 
 	Key management:
 	 -g, --gen-key        generate specified keypair, `help' lists algorithms
-	 -k, --list           list matching keys
+	 -k, --list           list keys
 	 -K, --list-secret
-	 -i, --import         import keys (optionally rename them)
+	 -i, --import         import keys
 	 -I, --import-secret
-	 -p, --export         export matching keys
+	 -p, --export         export keys
 	 -P, --export-secret
 	 -x, --delete         delete matching keys
 	 -X, --delete-secret
@@ -103,7 +99,8 @@ For completeness I add listing of all options here (also available from
 	 -n, --no-action    on import, only show what would be imported
 	 -N, --name         specify a new name for renaming or importing
 	 -F, --filter       only work with keys with matching names
-	 -f, --fingerprint  format key IDs nicely for human eyes
+	 -f, --fingerprint  format full key IDs nicely for human eyes
+
 
 ## Disclaimer
 
