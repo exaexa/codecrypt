@@ -80,15 +80,15 @@ int algo_mceqd256::create_keypair (sencode**pub, sencode**priv, prng&rng)
  *   randombits = randomness that pads the message bits to whole byte.
  *   nrbits = 1 byte with number of random bits applied
  *
- * Then we are padding stuff with a padding of length at most 255 blocks, to
- * format:
+ * Then we are padding stuff with a padding of length at most 255 blocks, from
+ * both sides:
  *
- * messagemessage [randomrandomrandom] 1bytesize
+ * 1bytesize [randomrandom] messagemessage [randomrandomrandom] 1bytesize
  *
  * where
  *   message = "tail" of the message that has overflown to the last block
  *   random = random bytes
- *   1bytesize = how many bytes of the mesage are there in the last block
+ *   1bytesize = how many bytes do corresponding random data have.
  *
  * Note that:
  *   - the last block is _always present_
@@ -98,14 +98,15 @@ int algo_mceqd256::create_keypair (sencode**pub, sencode**priv, prng&rng)
  *
  * 1bytesize is determined from message and message length in bits, as:
  *
- * size = h1(msg) + h2(|msg|)
+ * size_start = h1(msg) + h2(|msg|)
+ * size_start = h3(msg) + h4(|msg|)
  *
- * where h1 and h2 are hash functions to [0..127]
+ * where h1 to h4 are hash functions to [0..127]
  */
 
 #include "rmd_hash.h"
 
-static byte msg_pad_length (const std::vector<byte>& msg)
+static void msg_pad_length (const std::vector<byte>& msg, byte&start, byte&end)
 {
 	uint64_t len = msg.size();
 	std::vector<byte> lenbytes;
@@ -118,13 +119,12 @@ static byte msg_pad_length (const std::vector<byte>& msg)
 	std::vector<byte> tmp;
 
 	rmd128hash hf;
-	byte res = 0;
 	tmp = hf (lenbytes);
-	res += tmp[0] & 0x7f;
+	start = tmp[0] & 0x7f;
+	end = tmp[1] & 0x7f;
 	tmp = hf (msg);
-	res += tmp[0] & 0x7f;
-
-	return res;
+	start += tmp[0] & 0x7f;
+	end += tmp[1] & 0x7f;
 }
 
 static void message_pad (const bvector&in, std::vector<byte>&out, prng&rng)
@@ -150,18 +150,21 @@ static void message_pad (const bvector&in, std::vector<byte>&out, prng&rng)
 	out[i >> 3] = in.size() & 0x7;
 
 	//byte stage
-	byte padsize = msg_pad_length (out);
+	byte padsize_begin, padsize_end;
+	msg_pad_length (out, padsize_begin, padsize_end);
+
+	//padding at the beginning
+	out.insert (out.begin(), 1 + (uint) padsize_begin, 0);
+	out[0] = padsize_begin;
+	for (i = 1; i <= padsize_begin; ++i)
+		out[i] = rng.random (256);
+
+	//tail padding
 	uint out_end = out.size();
-
-	//make space for the bytes
-	out.resize (out_end + padsize + 1, 0);
-
-	//fill random bytes
-	for (i = 0; i < padsize; ++i)
+	out.resize (out_end + padsize_end + 1, 0);
+	for (i = 0; i < padsize_end; ++i)
 		out[out_end + i] = rng.random (256);
-
-	//fill the overflow size byte
-	out[out_end + padsize] = padsize;
+	out[out_end + padsize_end] = padsize_end;
 }
 
 static bool message_unpad (std::vector<byte> in, bvector&out)
@@ -170,14 +173,26 @@ static bool message_unpad (std::vector<byte> in, bvector&out)
 	if (!in.size() ) return false;
 
 	//get rid of the byte padding
-	uint padsize = in[in.size() - 1];
-	if (padsize + 1 > in.size() ) return false;
+	uint padsize_begin, padsize_end;
 
-	uint in_end = in.size() - padsize - 1;
-	if (!in_end) return false; //we need the last byte for bit padding
+	padsize_begin = in[0];
+	padsize_end = in[in.size() - 1];
+	//check if it really fits
+	//(2 bytes padding + 1 byte min padded msg length)
+	if ( (uint) padsize_begin + (uint) padsize_end + 3 > in.size() )
+		return false;
 
+	//get rid of beginning padding
+	in.erase (in.begin(), in.begin() + 1 + (uint) padsize_begin);
+
+	uint in_end = in.size() - padsize_end - 1;
 	in.resize (in_end);
-	if (padsize != msg_pad_length (in) ) return false;
+
+	//check if padding was really okay (TODO is it necessary?)
+	byte check_begin, check_end;
+	msg_pad_length (in, check_begin, check_end);
+	if (padsize_begin != check_begin || padsize_end != check_end)
+		return false;
 
 	//get bit padding information (now it's the last byte)
 	uint bit_overflow = in[in_end - 1];
