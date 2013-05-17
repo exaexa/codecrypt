@@ -371,18 +371,15 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	H = hf (M2);
 
 	/*
-	 * prepare the error vector (again. Avoiding colex ranking which is
-	 * little less deterministic than it could be (produces varying amounts
-	 * of whitespace)
+	 * Colex rank the vector to hash (it is faster than unranking)
 	 */
-	bvector ev_rank, ev2;
-	ev_rank.resize (ranksize);
+	bvector ev_rank;
+	ev.colex_rank (ev_rank);
+	ev_rank.resize (ranksize, 0);
 	for (i = 0; i < ranksize; ++i)
-		ev_rank[i] = 1 & (H[ (i >> 3) % H.size()] >> (i & 0x7) );
-	ev_rank.colex_unrank (ev2, ciphersize, errorcount);
+		if (ev_rank[i] != 1 & (H[ (i >> 3) % H.size()] >> (i & 0x7) ) )
+			return 8;
 
-	//now it should match, otherwise someone mangled the message.
-	if (ev != ev2) return 8;
 
 	//if the message seems okay, unpad and return it.
 	if (!message_unpad (M, plain) ) return 9;
