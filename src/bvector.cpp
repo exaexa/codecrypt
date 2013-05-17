@@ -248,7 +248,7 @@ void bvector::colex_unrank (bvector&res, uint n, uint k) const
 		 * halving the search interval as usual.
 		 */
 
-		uint p, a = i, b = n;
+		uint p, a = i, b = n + 1;
 		while (a < b) {
 			p = (a + b) / 2;
 
@@ -262,8 +262,8 @@ void bvector::colex_unrank (bvector&res, uint n, uint k) const
 		mpz_sub (r, t2, t);
 
 		//overflow protection (result's wrong anyway now)
-		if (p > n) continue;
-		res[p - 1] = 1;
+		if (b > n) continue;
+		res[b - 1] = 1;
 	}
 
 	mpz_clear (r);
