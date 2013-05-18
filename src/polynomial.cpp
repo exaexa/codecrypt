@@ -23,8 +23,8 @@
 
 int polynomial::degree() const
 {
-	int r = -1;
-	for (uint i = 0; i < size(); ++i) if (item (i) ) r = i;
+	int r;
+	for (r = ( (int) size() ) - 1; r >= 0; --r) if (item (r) ) break;
 	return r;
 }
 
