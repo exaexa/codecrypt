@@ -139,12 +139,42 @@ void bvector::from_string (const std::string&in)
  * utility colex (un)ranking for niederreiter and workalikes.
  * see Ruskey's Combinatorial Generation, algorithm 4.10
  *
- * TODO use (external) cache for combination numbers to speed this up.
+ * Colex ranking here uses "walking" through combination number space instead
+ * of caching or actual combination number generation. For a nice image, see
+ * the book.
+ *
+ * Suppose that you have a = (n choose k)
+ *
+ * then:
+ *   (n+1 choose k) = a * (n+1) / (n-k+1)
+ *   (n-1 choose k) = a * (n-k) / n
+ *   (n choose k+1) = a * (n-k) / (k+1)
+ *   (n choose k-1) = a * k / (n-k+1)
+ *
+ * Because colex ranking forms a "path" through tne combination number space
+ * (from (1 choose 1) to (length choose count)), worst operations actually use
+ * at most (length+count) multiplications and divisions, for worst McEliece
+ * parameters that is around 16k operations total (plus starting combination
+ * number computation un case of unranking, which is around 500 long ops.)
+ *
+ * To compare naive approach:
+ * - ranking needs computation of the same count of combination numbers as
+ *   count parameter. Those are (n choose k) with average n=(length/2) and
+ *   k=(count/2), every number needs 2k long operations, total operations is
+ *   count*count/2 = around 32k for mceliece approach.
+ * - unranking needs terrible number of "attempts" to determine each p (around
+ *   13 in binary search), this basically means it uses around 0.4M long
+ *   operations. Wrong way.
+ *
+ * For extremely sparse vectors (where 2*(length+count)>count*count/2, roughly
+ * where count>2*sqrt(length)) it can be benefical to compute stuff using the
+ * naive approach. This doesn't count for our McEliece parameters, so naive
+ * approach is not implemented at all.
  */
 
 #include <gmp.h>
 
-static void combination_number (uint n, uint k, mpz_t& r)
+static void combination_number (mpz_t& r, uint n, uint k)
 {
 	mpz_t t;
 	if (k > n) {
@@ -190,83 +220,104 @@ static void mpz_to_bvector (mpz_t&x, bvector&r)
 
 void bvector::colex_rank (bvector&r) const
 {
-	mpz_t res, t, t2;
+	mpz_t res, comb, t;
 	mpz_init_set_ui (res, 0);
+	mpz_init_set_ui (comb, 1);
 	mpz_init (t);
-	mpz_init (t2);
 
-	uint i, j;
-	j = 1;
-	for (i = 0; i < size(); ++i)
-		if (item (i) ) {
-			combination_number (i, j, t);
-			mpz_swap (t2, res);
-			mpz_add (res, t, t2);
-			++j;
+	uint n = 0, k = 1;
+
+	while (item (n) ) ++n, ++k; //skip the "zeroes" on the beginning
+
+	++n; //now n=k=1, comb=1
+
+	//non-zero positions
+	for (; n < size(); ++n) {
+
+		if (item (n) ) {
+			//add combination number to result
+			mpz_swap (t, res);
+			mpz_add (res, t, comb);
 		}
+
+		//increase n in comb
+		mpz_swap (t, comb);
+		mpz_mul_ui (comb, t, n + 1);
+		mpz_swap (t, comb);
+		mpz_fdiv_q_ui (comb, t, n - k + 1);
+
+		if (item (n) ) {
+			//increase k in comb
+			mpz_swap (t, comb);
+			mpz_mul_ui (comb, t, n + 1 - k); //n has changed!
+			mpz_swap (t, comb);
+			mpz_fdiv_q_ui (comb, t, k + 1);
+			++k;
+		}
+	}
 
 	mpz_to_bvector (res, r);
 
+	mpz_clear (comb);
 	mpz_clear (t);
-	mpz_clear (t2);
 	mpz_clear (res);
 }
 
-void bvector::colex_unrank (bvector&res, uint n, uint k) const
+bool bvector::colex_unrank (bvector&res, uint n, uint k) const
 {
-	mpz_t r, t, t2;
+	mpz_t r, comb, t, t2;
 	mpz_init (r);
+	mpz_init (comb);
 	mpz_init (t);
-	mpz_init (t2);
 
 	bvector_to_mpz (*this, r);
 
+	combination_number (comb, n, k); //initialize to the end of path
 	res.clear();
+
+	//check if incoming r is not too big.
+	if (mpz_cmp (r, comb) >= 0) {
+		mpz_clear (r);
+		mpz_clear (comb);
+		mpz_clear (t);
+		return false;
+	}
+
 	res.resize (n, 0);
 
-	for (uint i = k; i > 0; --i) {
-		/* Original code:
+	for (; k > 0; --k) {
+		if (mpz_sgn (r) == 0) //zero r needs n<k -> switch to simple mode
+			break;
 
-		uint p = i;
-		for (;;) {
-			combination_number (p, i, t);
-
-			if (mpz_cmp (t, r) > 0) break;
-			++p;
+		while (n > k && mpz_cmp (comb, r) > 0) {
+			//decrease n until something <=r is found
+			mpz_swap (t, comb);
+			mpz_mul_ui (comb, t, n - k);
+			mpz_swap (t, comb);
+			mpz_fdiv_q_ui (comb, t, n);
+			--n;
 		}
 
-		 * ...that kindof lacks speed. We're actually trying to find
-		 * the smallest value of p for which comb(p,i)>r.
-		 *
-		 * Computing all combination numbers is KIND OF slow and cache
-		 * (as suggested by Barreto and others) doesn't really make big
-		 * difference here (we're usually doing only one or two runs of
-		 * this stuff in one program run). Storing about 50megs of
-		 * precalculated combination numbers is weird as well.
-		 *
-		 * Therefore, with the knowledge that i <= p <= n, we're
-		 * halving the search interval as usual.
-		 */
+		res[n] = 1;
 
-		uint p, a = i, b = n + 1;
-		while (a < b) {
-			p = (a + b) / 2;
+		//r -= comb
+		mpz_swap (t, r);
+		mpz_sub (r, t, comb);
 
-			combination_number (p, i, t);
-			if (mpz_cmp (t, r) > 0) b = p;
-			else a = p + 1;
-		}
+		//decrease k
+		mpz_swap (t, comb);
+		mpz_mul_ui (comb, t, k);
+		mpz_swap (t, comb);
+		mpz_fdiv_q_ui (comb, t, n - k + 1);
+	}
 
-		combination_number (b - 1, i, t);
-		mpz_swap (t2, r);
-		mpz_sub (r, t2, t);
-
-		//overflow protection (result's wrong anyway now)
-		if (b > n) continue;
-		res[b - 1] = 1;
+	//do the "zeroes" rest
+	for (; k > 0; --k) {
+		res[k - 1] = 1;
 	}
 
 	mpz_clear (r);
+	mpz_clear (comb);
 	mpz_clear (t);
-	mpz_clear (t2);
+	return true;
 }

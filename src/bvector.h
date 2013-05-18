@@ -55,7 +55,7 @@ public:
 	void from_poly_cotrace (const polynomial&, gf2m&);
 
 	void colex_rank (bvector&) const;
-	void colex_unrank (bvector&, uint n, uint k) const;
+	bool colex_unrank (bvector&, uint n, uint k) const;
 
 	bool to_string (std::string&) const;
 	void from_string (const std::string&);
