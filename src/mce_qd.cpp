@@ -241,7 +241,7 @@ int privkey::prepare()
 	std::set<uint> used;
 	used.clear();
 
-	polynomial g, tmp;
+	polynomial tmp;
 	g.clear();
 	g.resize (1, 1); //g(x)=1
 	tmp.clear();
@@ -294,7 +294,7 @@ int privkey::prepare()
 	// prepare permuted support, from that prepare permuted check matrix
 	// (so that it can be applied directly)
 	uint pos, blk_perm;
-	std::vector<uint> sbl1, sbl2, permuted_support;
+	std::vector<uint> sbl1, sbl2;
 
 	sbl1.resize (block_size);
 	sbl2.resize (block_size);
@@ -316,17 +316,6 @@ int privkey::prepare()
 		//store support to permuted support
 		for (j = 0; j < block_size; ++j)
 			permuted_support[j + pos * block_size] = sbl2[j];
-	}
-
-	//prepare Hc
-	Hc.resize (block_size * block_count);
-	for (i = 0; i < block_size * block_count; ++i) {
-		Hc[i].resize (block_size * 2);
-		Hc[i][0] = fld.inv (g.eval (permuted_support[i], fld) );
-		Hc[i][0] = fld.mult (Hc[i][0], Hc[i][0]);
-		for (j = 1; j < 2 * block_size; ++j)
-			Hc[i][j] = fld.mult (permuted_support[i],
-			                     Hc[i][j - 1]);
 	}
 
 	//convert the permuted support to actual lookup
@@ -419,15 +408,27 @@ int privkey::decrypt (const bvector & in, bvector & out, bvector & errors)
 {
 	if (in.size() != cipher_size() ) return 2;
 	polynomial synd;
-	uint i;
+	uint i, j, tmp;
 
+	/*
+	 * compute the syndrome from alternant check matrix
+	 * that is H_alt = Vdm(L) * Diag(g(L_i)^{-2})
+	 */
+	uint h_size = 1 << (T + 1); //= 2*block_size
 	synd.clear();
-	for (i = 0; i < cipher_size(); ++i)
-		if (in[i]) synd.add (Hc[i], fld);
+	synd.resize (h_size, 0);
+	for (i = 0; i < cipher_size(); ++i) if (in[i]) {
+			tmp = fld.inv (g.eval (permuted_support[i], fld) );
+			tmp = fld.mult (tmp, tmp); //g(Li)^{-2}
+			synd[0] = fld.add (synd[0], tmp);
+			for (j = 1; j < h_size; ++j) {
+				tmp = fld.mult (tmp, permuted_support[i]);
+				synd[j] = fld.add (synd[j], tmp);
+			}
+		}
 
 	//decoding
 	polynomial loc;
-	//compute_alternant_error_locator (synd, fld, g, loc);
 	compute_alternant_error_locator (synd, fld, 1 << T, loc);
 
 	bvector ev;

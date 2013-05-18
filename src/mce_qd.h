@@ -52,10 +52,10 @@ public:
 	permutation hperm; //block permutation of H block used to get G
 
 	//derivable stuff
-	//cols of check matrix of g^2(x)
-	std::vector<polynomial> Hc;
-	//pre-permuted positions of support rows
-	std::vector<uint> support_pos;
+	//pre-permuted positions of support rows and support content
+	std::vector<uint> support_pos, permuted_support;
+	//generating polynomial
+	polynomial g;
 
 	int decrypt (const bvector&, bvector&);
 	int decrypt (const bvector&, bvector&, bvector&);
