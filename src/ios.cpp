@@ -22,7 +22,7 @@ using namespace std;
 
 ostream& operator<< (ostream&o, const polynomial& p)
 {
-	o << "polynomial degree " << p.degree() << ':' << endl;
+	o << "polynomial degree " << p.degree() << ": ";
 	for (int i = 0, e = p.degree(); i <= e; ++i) o << p[i] << ' ';
 	o << endl;
 	return o;
@@ -30,7 +30,7 @@ ostream& operator<< (ostream&o, const polynomial& p)
 
 ostream& operator<< (ostream&o, const permutation& p)
 {
-	o << "permutation over " << p.size() << " elements:" << endl;
+	o << "permutation over " << p.size() << " elements: ";
 	for (uint i = 0; i < p.size(); ++i) o << p[i] << ' ';
 	o << endl;
 	return o;
@@ -57,7 +57,7 @@ ostream& operator<< (ostream&o, const matrix& m)
 
 ostream& operator<< (ostream&o, const bvector& v)
 {
-	o << "vector of " << v.size() << " elements:" << endl;
+	o << "vector of " << v.size() << " elements: ";
 	for (uint i = 0, e = v.size(); i < e; ++i) o << v[i];
 	o << endl;
 	return o;
