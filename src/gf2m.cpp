@@ -32,11 +32,6 @@ int gf2p_degree (uint p)
 	return r - 1;
 }
 
-inline uint gf2p_add (uint a, uint b)
-{
-	return a ^ b;
-}
-
 uint gf2p_mod (uint a, uint p)
 {
 	if (!p) return 0;
@@ -88,14 +83,6 @@ bool is_irreducible_gf2_poly (uint p)
 	return true;
 }
 
-uint gf2p_tablemult (uint a, uint b, uint n,
-                     const std::vector<uint>&log,
-                     const std::vector<uint>&antilog)
-{
-	if (! (a && b) ) return 0;
-	return antilog[ (log[a] + log[b]) % (n - 1) ];
-}
-
 bool gf2m::create (uint M)
 {
 	if (M < 1) return false; //too small.
@@ -142,50 +129,4 @@ bool gf2m::create (uint M)
 	if (!poly) return false;
 
 	return true;
-}
-
-uint gf2m::add (uint a, uint b)
-{
-	return gf2p_add (a, b);
-}
-
-uint gf2m::mult (uint a, uint b)
-{
-	return gf2p_tablemult (a, b, n, log, antilog);
-}
-
-uint gf2m::exp (uint a, int k)
-{
-	if (!a) return 0;
-	if (a == 1) return 1;
-	if (k < 0) {
-		a = inv (a);
-		k = -k;
-	}
-	uint r = 1;
-	while (k) {
-		if (k & 1) r = mult (r, a);
-		a = mult (a, a);
-		k >>= 1;
-	}
-	return r;
-}
-
-uint gf2m::exp (int k)
-{
-	//return x^k
-	return exp (1 << 1, k);
-}
-
-uint gf2m::inv (uint a)
-{
-	if (!a) return 0;
-	return antilog[ (n - 1 - log[a]) % (n - 1) ];
-}
-
-uint gf2m::sq_root (uint a)
-{
-	for (uint i = 1; i < m; ++i)
-		a = mult (a, a);
-	return a;
 }

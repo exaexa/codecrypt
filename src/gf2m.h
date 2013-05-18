@@ -37,12 +37,36 @@ public:
 
 	std::vector<uint> log, antilog;
 
-	uint add (uint, uint);
-	uint mult (uint, uint);
-	uint exp (uint, int);
-	uint exp (int);
-	uint inv (uint);
-	uint sq_root (uint);
+	inline uint add (uint a, uint b) {
+		return a ^ b;
+	}
+
+	inline uint mult (uint a, uint b) {
+		if (! (a && b) ) return 0;
+		return antilog[ (log[a] + log[b]) % (n - 1)];
+	}
+
+	inline uint exp (uint a, int k) {
+		if (!a) return 0;
+		return antilog[ (log[a] * k) % (n - 1)];
+	}
+
+	inline uint exp (int k) {
+		//return x^k
+		return exp (1 << 1, k);
+	}
+
+	inline uint inv (uint a) {
+		if (!a) return 0;
+		return antilog[ (n - 1 - log[a]) % (n - 1)];
+	}
+
+	inline uint sq_root (uint a) {
+		if (!a) return 0;
+		uint t = log[a];
+		if (t % 2) return antilog[ (t + n - 1) >> 1];
+		else return antilog[t >> 1];
+	}
 
 	sencode* serialize();
 	bool unserialize (sencode*);
