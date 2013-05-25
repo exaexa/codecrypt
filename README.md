@@ -26,7 +26,7 @@ Everything is meant to work mostly like GnuPG, but with some good simplicity
 margin. Let's play with random data!
 
 	ccr -g help
-	ccr -g fmtseq128 --name "John Doe"    # your signature key
+	ccr -g fmtseq128-sha --name "John Doe"    # your signature key
 	ccr -g mceqd128 --name "John Doe"     # your encryption key
 
 	ccr -K  #watch the generated keys
