@@ -87,5 +87,71 @@ public:
 	int create_keypair (sencode**pub, sencode**priv, prng&rng);
 };
 
+class algo_fmtseq128h20 : public algorithm
+{
+public:
+	bool provides_signatures() {
+		return true;
+	}
+
+	bool provides_encryption() {
+		return false;
+	}
+
+	std::string get_alg_id() {
+		return "FMTSEQ128H20-SHA256-RIPEMD128";
+	}
+
+	virtual int sign (const bvector&msg, bvector&sig,
+	                  sencode** privkey, bool&dirty, prng&rng);
+	virtual int verify (const bvector&sig, const bvector&msg,
+	                    sencode* pubkey);
+	int create_keypair (sencode**pub, sencode**priv, prng&rng);
+};
+
+class algo_fmtseq192h20 : public algorithm
+{
+public:
+	bool provides_signatures() {
+		return true;
+	}
+
+	bool provides_encryption() {
+		return false;
+	}
+
+	std::string get_alg_id() {
+		return "FMTSEQ192H20-SHA384-TIGER192";
+	}
+
+	virtual int sign (const bvector&msg, bvector&sig,
+	                  sencode** privkey, bool&dirty, prng&rng);
+	virtual int verify (const bvector&sig, const bvector&msg,
+	                    sencode* pubkey);
+	int create_keypair (sencode**pub, sencode**priv, prng&rng);
+};
+
+class algo_fmtseq256h20 : public algorithm
+{
+public:
+	bool provides_signatures() {
+		return true;
+	}
+
+	bool provides_encryption() {
+		return false;
+	}
+
+	std::string get_alg_id() {
+		return "FMTSEQ256H20-SHA512-SHA256";
+	}
+
+	virtual int sign (const bvector&msg, bvector&sig,
+	                  sencode** privkey, bool&dirty, prng&rng);
+	virtual int verify (const bvector&sig, const bvector&msg,
+	                    sencode* pubkey);
+	int create_keypair (sencode**pub, sencode**priv, prng&rng);
+};
+
 #endif
 

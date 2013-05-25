@@ -23,21 +23,15 @@
 
 void fill_algorithm_suite (algorithm_suite&s)
 {
-	static algo_mceqd128 mce128;
-	mce128.register_into_suite (s);
-
-	static algo_mceqd192 mce192;
-	mce192.register_into_suite (s);
-
-	static algo_mceqd256 mce256;
-	mce256.register_into_suite (s);
-
-	static algo_fmtseq128 fmt128;
-	fmt128.register_into_suite (s);
-
-	static algo_fmtseq192 fmt192;
-	fmt192.register_into_suite (s);
-
-	static algo_fmtseq256 fmt256;
-	fmt256.register_into_suite (s);
+#define do_alg(x) static x var_##x ; var_##x.register_into_suite(s);
+	do_alg (algo_mceqd128);
+	do_alg (algo_mceqd192);
+	do_alg (algo_mceqd256);
+	do_alg (algo_fmtseq128);
+	do_alg (algo_fmtseq192);
+	do_alg (algo_fmtseq256);
+	do_alg (algo_fmtseq128h20);
+	do_alg (algo_fmtseq192h20);
+	do_alg (algo_fmtseq256h20);
+#undef do_alg
 }

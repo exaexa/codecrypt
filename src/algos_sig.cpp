@@ -270,3 +270,115 @@ int algo_fmtseq256::create_keypair (sencode**pub, sencode**priv, prng&rng)
 	return 0;
 }
 
+/*
+ * h=20 variants for signature count 1048576.
+ *
+ * Chosen were parameters h=4,l=5 over the h=5,l=4 variant for smaller runtime
+ * space needed, as signature time is not really a concern here.
+ */
+
+int algo_fmtseq128h20::sign (const bvector&msg,
+                             bvector&sig,
+                             sencode**privkey,
+                             bool&dirty,
+                             prng&rng)
+{
+	return fmtseq_generic_sign
+	       <4, 5, 256, sha256hash, rmd128hash>
+	       (msg, sig, privkey, dirty, rng);
+}
+
+int algo_fmtseq128h20::verify (const bvector&sig,
+                               const bvector&msg,
+                               sencode*pubkey)
+{
+	return fmtseq_generic_verify
+	       <4, 5, 256, sha256hash, rmd128hash>
+	       (sig, msg, pubkey);
+}
+
+int algo_fmtseq192h20::sign (const bvector&msg,
+                             bvector&sig,
+                             sencode**privkey,
+                             bool&dirty,
+                             prng&rng)
+{
+	return fmtseq_generic_sign
+	       <4, 5, 384, sha384hash, tiger192hash>
+	       (msg, sig, privkey, dirty, rng);
+}
+
+int algo_fmtseq192h20::verify (const bvector&sig,
+                               const bvector&msg,
+                               sencode*pubkey)
+{
+	return fmtseq_generic_verify
+	       <4, 5, 384, sha384hash, tiger192hash>
+	       (sig, msg, pubkey);
+}
+
+int algo_fmtseq256h20::sign (const bvector&msg,
+                             bvector&sig,
+                             sencode**privkey,
+                             bool&dirty,
+                             prng&rng)
+{
+	return fmtseq_generic_sign
+	       <4, 5, 512, sha512hash, sha256hash>
+	       (msg, sig, privkey, dirty, rng);
+}
+
+int algo_fmtseq256h20::verify (const bvector&sig,
+                               const bvector&msg,
+                               sencode*pubkey)
+{
+	return fmtseq_generic_verify
+	       <4, 5, 512, sha512hash, sha256hash>
+	       (sig, msg, pubkey);
+}
+
+int algo_fmtseq128h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	fmtseq::pubkey Pub;
+	fmtseq::privkey Priv;
+
+	rmd128hash hf;
+
+	if (fmtseq::generate (Pub, Priv, rng, hf, 256, 4, 5) )
+		return 1;
+
+	*pub = Pub.serialize();
+	*priv = Priv.serialize();
+	return 0;
+}
+
+int algo_fmtseq192h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	fmtseq::pubkey Pub;
+	fmtseq::privkey Priv;
+
+	tiger192hash hf;
+
+	if (fmtseq::generate (Pub, Priv, rng, hf, 384, 4, 5) )
+		return 1;
+
+	*pub = Pub.serialize();
+	*priv = Priv.serialize();
+	return 0;
+}
+
+int algo_fmtseq256h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	fmtseq::pubkey Pub;
+	fmtseq::privkey Priv;
+
+	sha256hash hf;
+
+	if (fmtseq::generate (Pub, Priv, rng, hf, 512, 4, 5) )
+		return 1;
+
+	*pub = Pub.serialize();
+	*priv = Priv.serialize();
+	return 0;
+}
+
