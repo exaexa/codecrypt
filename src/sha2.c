@@ -934,7 +934,7 @@ void SHA512_Last (SHA512_CTX* context)
 		*context->buffer = 0x80;
 	}
 	/* Store the length of input data (in bits): */
-	MEMCPY_BCOPY (context->buffer + SHA512_SHORT_BLOCK_LENGTH, context->bitcount+1, 8);
+	MEMCPY_BCOPY (context->buffer + SHA512_SHORT_BLOCK_LENGTH, context->bitcount + 1, 8);
 	MEMCPY_BCOPY (context->buffer + SHA512_SHORT_BLOCK_LENGTH + 8, context->bitcount, 8);
 
 	/* Final transform: */
