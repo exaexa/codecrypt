@@ -19,8 +19,6 @@
 #include "fmtseq.h"
 #include "arcfour.h"
 
-#include <iostream>
-
 using namespace fmtseq;
 
 void prepare_keygen (arcfour<byte>& kg, const std::vector<byte>&SK, uint idx)
