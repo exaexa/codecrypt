@@ -231,6 +231,8 @@ static bool message_unpad (std::vector<byte> in, bvector&out)
  * otherwise it probably fails. miserably.
  */
 
+#define arcfour_discard 4096
+
 template < class pubkey_type,
          int plainsize,
          int ciphersize,
@@ -294,7 +296,7 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 		                               K.begin() + ( (i + 1) << 8) ) );
 		arc.load_key (subkey);
 	}
-	arc.discard (256);
+	arc.discard (arcfour_discard);
 	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ arc.gen();
 
 	//append the message part to the ciphertext
@@ -359,7 +361,7 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 		                               K.begin() + ( (i + 1) << 8) ) );
 		arc.load_key (subkey);
 	}
-	arc.discard (256);
+	arc.discard (arcfour_discard);
 	//decrypt the message part
 	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ arc.gen();
 
