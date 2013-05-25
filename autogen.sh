@@ -14,6 +14,7 @@ echo > $OUT
 DISTDIRS=""
 
 echo "AUTOMAKE_OPTIONS = subdir-objects" >>$OUT
+echo "dist_man_MANS = man/ccr.1" >>$OUT
 echo "dist_noinst_SCRIPTS = autogen.sh" `for i in $DISTDIRS ; do find \$i -type f ; done | tr "\n" " " ` >>$OUT
 
 echo "bin_PROGRAMS = ccr" >>$OUT

@@ -1,0 +1,312 @@
+.TH CCR 1 2013-05-24 "ccr" "Codecrypt"
+.SH NAME
+.B ccr
+\- The post-quantum cryptography encryption and signing tool
+.SH SYNOPSIS
+.B ccr
+.RI [OPTION]...
+
+.SH DESCRIPTION
+
+\fBccr\fR (short of Codecrypt) is a general purpose encryption/decryption
+signing/verification tool that uses only quantum-computer resistant algorithms.
+
+.SS
+General options:
+
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show a simple help with option listing.
+
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Display only version information.
+
+.TP
+\fB\-T\fR, \fB\-\-test\fR
+This option exists as a convenience for hackers - in this case, \fBccr\fR
+initializes itself, calls a test() function from source file src/main.cpp (that
+is meant to be filled by testing stuff beforehand) and terminates. In
+distribution packages, it will probably do nothing.
+
+.TP
+\fB\-R\fR, \fB\-\-in\fR <\fIfile\fR>
+Redirect standard input to be read from \fIfile\fR instead from stdin. You can
+still specify "-" to force reading from stdin.
+
+.TP
+\fB\-o\fR, \fB\-\-out\fR <\fIfile\fR> Redirect standard output to be written to
+\fIfile\fR. You can specify "-" to force writing to stdout.
+
+.TP
+\fB\-a\fR, \fB\-\-armor\fR
+Where expecting input or output of data in codecrypt communication format, use
+ascii-armoring.
+
+Codecrypt otherwise usually generates raw binary data, that are very hard to
+pass through e-mail or similar text communication channels.
+
+.TP
+\fB\-y\fR, \fB\-\-yes\fR
+Assume the user knows what he is doing, and answer "yes" to all questions.
+
+.SS
+Actions:
+
+.TP
+\fB\-s\fR, \fB\-\-sign\fR
+Produce a signed message from input.
+
+.TP
+\fB\-v\fR, \fB\-\-verify\fR
+Take a signed message from input, verify whether the signature is valid, and
+output message content if the verification succeeded.
+
+.TP
+\fB\-e\fR, \fB\-\-encrypt\fR
+Produce an encrypted message from input.
+
+.TP
+\fB\-d\fR, \fB\-\-decrypt\fR
+Decrypt the message from input.
+
+.P
+Note that the actions for signature/encryption and decryption/verification can
+be easily combined into one command, simply by specifying both options usually
+as "-se" or "-dv".
+
+.SS
+Action options:
+
+.TP
+\fB\-r\fR, \fB\-\-recipient\fR <\fIkeyspec\fR>
+Specify that the message for encryption should be encrypted so that only the
+owner of a private key paired with public key specified by \fIkeyspec\fR can
+decrypt it.
+
+.TP
+\fB\-u\fR, \fB\-\-user\fR <\fIkeyspec\fR>
+Specify a private key to use for signing the message.
+
+.TP
+\fB\-C\fR, \fB\-\-cleartext\fR
+When working with signatures, produce/expect a cleartext signature. The basic
+property of cleartext signature is that the message it contains is easily
+readable by users, therefore it is a very popular method to e.g. sign e-mails.
+
+.TP
+\fB\-b\fR, \fB\-\-detach\-sign\fR <\fIfile\fR>
+On signing, produce a detached signature and save it to \fIfile\fR. When
+verifying, read the detached signature from \fIfile\fR. Note that files that is
+being signed or verified must be put into program's input (potentially using
+"-R" option.
+
+.SS
+Key management:
+
+In Codecrypt, each public key has a KeyID, which is basically a hash of its
+representation that is used to identify the key globally. Each public key is
+stored along with a key name, which is a convenience tool for users who can
+store arbitrary information about e.g. what is the key meant for or who it
+belongs to. Public keys also have an algorithm identifier to specify how to
+work with them, and sometimes also attached a private key to form a secret
+"keypair".
+
+Keys can be specified using several methods:
+
+Using KeyID -- the key specification consists of @ and several first characters
+to identify a prefix of KeyID of a single key.
+
+Using a name -- key specification consists of string and matches any key, that
+has a name that contains that string.
+
+.TP
+\fB\-g\fR, \fB\-\-gen\-key\fR <\fIalgorithm\fR>
+Generate a keypair for usage with specified algorithm. Use "-g help" to get
+list of all algorithms available. Listing also contains flags "S" and "E",
+meaning that algorithm can be used for signatures or encryption. Algorithm name
+does not need to be a full name, but must match only one available algorithm.
+
+.TP
+\fB\-N\fR, \fB\-\-name\fR <\fIkeyname\fR>
+Specify that affected keys (those being imported, generated, exported or
+renamed) should be newly renamed to \fIkeyname\fR.
+
+.TP
+\fB\-F\fR, \fB\-\-filter\fR <\fIkeyspec\fR>
+When listing, importing or exporting keys, only process keys that match
+\fIkeyspec\fR.
+
+.TP
+\fB\-k\fR, \fB\-\-list\fR
+List available public keys.
+
+.TP
+\fB\-K\fR, \fB\-\-list\-secret\fR
+List available private keys (in keypairs).
+
+.TP
+\fB\-i\fR, \fB\-\-import\fR
+Import public keys.
+
+.TP
+\fB\-I\fR, \fB\-\-import\-secret\fR
+Import private keypairs.
+
+.TP
+\fB\-n\fR, \fB\-\-no\-action\fR
+On import, do not really import the keys, but only print what keys and names
+will be imported. This is useful for preventing accepting unwanted private or
+public keys.
+
+.TP
+\fB\-f\fR, \fB\-\-fingerprint\fR
+When printing keys, format full KeyIDs. Note that full KeyIDs can be used in
+similar way as fingerprints known from other cryptosystems.
+
+.TP
+\fB\-p\fR, \fB\-\-export\fR
+Export public keys in keyring format.
+
+.TP
+\fB\-P\fR, \fB\-\-export\-secret\fR
+Export private keys. (Do this carefully!)
+
+.TP
+\fB\-x\fR, \fB\-\-delete\fR <\fIkeyspec\fR>
+Remove matching keys from public keyring.
+
+.TP
+\fB\-X\fR, \fB\-\-delete\-secret\fR <\fIkeyspec\fR>
+Remove matching keys from private keypairs.
+
+.TP
+\fB\-m\fR, \fB\-\-rename\fR <\fIkeyspec\fR>
+Rename matching public keys. Use "-N" to specify a new name.
+
+.TP
+\fB\-M\fR, \fB\-\-rename\-secret\fR <\fIkeyspec\fR>
+Rename matching private keys.
+
+.SH FILES
+
+Codecrypt stores user data in a directory specified by environment variable
+CCR_DIR, which defaults to "$HOME/.ccr". It contains the files "pubkeys" and
+"secrets" which are sencode keyring representations of user's public and
+private keyring.
+
+When Codecrypt is running, it locks the .ccr directory using a lockfile "lock"
+and applying flock(2) to it.
+
+.SH RETURN VALUE
+
+\fBccr\fR returns 0 if there was no error and all cryptography went fine, or 1
+on errors. If the error was that a missing public or private key was needed to
+complete the operation, 2 is returned. If signature verification fails (e.g.
+the signature is bad or likely forged), the program returns 3.
+
+.SH ALGORITHMS
+
+Program offers several "algorithms" that can be used for signatures and
+encryption. Use "ccr -g help" to get a list of supported algorithms.
+
+FMTSeq-named schemes are the Merkle-tree signature algorithms. The name
+FMTSEQxxx-HASH1-HASH2 means, that the scheme provides attack complexity ("bit
+security") around 2^xxx, HASH1 is used as a message digest algorithm, and HASH2
+is used for construction of Merkle tree.
+
+McEliece-based encryption schemes are formed from McEliece trapdoor running on
+quasi-dyadic Goppa codes with Fujisaki-Okamoto encryption padding. Algorithm
+name MCEQDxxxFO-HASH-CIPHER means that the trapdoor is designed to provide
+attack complexity around 2^xxx, and HASH and CIPHER are the hash and symmetric
+cipher functions that are used in Fujisaki-Okamoto padding scheme.
+
+As of June 2013, users are advised to deploy the 2^128-secure variants of the
+algorithms -- running 2^128 operations would require around 10^22 years of CPU
+time (of a pretty fast CPU), which is considered more than sufficient for any
+reasonable setup and using stronger algorithms seems just completely
+unnecessary. Note that using stronger algorithm variants does not come with any
+serious performance drawback.
+
+For comparison, 2^128 security level is very roughly equivalent to that of
+classical RSA with 3072bit modulus (which is reported to provide 2^112 attack
+complexity).
+
+All algorithms are believed to be intractable by quantum computers, except for
+the generic case of Grover search which (in a very idealized case and very
+roughly) halves the bit security (although the attack remains exponential).
+Users who are aware of large quantum computers being built are advised to use
+2^192 or 2^256 bit security keys.
+
+.SH WARNINGS AND CAVEATS
+
+Codecrypt does not do much to prevent damage from mistakes of the user. Be
+especially careful when managing your keyring, be aware that some operations
+can rename or delete more keys at once.
+
+FMTSeq signatures are constructed from one-time signature scheme, for this
+reason the private key changes after each signature, basically by increasing
+some counter. IF THE PRIVATE KEY IS USED MORE THAN ONCE TO SIGN WITH THE SAME
+COUNTER AND THE SIGNATURES GET PUBLISHED, SECURITY OF THE SCHEME IS SEVERELY
+DAMAGED. Never use the same key on two places at once. If you backup the
+private keys, be sure to backup it everytime after a signature is made.
+
+If something goes wrong and you really need to use the key that has been, for
+example, recovered from a backup, you can still "skip" the counter by producing
+and \fBdiscarding\fR some dummy signatures (ccr -s </dev/null >/dev/null). If
+you plan to do that for some real purpose, for your own safety be sure to
+understand inner workings of FMTSeq, especially how the Diffie-Lamport
+signature scheme degrades after publishing more than one signature.
+
+FMTSeq can only produce a limited amount of signatures (but still a pretty
+large number). When the remaining signature count starts to get low, Codecrypt
+will print warning messages. In that case, users are advised to generate and
+certify new keys.
+
+Try to always use the "-n" option before you actually import keys -- blind
+import of keys can bring serious inconsistencies into your key naming scheme.
+
+In a distant universe after much computation, KeyIDs can collide. If you find
+someone who has a colliding KeyID, kiss him and generate another key.
+
+.SH EXAMPLE
+Following commands roughly demonstrate command line usage of \fBccr\fR:
+.nf
+.sp
+ccr -g help
+ccr -g fmtseq128 --name "John Doe"    # your signature key
+ccr -g mceqd128 --name "John Doe"     # your encryption key
+
+ccr -K  #watch the generated keys
+ccr -k
+
+ccr -p -a -o my_pubkeys.asc -F Doe  # export your pubkeys for friends
+
+#see what people sent us
+ccr -ina < friends_pubkeys.asc
+
+#import Frank's key and rename it
+ccr -i -R friends_pubkeys.asc --name "Friendly Frank"
+
+#send a nice message to Frank (you can also specify him by @12345 keyid)
+ccr -se -r Frank < Document.doc > Message_to_frank.ccr
+
+#receive a reply
+ccr -dv -o Decrypted_verified_reply.doc <Reply_from_frank.ccr
+
+#rename other's keys
+ccr -m Frank -N "Unfriendly Frank"
+
+#and delete pukeys of everyone who's Unfriendly
+ccr -x Unfri
+.fi
+
+.SH DISCLAIMER
+
+Used cryptography is relatively new. For this reason, codecrypt eats data. Use
+it with caution.
+
+.SH Authors
+
+Codecrypt was written by Mirek Kratochvil in 2013.
+
