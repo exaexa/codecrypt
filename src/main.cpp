@@ -26,6 +26,89 @@ void print_version()
 	     "for copying conditions.  There is NO");
 	out ("warranty; not even for MERCHANTABILITY "
 	     "or FITNESS FOR A PARTICULAR PURPOSE.");
+	outeol;
+	out ("For complete and detailed licensing information, "
+	     "use `--license' option.");
+}
+
+void print_licenses()
+{
+	out ("codecrypt software:");
+	out ("Copyright (C) 2013 Mirek Kratochvil <exa.exa@gmail.com>");
+	out ("This is free software; see the source "
+	     "for copying conditions.  There is NO");
+	out ("warranty; not even for MERCHANTABILITY "
+	     "or FITNESS FOR A PARTICULAR PURPOSE.");
+	outeol;
+
+	out ("RIPEMD-128 implementation:");
+	out ("Copyright (C) 2009  Gabriel A. Petursson");
+	out ("This is free software; see the source "
+	     "for copying conditions.  There is NO");
+	out ("warranty; not even for MERCHANTABILITY "
+	     "or FITNESS FOR A PARTICULAR PURPOSE.");
+	outeol;
+
+	out ("SHA-2 implementations:");
+	out ("Copyright (c) 2000-2001, Aaron D. Gifford\nAll rights "
+	     "reserved.\n\nRedistribution and use in source and binary "
+	     "forms, with or without\nmodification, are permitted provided "
+	     "that the following conditions\nare met:\n1. Redistributions "
+	     "of source code must retain the above copyright\n   notice, this "
+	     "list of conditions and the following disclaimer.\n2. "
+	     "Redistributions in binary form must reproduce the above "
+	     "copyright\n   notice, this list of conditions and the following "
+	     "disclaimer in the\n   documentation and/or other materials "
+	     "provided with the distribution.\n3. Neither the name of the "
+	     "copyright holder nor the names of contributors\n   may be used "
+	     "to endorse or promote products derived from this software\n   "
+	     "without specific prior written permission.\n\nTHIS SOFTWARE "
+	     "IS PROVIDED BY THE AUTHOR AND CONTRIBUTOR(S) ``AS IS'' AND\n"
+	     "ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT "
+	     "LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND "
+	     "FITNESS FOR A PARTICULAR PURPOSE\nARE DISCLAIMED.  IN NO "
+	     "EVENT SHALL THE AUTHOR OR CONTRIBUTOR(S) BE LIABLE\nFOR ANY "
+	     "DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR "
+	     "CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, "
+	     "PROCUREMENT OF SUBSTITUTE GOODS\nOR SERVICES; LOSS OF USE, "
+	     "DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\nHOWEVER CAUSED "
+	     "AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n"
+	     "LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) "
+	     "ARISING IN ANY WAY\nOUT OF THE USE OF THIS SOFTWARE, EVEN IF "
+	     "ADVISED OF THE POSSIBILITY OF\nSUCH DAMAGE.");
+	outeol;
+
+	out ("Tiger hash implementation:");
+	out ("Copyright (c) 2012 Francisco Blas Izquierdo Riera (klondike)\n"
+	     "The Tiger algorithm was written by Eli Biham and Ross Anderson "
+	     "and is available\non the official Tiger algorithm page.\n"
+	     "Redistribution and use in source and binary forms, with or "
+	     "without\nmodification, are permitted provided that the following "
+	     "conditions are met:\n\n1. Redistributions of source code must "
+	     "retain the above copyright notice, the\n   algorithm authorsip "
+	     "notice, this list of conditions and the following\n  disclaimer."
+	     "\n2. Redistributions in binary form must reproduce the above "
+	     "copyright notice,\n   this list of conditions and the following "
+	     "disclaimer in the documentation\n   and/or other materials "
+	     "provided with the distribution.\n3. The name of the author may "
+	     "not be used to endorse or promote products\n   derived from this "
+	     "software without specific prior written permission.\n4. If this "
+	     "license is not appropriate for you please write me at\n   "
+	     "klondike ( a t ) klondike ( d o t ) es to negotiate another "
+	     "license.\n\nTHIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' "
+	     "AND ANY EXPRESS OR IMPLIED\nWARRANTIES, INCLUDING, BUT NOT "
+	     "LIMITED TO, THE IMPLIED WARRANTIES OF\nMERCHANTABILITY AND "
+	     "FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO\nEVENT "
+	     "SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, "
+	     "SPECIAL,\nEXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT "
+	     "NOT LIMITED TO, PROCUREMENT\nOF SUBSTITUTE GOODS OR SERVICES; "
+	     "LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\nINTERRUPTION) "
+	     "HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\n"
+	     "CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR "
+	     "OTHERWISE) ARISING\nIN ANY WAY OUT OF THE USE OF THIS SOFTWARE, "
+	     "EVEN IF ADVISED OF THE POSSIBILITY\nOF SUCH DAMAGE.\n");
+	outeol;
+
 }
 
 void print_help (char*pname)
@@ -37,6 +120,7 @@ void print_help (char*pname)
 	out ("Common options:");
 	out (" -h, --help     display this help");
 	out (" -V, --version  display version information");
+	out (" -L, --license  display detailed license information");
 	out (" -T, --test     perform (probably nonexistent) testing/debugging stuff");
 	outeol;
 	out ("Global options:");
@@ -107,6 +191,7 @@ int main (int argc, char**argv)
 	//option variables
 	bool do_help = false,
 	     do_version = false,
+	     do_license = false,
 	     do_test = false,
 	     has_opt = false,
 	     opt_armor = false,
@@ -128,6 +213,7 @@ int main (int argc, char**argv)
 		static struct option long_opts[] = {
 			{"help",	0,	0,	'h' },
 			{"version",	0,	0,	'V' },
+			{"license",	0,	0,	'L' },
 			{"test",	0,	0,	'T' },
 
 			//global options
@@ -177,7 +263,7 @@ int main (int argc, char**argv)
 		option_index = -1;
 		c = getopt_long
 		    (argc, argv,
-		     "hVTayr:u:R:o:kipx:m:KIPX:M:g:N:F:fnsvedCb:",
+		     "hVLTayr:u:R:o:kipx:m:KIPX:M:g:N:F:fnsvedCb:",
 		     long_opts, &option_index);
 		if (c == -1) break;
 
@@ -213,6 +299,7 @@ int main (int argc, char**argv)
 
 
 			read_flag ('V', do_version)
+			read_flag ('L', do_license)
 			read_flag ('T', do_test)
 			read_flag ('a', opt_armor)
 			read_flag ('y', opt_yes)
@@ -279,6 +366,11 @@ int main (int argc, char**argv)
 
 	if ( (!has_opt) || do_help) {
 		print_help (argv[0]);
+		return 0;
+	}
+
+	if (do_license) {
+		print_licenses();
 		return 0;
 	}
 
