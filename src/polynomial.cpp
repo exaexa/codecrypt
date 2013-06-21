@@ -157,12 +157,13 @@ void polynomial::generate_random_irreducible (uint s, gf2m&fld, prng& rng)
 		item (rng.random (s) ) = rng.random (fld.n);
 }
 
-bool polynomial::compute_square_root_matrix (vector<polynomial>&r, gf2m&fld)
+bool polynomial::compute_square_root_matrix (std::vector<polynomial>&r,
+                                             gf2m&fld)
 {
 	// step 1, generate a square matrix of squares mod poly.
 	int d = degree();
 	if (d < 0) return false;
-	vector<polynomial>l;
+	std::vector<polynomial>l;
 	l.resize (d);
 	polynomial col, t;
 	for (int i = 0; i < d; ++i) {
@@ -275,7 +276,7 @@ void polynomial::square (gf2m&fld)
 	mult (a, fld);
 }
 
-void polynomial::sqrt (vector<polynomial>& sqInv, gf2m&fld)
+void polynomial::sqrt (std::vector<polynomial>& sqInv, gf2m&fld)
 {
 	polynomial a = *this;
 	clear();

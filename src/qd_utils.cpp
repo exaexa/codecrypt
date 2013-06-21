@@ -19,7 +19,6 @@
 #include "qd_utils.h"
 
 #include <vector>
-using namespace std;
 
 /*
  * we count on that all integers are sufficiently large.
@@ -27,7 +26,7 @@ using namespace std;
  * consisted only from {0,1}^n, and we don't usually have codes of this size.
  */
 
-static void fwht (vector<int> x, vector<int>&r)
+static void fwht (std::vector<int> x, std::vector<int>&r)
 {
 	int bs, s;
 	s = x.size();
@@ -51,7 +50,9 @@ static void fwht (vector<int> x, vector<int>&r)
  * this multiple times.
  */
 void fwht_dyadic_multiply (const bvector& a, const bvector& b, bvector& out,
-                           vector<int>&t, vector<int>&A, vector<int>&B)
+                           std::vector<int>&t,
+                           std::vector<int>&A,
+                           std::vector<int>&B)
 {
 
 	uint i;
@@ -109,7 +110,7 @@ bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&mat)
 	bvector tmp;
 	tmp.resize (bs);
 
-	vector<int> c1, c2, c3;
+	std::vector<int> c1, c2, c3;
 	c1.resize (bs);
 	c2.resize (bs);
 	c3.resize (bs);

@@ -58,7 +58,7 @@ public:
 	void inv (polynomial&, gf2m&);
 	void make_monic (gf2m&);
 
-	void sqrt (vector<polynomial>&, gf2m&);
+	void sqrt (std::vector<polynomial>&, gf2m&);
 	polynomial gcd (polynomial, gf2m&);
 	void ext_euclid (polynomial&, polynomial&, polynomial&, gf2m&, int);
 

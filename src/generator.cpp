@@ -21,8 +21,6 @@
 #include <fstream>
 #include <vector>
 
-using namespace std;
-
 static inline uint bytes (uint bits)
 {
 	return (bits >> 3) + ( (bits & 7) ? 1 : 0);
@@ -30,13 +28,14 @@ static inline uint bytes (uint bits)
 
 void arcfour_rng::seed (uint bits, bool quick)
 {
-	vector<byte> s;
-	ifstream f;
+	std::vector<byte> s;
+	std::ifstream f;
 
 	uint b = bytes (bits);
 	if (b > 256) b = 256;
 
-	f.open (quick ? "/dev/urandom" : "/dev/random", ios::in | ios::binary);
+	f.open (quick ? "/dev/urandom" : "/dev/random",
+	        std::ios::in | std::ios::binary);
 	s.resize (b);
 	for (uint i = 0; i < b; ++i) f >> s[i];
 	f.close();
