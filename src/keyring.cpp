@@ -299,12 +299,13 @@ static bool ensure_empty_sencode_file (const std::string&fn,
 		l.items.push_back (&b);
 		std::string emptyfile = l.encode();
 
-		int fd, res;
+		int fd;
 		fd = creat (fn.c_str(), S_IRUSR | S_IWUSR);
 		if (fd < 0) return false;
-		res = write (fd, emptyfile.c_str(), emptyfile.length() );
+		ssize_t res = write (fd, emptyfile.c_str(),
+		                     emptyfile.length() );
 		if (close (fd) ) return false;
-		if (res != emptyfile.length() ) return false;
+		if ( (size_t) res != emptyfile.length() ) return false;
 
 	} else {
 		if (!S_ISREG (st.st_mode) )

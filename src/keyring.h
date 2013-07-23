@@ -115,6 +115,7 @@ public:
 		if (pairs.count (keyid) ) return false;
 		if (pubs.count (keyid) ) return false;
 		pubs[keyid] = pubkey_entry (keyid, name, alg, key);
+		return true;
 	}
 
 	void remove_pubkey (const std::string&keyid) {
@@ -138,6 +139,7 @@ public:
 		if (pubs.count (keyid) ) return false;
 		pairs[keyid] = keypair_entry (keyid, name, alg,
 		                              pubkey, privkey);
+		return true;
 	}
 
 	void remove_keypair (const std::string&keyid) {

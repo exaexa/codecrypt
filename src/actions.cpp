@@ -96,6 +96,7 @@ int action_gen_key (const std::string& algspec, const std::string&name,
 		return 1;
 	}
 
+	//TODO this can fail, handle it.
 	KR.store_keypair (keyring::get_keyid (pub), name, algname, pub, priv);
 	//pub&priv data will get destroyed along with keyring
 
@@ -1046,6 +1047,7 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 		if (keyspec_matches (filter, i->second.name, i->first) ) {
 			KR.remove_pubkey (i->first);
 			KR.remove_keypair (i->first);
+			//TODO this can fail, handle it.
 			KR.store_pubkey (i->first,
 			                 name.length() ?
 			                 name : i->second.name,
@@ -1297,6 +1299,7 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
 			KR.remove_pubkey (i->first);
 			KR.remove_keypair (i->first);
+			//TODO this can fail, handle it.
 			KR.store_keypair (i->first,
 			                  name.length() ?
 			                  name : i->second.pub.name,

@@ -33,6 +33,8 @@ class sencode
 public:
 	virtual std::string encode() = 0;
 	virtual void destroy() {}
+
+	virtual ~sencode() {}
 };
 
 sencode* sencode_decode (const std::string&);

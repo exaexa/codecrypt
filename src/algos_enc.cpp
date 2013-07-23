@@ -379,7 +379,8 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	ev.colex_rank (ev_rank);
 	ev_rank.resize (ranksize, 0);
 	for (i = 0; i < ranksize; ++i)
-		if (ev_rank[i] != 1 & (H[ (i >> 3) % H.size()] >> (i & 0x7) ) )
+		if (ev_rank[i] != (1 & (H[ (i >> 3) % H.size()]
+		                        >> (i & 0x7) ) ) )
 			return 8;
 
 

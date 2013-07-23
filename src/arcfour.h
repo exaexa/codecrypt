@@ -30,12 +30,13 @@ template<class inttype> class arcfour
 	inttype mask;
 public:
 	bool init (unsigned bits) {
+		size_t Ssize = 1 << bits;
 		if (bits > 8 * sizeof (inttype) ) return false;
 		I = J = 0;
-		S.resize (1 << bits);
+		S.resize (Ssize);
 		mask = ~ (inttype) 0;
 		if ( (inttype) (1 << bits) ) mask %= 1 << bits;
-		for (size_t i = 0; i < (1 << bits); ++i) S[i] = i;
+		for (size_t i = 0; i < Ssize; ++i) S[i] = i;
 		return true;
 	}
 

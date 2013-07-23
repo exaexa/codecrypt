@@ -21,6 +21,11 @@
 #include <sstream>
 #include <list>
 
+/*
+ * TODO
+ * fix: set some maximum integer to avoid overflows and keep the top limit
+ */
+
 static void parse_int (const std::string&str, int&pos, int len,
                        unsigned int&res)
 {
@@ -62,7 +67,7 @@ static void parse_string (const std::string&str, int&pos, int len,
                           std::string&res)
 {
 	//first, read the amount of bytes
-	unsigned int bytes = 0;
+	int bytes = 0;
 
 	/*
 	 * we need to keep this bijective, therefore avoid parsing of any
@@ -84,7 +89,7 @@ static void parse_string (const std::string&str, int&pos, int len,
 		if (pos >= len) goto fail;
 		else if (str[pos] == ':') break; //got it
 		else if ( (str[pos] >= '0') and (str[pos] <= '9') ) //integer
-			bytes = (10 * bytes) + (unsigned int) (str[pos] - '0');
+			bytes = (10 * bytes) + (int) (str[pos] - '0');
 		else goto fail; //weird!
 		++pos;
 	}
@@ -95,7 +100,7 @@ bytes_done:
 	if (pos + bytes >= len) goto fail;
 	res = str.substr (pos, bytes);
 	pos += bytes;
-	--pos; //last char of the bytestring
+	--pos; //set position to last char of the bytestring (not behind it)
 	return;
 fail:
 	pos = -1;

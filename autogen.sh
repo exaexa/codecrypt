@@ -4,6 +4,7 @@
 
 COMMON_CPPFLAGS="-I/usr/local/include"
 COMMON_CFLAGS="-Wall"
+COMMON_CXXFLAGS="${COMMON_CFLAGS}"
 COMMON_LDFLAGS="-L/usr/local/lib"
 COMMON_LDADD=""
 
@@ -23,6 +24,7 @@ echo "ccr_SOURCES = `( find src/ -type f -name \*.c ; find src/ -type f -name \*
 echo "noinst_HEADERS = `find src/ -type f -name \*.h |tr \"\n\" \" \" `" >>$OUT
 echo "ccr_CPPFLAGS = -I\$(srcdir)/$i/ ${COMMON_CPPFLAGS}" >>$OUT
 echo "ccr_CFLAGS = ${COMMON_CFLAGS}" >>$OUT
+echo "ccr_CXXFLAGS = ${COMMON_CXXFLAGS}" >>$OUT
 echo "ccr_LDFLAGS = ${COMMON_LDFLAGS}" >>$OUT
 echo "ccr_LDADD = -lgmp ${COMMON_LDADD} " >>$OUT
 

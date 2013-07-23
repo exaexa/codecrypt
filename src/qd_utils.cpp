@@ -28,7 +28,7 @@
 
 static void fwht (std::vector<int> x, std::vector<int>&r)
 {
-	int bs, s;
+	uint bs, s;
 	s = x.size();
 	bs = s >> 1;
 	r.swap (x);

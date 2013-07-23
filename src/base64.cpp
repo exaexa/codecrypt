@@ -21,7 +21,7 @@
 void base64_encode (const std::string& in, std::string&out, int cols)
 {
 	//note: it could be b64str[64], but we'd need -fpermissive
-	static const char b64str[65] =
+	static const unsigned char b64str[65] =
 	    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 	unsigned int acc = 0;
@@ -50,7 +50,7 @@ void base64_encode (const std::string& in, std::string&out, int cols)
 	}
 }
 
-static void init_dec_str (char s[256])
+static void init_dec_str (unsigned char s[256])
 {
 	for (int i = 0; i < 256; ++i) s[i] = -1;
 
@@ -126,12 +126,12 @@ static void init_dec_str (char s[256])
 	s['/'] = 63;
 }
 
-static inline bool is_white (char c)
+static inline bool is_white (unsigned char c)
 {
 	return (c == '\n') || (c == '\r') || (c == ' ') || (c == '\t');
 }
 
-static inline bool is_b64 (char c)
+static inline bool is_b64 (unsigned char c)
 {
 	return (c >= 'a' && c <= 'z')
 	       || (c >= 'A' && c <= 'Z')
@@ -145,7 +145,7 @@ static void eat_white (const std::string&in, int&idx, int idxmax)
 	for (; (idx < idxmax) && is_white (in[idx]); ++idx);
 }
 
-static bool eat_4 (const std::string&in, int&idx, int idxmax, char*a)
+static bool eat_4 (const std::string&in, int&idx, int idxmax, unsigned char*a)
 {
 	for (int i = 0; i < 4; ++i) {
 		eat_white (in, idx, idxmax);
@@ -159,7 +159,7 @@ static bool eat_4 (const std::string&in, int&idx, int idxmax, char*a)
 
 bool base64_decode (const std::string& in, std::string&out)
 {
-	static char b64d[256];
+	static unsigned char b64d[256];
 	static bool b64d_init = false;
 
 	if (!b64d_init) {
@@ -173,7 +173,7 @@ bool base64_decode (const std::string& in, std::string&out)
 	out.reserve (3 * in.length() / 4);
 
 	//start parsing
-	char c[4];
+	unsigned char c[4];
 	while (eat_4 (in, idx, idxmax, c) ) {
 		for (int i = 0; i < 4; ++i)
 			c[i] = b64d[c[i]]; // '=' gets converted to -1

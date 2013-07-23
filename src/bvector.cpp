@@ -265,7 +265,7 @@ void bvector::colex_rank (bvector&r) const
 
 bool bvector::colex_unrank (bvector&res, uint n, uint k) const
 {
-	mpz_t r, comb, t, t2;
+	mpz_t r, comb, t;
 	mpz_init (r);
 	mpz_init (comb);
 	mpz_init (t);

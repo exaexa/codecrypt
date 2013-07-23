@@ -64,7 +64,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		essence[m - 1] = fld.inv (Hsig[0]);
 		//essence[m-1] is now used as precomputed 1/h_0
 
-		for (uint s = 0; (1 << s) < n; ++s) {
+		for (uint s = 0; ( (uint) 1 << s) < n; ++s) {
 			i = 1 << s; //i = 2^s
 
 			Hsig[i] = choose_random (fld.n, rng, used);
@@ -220,7 +220,7 @@ int privkey::prepare()
 	//compute H signature from essence
 	Hsig.resize (n);
 	Hsig[0] = fld.inv (essence[fld.m - 1]);
-	for (s = 0; (1 << s) < n; ++s) {
+	for (s = 0; ( (uint) 1 << s) < n; ++s) {
 		i = 1 << s; //i = 2^s
 
 		Hsig[i] = fld.inv (fld.add (essence[s], essence[fld.m - 1]) );
@@ -246,7 +246,7 @@ int privkey::prepare()
 	g.resize (1, 1); //g(x)=1
 	tmp.clear();
 	tmp.resize (2, 1); //tmp(x)=x+1
-	for (i = 0; i < (1 << T); ++i) {
+	for (i = 0; i < block_size; ++i) {
 		tmp[0] = fld.inv (Hsig[i]); //tmp(x)=x+1/h_i
 		if (used.count (tmp[0]) )
 			return 1;
@@ -286,7 +286,7 @@ int privkey::prepare()
 	tmp.clear();
 	g.resize (1, 1); //g(x)=1
 	tmp.resize (2, 1); //tmp(x)=x+1
-	for (i = 0; i < (1 << T); ++i) {
+	for (i = 0; i < block_size; ++i) {
 		tmp[0] = fld.add (fld.inv (Hsig[i]), omega);
 		g.mult (tmp, fld);
 	}
@@ -351,7 +351,7 @@ int pubkey::encrypt (const bvector & in, bvector & out, const bvector&errors)
 {
 	uint t = 1 << T;
 	bvector p, g, r, cksum;
-	uint i, j, k;
+	uint i, j;
 
 	/*
 	 * shortened checksum pair of G is computed blockwise accordingly to

@@ -64,10 +64,11 @@ static void store_exist (privkey&priv, const privkey::tree_stk_item&i)
 {
 	uint level = i.level / priv.h;
 	if (level >= priv.l) return; //top node
-	uint sublevel = priv.h - (i.level % priv.h);
-	if (i.pos >= (1 << sublevel) ) return; //too far right
+	uint sublevel = priv.h - (i.level % priv.h),
+	     sublev_width = (uint) 1 << sublevel;
+	if (i.pos >= sublev_width) return; //too far right
 
-	priv.exist[level][i.pos + (1 << sublevel) - 2] = i.item;
+	priv.exist[level][i.pos + sublev_width - 2] = i.item;
 }
 
 static void alloc_desired (privkey&priv, hash_func&hf)
@@ -88,7 +89,7 @@ static void store_desired (privkey&priv, uint did,
 {
 	if ( (i.level / priv.h) != did) return; //too below or above
 	uint depth = priv.h - (i.level % priv.h);
-	if (i.pos >= (1 << depth) ) return; //too far right, omg why?!
+	if (i.pos >= ( (uint) 1 << depth) ) return; //too far right, omg why?!
 	priv.desired[did][i.pos + (1 << depth) - 2] = i.item;
 }
 
@@ -206,7 +207,7 @@ static void update_privkey (privkey&priv, hash_func&hf)
 		uint next_subtree_start =
 		    (1 + (next_sigs_used >> ( (1 + idx) * priv.h) ) )
 		    << ( (1 + idx) * priv.h);
-		if (next_subtree_start >= (1 << (priv.h * priv.l) ) ) {
+		if (next_subtree_start >= ( (uint) 1 << (priv.h * priv.l) ) ) {
 			priv.desired.resize (idx);
 			priv.desired_stack.resize (idx);
 			priv.desired_progress.resize (idx);

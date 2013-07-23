@@ -85,13 +85,12 @@ void polynomial::mod (const polynomial&f, gf2m&fld)
 void polynomial::mult (const polynomial&b, gf2m&fld)
 {
 	polynomial a = *this;
-	uint i, j;
-	int da, db;
+	int da, db, i, j;
 	da = a.degree();
 	db = b.degree();
 
 	clear();
-	if ( (da < 0) || (db < 0) ) //multiply by zero
+	if ( (da < 0) || (db < 0) ) //multiply by zero, not much to do.
 		return;
 
 	resize (da + db + 1, 0);
@@ -261,7 +260,7 @@ void polynomial::make_monic (gf2m&fld)
 	int d = degree();
 	if (d < 0) return;
 	uint m = fld.inv (item (d) );
-	for (uint i = 0; i <= d; ++i) item (i) = fld.mult (item (i), m);
+	for (int i = 0; i <= d; ++i) item (i) = fld.mult (item (i), m);
 }
 
 void polynomial::shift (uint n)
@@ -342,9 +341,9 @@ void polynomial::divmod (polynomial&d, polynomial&res, polynomial&rem, gf2m&fld)
 	int t;
 	while ( (t = rem.degree() ) >= degd) {
 		int rp = t - degd;
-		if (res.size() < rp + 1) res.resize (rp + 1, 0);
+		if ( (int) res.size() < rp + 1) res.resize (rp + 1, 0);
 		res[rp] = fld.mult (headInv, rem[t]);
-		for (uint i = 0; i <= degd; ++i)
+		for (int i = 0; i <= degd; ++i)
 			rem[i + rp] = fld.add (rem[i + rp], fld.mult (res[rp], d[i]) );
 	}
 	rem.strip();
