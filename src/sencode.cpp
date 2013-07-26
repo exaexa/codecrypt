@@ -21,14 +21,14 @@
 #include <sstream>
 #include <list>
 
-/*
- * TODO
- * fix: set some maximum integer to avoid overflows and keep the top limit
- */
+#define sencode_max_int_len 9
+#define sencode_max_int 999999999
 
 static void parse_int (const std::string&str, int&pos, int len,
                        unsigned int&res)
 {
+	int length;
+
 	res = 0;
 	++pos; //skip 'i'
 	if (pos >= len) goto fail;
@@ -48,7 +48,8 @@ static void parse_int (const std::string&str, int&pos, int len,
 		} else goto fail;
 	}
 
-	//parse the number
+	//parse the number, keep eye on maximum length
+	length = 0;
 	for (;;) {
 		if (pos >= len) goto fail; //not terminated
 		else if (str[pos] == 'e') break; //done good
@@ -56,6 +57,7 @@ static void parse_int (const std::string&str, int&pos, int len,
 			res = (10 * res) + (unsigned int) (str[pos] - '0');
 		else goto fail; //something weird!
 		++pos;
+		if (++length > sencode_max_int_len) goto fail;
 	}
 
 	return;
@@ -66,15 +68,17 @@ fail:
 static void parse_string (const std::string&str, int&pos, int len,
                           std::string&res)
 {
-	//first, read the amount of bytes
-	int bytes = 0;
+	int bytes, length;
 
 	/*
-	 * we need to keep this bijective, therefore avoid parsing of any
+	 * First, read the amount of bytes.
+	 * We need to keep this bijective, therefore avoid parsing of any
 	 * incorrect cases with leading zeroes except for a single zero. Such
 	 * cases can be distinguished very simply by having zero at first
 	 * position and not having colon right after.
 	 */
+
+	bytes = 0;
 	if (pos >= len) goto fail;
 	if (str[pos] == '0') {
 		++pos;
@@ -85,6 +89,7 @@ static void parse_string (const std::string&str, int&pos, int len,
 	}
 
 	//parse the number.
+	length = 0;
 	for (;;) {
 		if (pos >= len) goto fail;
 		else if (str[pos] == ':') break; //got it
@@ -92,6 +97,7 @@ static void parse_string (const std::string&str, int&pos, int len,
 			bytes = (10 * bytes) + (int) (str[pos] - '0');
 		else goto fail; //weird!
 		++pos;
+		if (++length > sencode_max_int_len) goto fail;
 	}
 
 bytes_done:
@@ -196,6 +202,7 @@ std::string sencode_list::encode()
 
 std::string sencode_int::encode()
 {
+	if (i > sencode_max_int) return "i0e"; //failure fallback
 	std::stringstream ss;
 	ss << 'i' << i << 'e';
 	return ss.str();
@@ -203,6 +210,7 @@ std::string sencode_int::encode()
 
 std::string sencode_bytes::encode()
 {
+	if (b.length() > sencode_max_int) return "0:"; //failure fallback
 	std::stringstream ss;
 	ss << b.length() << ':' << b;
 	return ss.str();
