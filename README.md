@@ -20,6 +20,10 @@ Go read http://pqcrypto.org/
  - infopage: http://e-x-a.org/codecrypt/
  - *package downloads*: http://e-x-a.org/codecrypt/files/
 
+#### Documentation
+
+There is a complete, UNIXy manual page supplied with the package. You can view it online here: http://e-x-a.org/codecrypt/ccr.1.html
+
 ## Quick How-To
 
 Everything is meant to work mostly like GnuPG, but with some good simplicity
