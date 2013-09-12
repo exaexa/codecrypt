@@ -50,10 +50,10 @@ extern "C" {
 #include <stdint.h>
 #else
 
-	typedef __int32 int32_t;
-	typedef unsigned __int32 uint32_t;
-	typedef __int64 int64_t;
-	typedef unsigned __int64 uint64_t;
+typedef __int32 int32_t;
+typedef unsigned __int32 uint32_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
 
 #endif
 
@@ -83,71 +83,71 @@ extern "C" {
 #endif
 
 
-	/** A word in the tiger hash, 64 bits **/
-	typedef uint64_t t_word;
+/** A word in the tiger hash, 64 bits **/
+typedef uint64_t t_word;
 
-	/** This one is provided as a commodity for people wanting an easy way
-	 * to declare result variables **/
-	typedef t_word t_res[3];
+/** This one is provided as a commodity for people wanting an easy way
+ * to declare result variables **/
+typedef t_word t_res[3];
 
-	/** Partial calculation as used by tigerp1 and tigerp2 **/
-	typedef struct {
-		t_res h; // Hash status
-		char r[128]; // SALT
-		t_word n; // Number of characters of r used
-		t_word hs; // Amount of total data hashed
-	} t_pres;
+/** Partial calculation as used by tigerp1 and tigerp2 **/
+typedef struct {
+	t_res h; // Hash status
+	char r[128]; // SALT
+	t_word n; // Number of characters of r used
+	t_word hs; // Amount of total data hashed
+} t_pres;
 
-	/** This one is provided as a commodity for people wanting an easy way
-	 * to declare block variables **/
-	typedef t_word t_block[8];
+/** This one is provided as a commodity for people wanting an easy way
+ * to declare block variables **/
+typedef t_word t_block[8];
 
-	/** Standard tiger calculation, put your string in str and the string
-	 * length on length and get the result on res **/
-	void tiger (const char *str, t_word length, t_res res);
-	/** Similar to tiger but interleaving accesses to both equally sized
-	 * strings to reduce overhead and pipeline stalls you get the result of
-	 * str1 on res1 and the one of str2 on res2 **/
-	void tiger_2 (const char *str1, const char *str2, t_word length,
-	              t_res res1, t_res res2);
+/** Standard tiger calculation, put your string in str and the string
+ * length on length and get the result on res **/
+void tiger (const char *str, t_word length, t_res res);
+/** Similar to tiger but interleaving accesses to both equally sized
+ * strings to reduce overhead and pipeline stalls you get the result of
+ * str1 on res1 and the one of str2 on res2 **/
+void tiger_2 (const char *str1, const char *str2, t_word length,
+              t_res res1, t_res res2);
 #ifdef __SSE2__
-	/** This is equivalent to tiger_2 but uses SSE2 for the key schduling
-	 * making it faster **/
-	void tiger_sse2 (const char *str1, const char *str2, t_word length,
-	                 t_res res1, t_res res2);
+/** This is equivalent to tiger_2 but uses SSE2 for the key schduling
+ * making it faster **/
+void tiger_sse2 (const char *str1, const char *str2, t_word length,
+                 t_res res1, t_res res2);
 #endif
-	/** This function is optimized for use on TTHs just send the two
-	 * concatenated hashes and you will get back the hash with a prepended
-	 * 0x01 **/
-	void tiger_49 (const char *str, t_res res);
-	/** This function is optimized for use on TTHs just send the 1024 sized
-	 * block and you will get back the hash with a prepended 0x00 **/
-	void tiger_1025 (const char *str, t_res res);
-	/** Interleaved version of tiger_49 you insert two hashes and get back
-	 * two results **/
-	void tiger_2_49 (const char *str1, const char *str2,
-	                 t_res res1, t_res res2);
-	/** Interleaved version of tiger_1025 you insert two hashes and get
-	 * back two results **/
-	void tiger_2_1025 (const char *str1, const char *str2,
-	                   t_res res1, t_res res2);
+/** This function is optimized for use on TTHs just send the two
+ * concatenated hashes and you will get back the hash with a prepended
+ * 0x01 **/
+void tiger_49 (const char *str, t_res res);
+/** This function is optimized for use on TTHs just send the 1024 sized
+ * block and you will get back the hash with a prepended 0x00 **/
+void tiger_1025 (const char *str, t_res res);
+/** Interleaved version of tiger_49 you insert two hashes and get back
+ * two results **/
+void tiger_2_49 (const char *str1, const char *str2,
+                 t_res res1, t_res res2);
+/** Interleaved version of tiger_1025 you insert two hashes and get
+ * back two results **/
+void tiger_2_1025 (const char *str1, const char *str2,
+                   t_res res1, t_res res2);
 #ifdef __SSE2__
-	/** SSE2 version of tiger_49 you insert two hashes and get back two
-	 * results **/
-	void tiger_sse2_49 (const char *str1, const char *str2,
-	                    t_res res1, t_res res2);
-	/** SSE2 version of tiger_1025 you insert two hashes and get back two
-	 * results **/
-	void tiger_sse2_1025 (const char *str1, const char *str2,
-	                      t_res res1, t_res res2);
+/** SSE2 version of tiger_49 you insert two hashes and get back two
+ * results **/
+void tiger_sse2_49 (const char *str1, const char *str2,
+                    t_res res1, t_res res2);
+/** SSE2 version of tiger_1025 you insert two hashes and get back two
+ * results **/
+void tiger_sse2_1025 (const char *str1, const char *str2,
+                      t_res res1, t_res res2);
 #endif
-	/** First stage of partial tiger calculation to improve password
-	 * security during storage **/
-	void tigerp1 (const char *password, t_word length, const char *salt,
-	              t_pres *pres);
-	/** Second stage of partial tiger calculation **/
-	void tigerp2 (const t_pres *pres, const char *salt, t_word length,
-	              t_res res);
+/** First stage of partial tiger calculation to improve password
+ * security during storage **/
+void tigerp1 (const char *password, t_word length, const char *salt,
+              t_pres *pres);
+/** Second stage of partial tiger calculation **/
+void tigerp2 (const t_pres *pres, const char *salt, t_word length,
+              t_res res);
 
 #ifdef __cplusplus
 }  //extern "C"

@@ -26,21 +26,21 @@ extern "C" {
 #include <stddef.h>
 #include <inttypes.h>
 
-	struct ampheck_ripemd128 {
-		uint32_t h[4];
-		uint8_t buffer[64];
+struct ampheck_ripemd128 {
+	uint32_t h[4];
+	uint8_t buffer[64];
 
-		uint64_t length;
-	};
+	uint64_t length;
+};
 
-	void ampheck_ripemd128_init (struct ampheck_ripemd128 *ctx);
+void ampheck_ripemd128_init (struct ampheck_ripemd128 *ctx);
 
-	void ampheck_ripemd128_update (struct ampheck_ripemd128 *ctx,
-	                               const uint8_t *data,
-	                               size_t length);
+void ampheck_ripemd128_update (struct ampheck_ripemd128 *ctx,
+                               const uint8_t *data,
+                               size_t length);
 
-	void ampheck_ripemd128_finish (const struct ampheck_ripemd128 *ctx,
-	                               uint8_t *digest);
+void ampheck_ripemd128_finish (const struct ampheck_ripemd128 *ctx,
+                               uint8_t *digest);
 
 #ifdef __cplusplus
 } //extern "C"
