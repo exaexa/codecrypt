@@ -83,7 +83,6 @@ public:
 
 	bool open();
 	bool close();
-	bool load();
 	bool save();
 
 	static std::string get_keyid (const std::string& pubkey);

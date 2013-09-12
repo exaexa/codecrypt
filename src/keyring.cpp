@@ -377,41 +377,6 @@ static bool file_put_sencode (const std::string&fn, sencode*in)
 	return true;
 }
 
-bool keyring::load()
-{
-	std::string dir = get_user_dir();
-	std::string fn;
-	bool res;
-
-	/*
-	 * pubkeys loading
-	 */
-	fn = dir + PUBKEYS_FILENAME;
-
-	sencode* pubkeys = file_get_sencode (fn);
-	if (!pubkeys) return false;
-
-	res = parse_pubkeys (pubkeys, pubs);
-	sencode_destroy (pubkeys);
-	if (!res) return false;
-
-
-	/*
-	 * keypairs loading
-	 */
-	fn = dir + SECRETS_FILENAME;
-
-	sencode*keypairs = file_get_sencode (fn);
-	if (!keypairs) return false;
-
-	res = parse_keypairs (keypairs, pairs);
-	sencode_destroy (keypairs);
-	if (!res) return false;
-
-	//all okay
-	return true;
-}
-
 bool keyring::save()
 {
 	std::string dir, fn;
@@ -457,7 +422,35 @@ bool keyring::open()
 		return false;
 	}
 
+	//load the public keys
+	fn = dir + PUBKEYS_FILENAME;
+
+	sencode *pubkeys, *keypairs;
+	bool res;
+
+	pubkeys = file_get_sencode (fn);
+	if (!pubkeys) goto close_and_fail;
+
+	res = parse_pubkeys (pubkeys, pubs);
+	sencode_destroy (pubkeys);
+	if (!res) goto close_and_fail;
+
+	//load keypairs
+	fn = dir + SECRETS_FILENAME;
+
+	keypairs = file_get_sencode (fn);
+	if (!keypairs) goto close_and_fail;
+
+	res = parse_keypairs (keypairs, pairs);
+	sencode_destroy (keypairs);
+	if (!res) goto close_and_fail;
+
+	//all okay
 	return true;
+
+close_and_fail:
+	close();
+	return false;
 }
 
 bool keyring::close()

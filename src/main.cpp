@@ -392,20 +392,14 @@ int main (int argc, char**argv)
 		return 1;
 	}
 
-	int exitval = 0;
-
-	if (!KR.load() ) {
-		err ("could not load keyring!");
-		exitval = 1;
-		goto exit;
-	}
-
 	//register all available algorithms
 	fill_algorithm_suite (AS);
 
 	/*
 	 * cin/cout redirection
 	 */
+
+	int exitval = 0;
 
 	if (input.length() && !redirect_cin (input) ) {
 		progerr ("could not open input file");
