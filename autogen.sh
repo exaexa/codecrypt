@@ -16,6 +16,7 @@ echo > $OUT
 DISTDIRS=""
 
 echo "AUTOMAKE_OPTIONS = subdir-objects" >>$OUT
+echo "ACLOCAL_AMFLAGS = -I m4" >>$OUT
 echo "dist_man_MANS = man/${NAME}.1" >>$OUT
 echo "dist_noinst_SCRIPTS = autogen.sh" `for i in $DISTDIRS ; do find \$i -type f ; done | tr "\n" " " ` >>$OUT
 

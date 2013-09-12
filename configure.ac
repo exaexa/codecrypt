@@ -2,6 +2,7 @@
 AC_PREREQ(2.6)
 AC_INIT([codecrypt], [1.2])
 AC_CONFIG_AUX_DIR(.) # because of libtoolize
+AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE()
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES])
