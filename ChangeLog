@@ -1,0 +1,32 @@
+
+Codecrypt ChangeLog
+
+1.3
+
+- fix too aggressive locking of keyring that caused deadlocks on piping
+- fix many warnings and code inconsistencies
+- correct licensing information from ccr --version
+- prevent possible problems with forged sencode
+- add this helpful changelog :)
+
+1.2
+
+- improve arcfour usage (much stuff is thus incompatible with older versions)
+- added a manual page
+- added H20 variants of FMTSeq (they provide more than 1M signatures)
+
+1.1
+
+- several speed improvements (colex ranking and MceQD decoding)
+- cleanup of some unneeded parts
+
+1.0
+
+- key naming fixes
+- add 2^192-secure algorithm variants
+- improve message padding for encryption (incompatible with previous format)
+
+0.9
+
+- first released version
+
