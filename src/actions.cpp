@@ -888,7 +888,7 @@ int action_decrypt_verify (bool armor, bool yes,
 	if (r) {
 		if (!yes) {
 			err ("notice: not displaying unverified message");
-			err ("info: to see it, use yes option");
+			err ("info: to see it, use the `yes' option");
 		} else {
 			err ("warning: following message is UNVERIFIED");
 		}
