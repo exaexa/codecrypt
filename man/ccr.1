@@ -245,6 +245,13 @@ Codecrypt does not do much to prevent damage from mistakes of the user. Be
 especially careful when managing your keyring, be aware that some operations
 can rename or delete more keys at once.
 
+Codecrypt is not very good for working directly with large files. Because of
+the message format and code clarity, whole input files and messages are usually
+loaded into memory before getting signed/encrypted. Fixing the problem requires
+some deep structural changes in Codecrypt, but you can easily workaround the
+whole problem using symmetric ciphers (for encryption of large files) or
+hashfiles (for signatures of large files).
+
 FMTSeq signatures are constructed from one-time signature scheme, for this
 reason the private key changes after each signature, basically by increasing
 some counter. IF THE PRIVATE KEY IS USED MORE THAN ONCE TO SIGN WITH THE SAME
