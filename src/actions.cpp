@@ -109,9 +109,22 @@ int action_gen_key (const std::string& algspec, const std::string&name,
 
 	PREPARE_KEYRING;
 
-	//TODO this can fail, handle it.
-	KR.store_keypair (keyring::get_keyid (pub), name, algname, pub, priv);
-	//pub&priv data will get destroyed along with keyring
+	/*
+	 * there is a tiny chance that someone will eventually generate a key
+	 * that has a colliding KeyID with anyone else. This is highly
+	 * improbable, so apologize nicely in that case.
+	 */
+	if (!KR.store_keypair (keyring::get_keyid (pub),
+	                       name, algname, pub, priv) ) {
+
+		err ("error: new key cannot be saved into the keyring.");
+		err ("notice: produced KeyID @" << keyring::get_keyid (pub)
+		     << " apparently collides with some other known KeyID!");
+		err ("notice: if this is not a bug, magic has just happened!");
+
+		return 1;
+	}
+	//note that pub&priv sencode data will get destroyed along with keyring
 
 	if (!KR.save() ) {
 		err ("error: couldn't save keyring");
@@ -1079,7 +1092,6 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 		if (keyspec_matches (filter, i->second.name, i->first) ) {
 			KR.remove_pubkey (i->first);
 			KR.remove_keypair (i->first);
-			//TODO this can fail, handle it.
 			KR.store_pubkey (i->first,
 			                 name.length() ?
 			                 name : i->second.name,
@@ -1342,7 +1354,6 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
 			KR.remove_pubkey (i->first);
 			KR.remove_keypair (i->first);
-			//TODO this can fail, handle it.
 			KR.store_keypair (i->first,
 			                  name.length() ?
 			                  name : i->second.pub.name,
