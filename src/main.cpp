@@ -386,12 +386,6 @@ int main (int argc, char**argv)
 	keyring KR;
 	algorithm_suite AS;
 
-	//keyring initialization
-	if (!KR.open() ) {
-		progerr ("could not open keyring!");
-		return 1;
-	}
-
 	//register all available algorithms
 	fill_algorithm_suite (AS);
 

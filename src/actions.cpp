@@ -38,6 +38,17 @@
 #define MSG_CLEARTEXT "MESSAGE-IN-CLEARTEXT"
 #define MSG_DETACHED "MESSAGE-DETACHED"
 
+inline bool open_keyring (keyring&KR)
+{
+	if (!KR.open() ) {
+		err ("could not open keyring!");
+		return false;
+	}
+	return true;
+}
+
+#define PREPARE_KEYRING if(!open_keyring(KR)) return 1
+
 int action_gen_key (const std::string& algspec, const std::string&name,
                     keyring&KR, algorithm_suite&AS)
 {
@@ -96,6 +107,8 @@ int action_gen_key (const std::string& algspec, const std::string&name,
 		return 1;
 	}
 
+	PREPARE_KEYRING;
+
 	//TODO this can fail, handle it.
 	KR.store_keypair (keyring::get_keyid (pub), name, algname, pub, priv);
 	//pub&priv data will get destroyed along with keyring
@@ -115,8 +128,14 @@ int action_gen_key (const std::string& algspec, const std::string&name,
 int action_encrypt (const std::string&recipient, bool armor,
                     keyring&KR, algorithm_suite&AS)
 {
-	//first, find a recipient
+	//first, read plaintext
+	std::string data;
+	read_all_input (data);
+
+	//find a recipient
 	keyring::pubkey_entry *recip = NULL;
+
+	PREPARE_KEYRING;
 
 	//search both publickeys and keypairs that are valid for encryption
 	for (keyring::pubkey_storage::iterator
@@ -152,10 +171,7 @@ int action_encrypt (const std::string&recipient, bool armor,
 		return 1;
 	}
 
-	//read plaintext
-	std::string data;
-	read_all_input (data);
-
+	//encryption part
 	encrypted_msg msg;
 	arcfour_rng r;
 	r.seed (256);
@@ -222,6 +238,8 @@ int action_decrypt (bool armor,
 	}
 
 	sencode_destroy (M);
+
+	PREPARE_KEYRING;
 
 	//check if we have the privkey
 	keyring::keypair_entry*kpe;
@@ -312,6 +330,12 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 		}
 	}
 
+	//eat data for signature
+	std::string data;
+	read_all_input (data);
+
+	PREPARE_KEYRING;
+
 	//some common checks on user key
 	keyring::keypair_entry *u = NULL;
 
@@ -340,10 +364,7 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 		return 1;
 	}
 
-	//eat data
-	std::string data;
-	read_all_input (data);
-
+	//signature production part
 	signed_msg msg;
 	arcfour_rng r;
 	r.seed (256);
@@ -583,6 +604,8 @@ int action_verify (bool armor, const std::string&detach,
 		return 1;
 	}
 
+	PREPARE_KEYRING;
+
 	//check pubkey availability
 	keyring::pubkey_entry*pke;
 	pke = KR.get_pubkey (msg.key_id);
@@ -653,6 +676,12 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 	 * (it would leak the information that inner message is signed).
 	 */
 
+	//eat al input first
+	std::string data;
+	read_all_input (data);
+
+	PREPARE_KEYRING;
+
 	//find some good local user
 	keyring::keypair_entry *u = NULL;
 
@@ -712,9 +741,6 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 	}
 
 	//make a signature
-	std::string data;
-	read_all_input (data);
-
 	signed_msg smsg;
 	arcfour_rng r;
 	r.seed (256);
@@ -793,6 +819,8 @@ int action_decrypt_verify (bool armor, bool yes,
 	}
 
 	sencode_destroy (M);
+
+	PREPARE_KEYRING;
 
 	//check if we will be able to decrypt
 	keyring::keypair_entry*kpe;
@@ -936,6 +964,8 @@ static void output_key (bool fp,
 int action_list (bool nice_fingerprint, const std::string&filter,
                  keyring&KR)
 {
+	PREPARE_KEYRING;
+
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i) {
@@ -1019,6 +1049,8 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 		return 0;
 	}
 
+	PREPARE_KEYRING;
+
 	//informatively count how much stuff is this going to destroy.
 	int rewrites = 0, privs = 0;
 	for (keyring::pubkey_storage::iterator
@@ -1068,6 +1100,8 @@ int action_export (bool armor,
                    const std::string & filter, const std::string & name,
                    keyring & KR)
 {
+	PREPARE_KEYRING;
+
 	keyring::pubkey_storage s;
 
 	for (keyring::keypair_storage::iterator
@@ -1117,6 +1151,8 @@ int action_export (bool armor,
 
 int action_delete (bool yes, const std::string & filter, keyring & KR)
 {
+	PREPARE_KEYRING;
+
 	int kc = 0;
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end();
@@ -1165,6 +1201,9 @@ int action_rename (bool yes,
 		err ("error: missing new name specification");
 		return 1;
 	}
+
+	PREPARE_KEYRING;
+
 	int kc = 0;
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end();
@@ -1205,6 +1244,8 @@ int action_rename (bool yes,
 int action_list_sec (bool nice_fingerprint, const std::string & filter,
                      keyring & KR)
 {
+	PREPARE_KEYRING;
+
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i) {
@@ -1277,6 +1318,8 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 		return 0;
 	}
 
+	PREPARE_KEYRING;
+
 	int rewrites = 0;
 	for (keyring::keypair_storage::iterator
 	     i = s.begin(), e = s.end(); i != e; ++i) {
@@ -1321,6 +1364,8 @@ int action_export_sec (bool armor, bool yes,
                        const std::string & filter, const std::string & name,
                        keyring & KR)
 {
+	PREPARE_KEYRING;
+
 	keyring::keypair_storage s;
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
@@ -1366,6 +1411,8 @@ int action_export_sec (bool armor, bool yes,
 
 int action_delete_sec (bool yes, const std::string & filter, keyring & KR)
 {
+	PREPARE_KEYRING;
+
 	int kc = 0;
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
@@ -1414,6 +1461,8 @@ int action_rename_sec (bool yes,
 		err ("error: missing new name specification");
 		return 1;
 	}
+
+	PREPARE_KEYRING;
 
 	int kc = 0;
 	for (keyring::keypair_storage::iterator
