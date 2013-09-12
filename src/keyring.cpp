@@ -419,6 +419,7 @@ bool keyring::open()
 
 	if (flock (lockfd, LOCK_EX) ) {
 		::close (lockfd);
+		lockfd = -1;
 		return false;
 	}
 
@@ -462,10 +463,15 @@ bool keyring::close()
 	 * Note that unlink goes first, so that the lock disappears atomically.
 	 */
 
+	if (lockfd < 0) return true; //nothing to close
+
 	std::string fn = get_user_dir() + LOCK_FILENAME;
 	unlink (fn.c_str() );
 
 	flock (lockfd, LOCK_UN);
 	::close (lockfd);
+
+	lockfd = -1;
+
 	return true;
 }
