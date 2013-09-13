@@ -59,7 +59,7 @@ margin. Let's play with random data!
 ## Option reference
 
 For completeness I add listing of all options here (also available from
-@ccr --help@)
+`ccr --help`)
 
 	Usage: ./ccr [options]
 
