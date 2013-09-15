@@ -20,23 +20,23 @@
 #define _ccr_sha_hash_h_
 
 #include "hash.h"
-#include "sha2.h"
+
+#include <crypto++/sha.h>
 #include <inttypes.h>
 
 class sha256hash : public hash_func
 {
 public:
 	uint size() {
-		return SHA256_DIGEST_LENGTH;
+		return CryptoPP::SHA256::DIGESTSIZE;
 	}
 
 	std::vector<byte> operator() (const std::vector<byte>&a) {
-		SHA256_CTX ctx;
-		SHA256_Init (&ctx);
-		SHA256_Update (&ctx, (const uint8_t*) & (a[0]), a.size() );
 		std::vector<byte> r;
 		r.resize (size() );
-		SHA256_Final ( (uint8_t*) & (r[0]), &ctx);
+		CryptoPP::SHA256().CalculateDigest (& (r[0]),
+		                                    & (a[0]),
+		                                    a.size() );
 		return r;
 	}
 };
@@ -45,16 +45,15 @@ class sha384hash : public hash_func
 {
 public:
 	uint size() {
-		return SHA384_DIGEST_LENGTH;
+		return CryptoPP::SHA384::DIGESTSIZE;
 	}
 
 	std::vector<byte> operator() (const std::vector<byte>&a) {
-		SHA384_CTX ctx;
-		SHA384_Init (&ctx);
-		SHA384_Update (&ctx, (const uint8_t*) & (a[0]), a.size() );
 		std::vector<byte> r;
 		r.resize (size() );
-		SHA384_Final ( (uint8_t*) & (r[0]), &ctx);
+		CryptoPP::SHA384().CalculateDigest (& (r[0]),
+		                                    & (a[0]),
+		                                    a.size() );
 		return r;
 	}
 };
@@ -63,19 +62,17 @@ class sha512hash : public hash_func
 {
 public:
 	uint size() {
-		return SHA512_DIGEST_LENGTH;
+		return CryptoPP::SHA512::DIGESTSIZE;
 	}
 
 	std::vector<byte> operator() (const std::vector<byte>&a) {
-		SHA512_CTX ctx;
-		SHA512_Init (&ctx);
-		SHA512_Update (&ctx, (const uint8_t*) & (a[0]), a.size() );
 		std::vector<byte> r;
 		r.resize (size() );
-		SHA512_Final ( (uint8_t*) & (r[0]), &ctx);
+		CryptoPP::SHA512().CalculateDigest (& (r[0]),
+		                                    & (a[0]),
+		                                    a.size() );
 		return r;
 	}
 };
-
 
 #endif

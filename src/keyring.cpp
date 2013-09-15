@@ -29,24 +29,25 @@ void keyring::clear()
  * simple fingerprint.
  */
 
-#include "sha2.h"
+#include <crypto++/sha.h>
 #include <inttypes.h>
 
 std::string keyring::get_keyid (const std::string&pubkey)
 {
-	SHA256_CTX ctx;
-	uint8_t t;
-
-	SHA256_Init (&ctx);
-
-	for (size_t i = 0; i < pubkey.length(); ++i) {
-		t = pubkey[i];
-		SHA256_Update (&ctx, &t, 1);
-	}
+	static const char hex[] = "0123456789abcdef";
 
 	std::string r;
-	r.resize (64, ' ');
-	SHA256_End (&ctx, & (r[0]) );
+	std::vector<byte> tmp;
+
+	tmp.resize (CryptoPP::SHA256::DIGESTSIZE, 0);
+	CryptoPP::SHA256().CalculateDigest ( & (tmp[0]),
+	                                     (const byte*) & (pubkey[0]),
+	                                     pubkey.length() );
+	r.resize (tmp.size() * 2, ' ');
+	for (size_t i = 0; i < tmp.size(); ++i) {
+		r[2 * i] = hex[ (tmp[i] >> 4) & 0xf];
+		r[2 * i + 1] = hex[tmp[i] & 0xf];
+	}
 
 	return r;
 }
