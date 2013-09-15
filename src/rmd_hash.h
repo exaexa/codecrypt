@@ -21,22 +21,21 @@
 #define _ccr_rmd_hash_h_
 
 #include "hash.h"
-#include "ripemd128.h"
+#include <crypto++/ripemd.h>
 
 class rmd128hash : public hash_func
 {
 public:
 	uint size() {
-		return RIPEMD128_DIGEST_LENGTH;
+		return CryptoPP::RIPEMD128::DIGESTSIZE;
 	}
 
 	std::vector<byte> operator() (const std::vector<byte>&a) {
-		ampheck_ripemd128 ctx;
-		ampheck_ripemd128_init (&ctx);
-		ampheck_ripemd128_update (&ctx, (const uint8_t*) & (a[0]), a.size() );
 		std::vector<byte> r;
 		r.resize (size() );
-		ampheck_ripemd128_finish (&ctx, (uint8_t*) & (r[0]) );
+		CryptoPP::RIPEMD128().CalculateDigest (& (r[0]),
+		                                       & (a[0]),
+		                                       a.size() );
 		return r;
 	}
 };
