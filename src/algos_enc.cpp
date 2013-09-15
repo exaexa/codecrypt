@@ -105,6 +105,7 @@ int algo_mceqd256::create_keypair (sencode**pub, sencode**priv, prng&rng)
  */
 
 #include "rmd_hash.h"
+#include <stdint.h>
 
 static void msg_pad_length (const std::vector<byte>& msg, byte&start, byte&end)
 {
