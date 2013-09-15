@@ -21,19 +21,21 @@
 #define _ccr_tiger_hash_h_
 
 #include "hash.h"
-#include "tiger.h"
+#include <crypto++/tiger.h>
 
 class tiger192hash : public hash_func
 {
 public:
 	uint size() {
-		return 24;
+		return CryptoPP::Tiger::DIGESTSIZE;
 	}
 
 	std::vector<byte> operator() (const std::vector<byte>&a) {
 		std::vector<byte> r;
 		r.resize (size() );
-		tiger ( (const char*) & (a[0]), a.size(), (t_word*) & (r[0]) );
+		CryptoPP::Tiger().CalculateDigest (& (r[0]),
+		                                   & (a[0]),
+		                                   a.size() );
 		return r;
 	}
 };
