@@ -218,7 +218,7 @@ static bool message_unpad (std::vector<byte> in, bvector&out)
  * Fujisaki-okamoto part
  */
 
-#define min(a,b) ((a)<(b)?(a):(b))
+#define MIN(a,b) ((a)<(b)?(a):(b))
 
 #include "sha_hash.h"
 #include "arcfour.h"
@@ -292,7 +292,7 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	//whole key must be tossed in, so split if when necessary
 	for (i = 0; i < (K.size() >> 8); ++i) {
 		std::vector<byte> subkey (K.begin() + (i << 8),
-		                          min (K.end(),
+		                          MIN (K.end(),
 		                               K.begin() + ( (i + 1) << 8) ) );
 		arc.load_key (subkey);
 	}
@@ -357,7 +357,7 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	//stuff in the whole key
 	for (i = 0; i < (K.size() >> 8); ++i) {
 		std::vector<byte> subkey (K.begin() + (i << 8),
-		                          min (K.end(),
+		                          MIN (K.end(),
 		                               K.begin() + ( (i + 1) << 8) ) );
 		arc.load_key (subkey);
 	}
