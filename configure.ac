@@ -19,6 +19,11 @@ AC_PROG_INSTALL
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR([Codecrypt requires gmp.h]))
 AC_CHECK_LIB(gmp, __gmpz_init, , AC_MSG_ERROR([Codecrypt requires libgmp]))
 
+#check for presence of Crypto++
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADERS([crypto++/sha.h crypto++/tiger.h crypto++/ripemd.h], , AC_MSG_ERROR([Codecrypt requires Crypto++]))
+AC_LANG_POP([C++])
+
 #check for standard functions
 AC_CHECK_FUNCS([memset mkdir], , AC_MSG_ERROR([Required function missing]))
 
