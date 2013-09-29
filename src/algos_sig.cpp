@@ -90,11 +90,11 @@ static void msg_pad (const bvector&in, std::vector<byte>&out, size_t minsize)
  */
 
 template <int h, int l, int hs, class message_hash, class tree_hash>
-int fmtseq_generic_sign (const bvector&msg,
-                         bvector&sig,
-                         sencode**privkey,
-                         bool&dirty,
-                         prng&rng)
+static int fmtseq_generic_sign (const bvector&msg,
+                                bvector&sig,
+                                sencode**privkey,
+                                bool&dirty,
+                                prng&rng)
 {
 	//load the key
 	fmtseq::privkey Priv;
@@ -131,9 +131,9 @@ int fmtseq_generic_sign (const bvector&msg,
 }
 
 template <int h, int l, int hs, class message_hash, class tree_hash>
-int fmtseq_generic_verify (const bvector&sig,
-                           const bvector&msg,
-                           sencode*pubkey)
+static int fmtseq_generic_verify (const bvector&sig,
+                                  const bvector&msg,
+                                  sencode*pubkey)
 {
 	//load the key
 	fmtseq::pubkey Pub;
@@ -160,6 +160,23 @@ int fmtseq_generic_verify (const bvector&sig,
 	//otherwise the sig is okay!
 	return 0;
 }
+
+template<class treehash, int hs, int h, int l>
+static int fmtseq_create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	fmtseq::pubkey Pub;
+	fmtseq::privkey Priv;
+
+	treehash hf;
+
+	if (fmtseq::generate (Pub, Priv, rng, hf, hs, h, l) )
+		return 1;
+
+	*pub = Pub.serialize();
+	*priv = Priv.serialize();
+	return 0;
+}
+
 
 /*
  * actual instantiations
@@ -227,47 +244,20 @@ int algo_fmtseq256::verify (const bvector&sig,
 
 int algo_fmtseq128::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
-	fmtseq::pubkey Pub;
-	fmtseq::privkey Priv;
-
-	rmd128hash hf;
-
-	if (fmtseq::generate (Pub, Priv, rng, hf, 256, 4, 4) )
-		return 1;
-
-	*pub = Pub.serialize();
-	*priv = Priv.serialize();
-	return 0;
+	return fmtseq_create_keypair<rmd128hash, 256, 4, 4>
+	       (pub, priv, rng);
 }
 
 int algo_fmtseq192::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
-	fmtseq::pubkey Pub;
-	fmtseq::privkey Priv;
-
-	tiger192hash hf;
-
-	if (fmtseq::generate (Pub, Priv, rng, hf, 384, 4, 4) )
-		return 1;
-
-	*pub = Pub.serialize();
-	*priv = Priv.serialize();
-	return 0;
+	return fmtseq_create_keypair<tiger192hash, 384, 4, 4>
+	       (pub, priv, rng);
 }
 
 int algo_fmtseq256::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
-	fmtseq::pubkey Pub;
-	fmtseq::privkey Priv;
-
-	sha256hash hf;
-
-	if (fmtseq::generate (Pub, Priv, rng, hf, 512, 4, 4) )
-		return 1;
-
-	*pub = Pub.serialize();
-	*priv = Priv.serialize();
-	return 0;
+	return fmtseq_create_keypair<sha256hash, 512, 4, 4>
+	       (pub, priv, rng);
 }
 
 /*
@@ -339,46 +329,184 @@ int algo_fmtseq256h20::verify (const bvector&sig,
 
 int algo_fmtseq128h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
-	fmtseq::pubkey Pub;
-	fmtseq::privkey Priv;
-
-	rmd128hash hf;
-
-	if (fmtseq::generate (Pub, Priv, rng, hf, 256, 4, 5) )
-		return 1;
-
-	*pub = Pub.serialize();
-	*priv = Priv.serialize();
-	return 0;
+	return fmtseq_create_keypair<rmd128hash, 256, 4, 5>
+	       (pub, priv, rng);
 }
 
 int algo_fmtseq192h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
-	fmtseq::pubkey Pub;
-	fmtseq::privkey Priv;
-
-	tiger192hash hf;
-
-	if (fmtseq::generate (Pub, Priv, rng, hf, 384, 4, 5) )
-		return 1;
-
-	*pub = Pub.serialize();
-	*priv = Priv.serialize();
-	return 0;
+	return fmtseq_create_keypair<tiger192hash, 384, 4, 5>
+	       (pub, priv, rng);
 }
 
 int algo_fmtseq256h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
-	fmtseq::pubkey Pub;
-	fmtseq::privkey Priv;
-
-	sha256hash hf;
-
-	if (fmtseq::generate (Pub, Priv, rng, hf, 512, 4, 5) )
-		return 1;
-
-	*pub = Pub.serialize();
-	*priv = Priv.serialize();
-	return 0;
+	return fmtseq_create_keypair<sha256hash, 512, 4, 5>
+	       (pub, priv, rng);
 }
 
+/*
+ * CubeHash variants of everything above.
+ */
+
+#include "cube_hash.h"
+
+int algo_fmtseq128cube::sign (const bvector&msg,
+                              bvector&sig,
+                              sencode**privkey,
+                              bool&dirty,
+                              prng&rng)
+{
+	return fmtseq_generic_sign
+	       <4, 4, 256, cube256hash, cube128hash>
+	       (msg, sig, privkey, dirty, rng);
+}
+
+int algo_fmtseq128cube::verify (const bvector&sig,
+                                const bvector&msg,
+                                sencode*pubkey)
+{
+	return fmtseq_generic_verify
+	       <4, 4, 256, cube256hash, cube128hash>
+	       (sig, msg, pubkey);
+}
+
+int algo_fmtseq192cube::sign (const bvector&msg,
+                              bvector&sig,
+                              sencode**privkey,
+                              bool&dirty,
+                              prng&rng)
+{
+	return fmtseq_generic_sign
+	       <4, 4, 384, cube384hash, cube192hash>
+	       (msg, sig, privkey, dirty, rng);
+}
+
+int algo_fmtseq192cube::verify (const bvector&sig,
+                                const bvector&msg,
+                                sencode*pubkey)
+{
+	return fmtseq_generic_verify
+	       <4, 4, 384, cube384hash, cube192hash>
+	       (sig, msg, pubkey);
+}
+
+int algo_fmtseq256cube::sign (const bvector&msg,
+                              bvector&sig,
+                              sencode**privkey,
+                              bool&dirty,
+                              prng&rng)
+{
+	return fmtseq_generic_sign
+	       <4, 4, 512, cube512hash, cube256hash>
+	       (msg, sig, privkey, dirty, rng);
+}
+
+int algo_fmtseq256cube::verify (const bvector&sig,
+                                const bvector&msg,
+                                sencode*pubkey)
+{
+	return fmtseq_generic_verify
+	       <4, 4, 512, cube512hash, cube256hash>
+	       (sig, msg, pubkey);
+}
+
+int algo_fmtseq128cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	return fmtseq_create_keypair<cube128hash, 256, 4, 4>
+	       (pub, priv, rng);
+}
+
+int algo_fmtseq192cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	return fmtseq_create_keypair<cube192hash, 384, 4, 4>
+	       (pub, priv, rng);
+}
+
+int algo_fmtseq256cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	return fmtseq_create_keypair<cube256hash, 512, 4, 4>
+	       (pub, priv, rng);
+}
+
+/*
+ * h=20 variants with cubehash.
+ */
+
+int algo_fmtseq128h20cube::sign (const bvector&msg,
+                                 bvector&sig,
+                                 sencode**privkey,
+                                 bool&dirty,
+                                 prng&rng)
+{
+	return fmtseq_generic_sign
+	       <4, 5, 256, cube256hash, cube128hash>
+	       (msg, sig, privkey, dirty, rng);
+}
+
+int algo_fmtseq128h20cube::verify (const bvector&sig,
+                                   const bvector&msg,
+                                   sencode*pubkey)
+{
+	return fmtseq_generic_verify
+	       <4, 5, 256, cube256hash, cube128hash>
+	       (sig, msg, pubkey);
+}
+
+int algo_fmtseq192h20cube::sign (const bvector&msg,
+                                 bvector&sig,
+                                 sencode**privkey,
+                                 bool&dirty,
+                                 prng&rng)
+{
+	return fmtseq_generic_sign
+	       <4, 5, 384, cube384hash, cube192hash>
+	       (msg, sig, privkey, dirty, rng);
+}
+
+int algo_fmtseq192h20cube::verify (const bvector&sig,
+                                   const bvector&msg,
+                                   sencode*pubkey)
+{
+	return fmtseq_generic_verify
+	       <4, 5, 384, cube384hash, cube192hash>
+	       (sig, msg, pubkey);
+}
+
+int algo_fmtseq256h20cube::sign (const bvector&msg,
+                                 bvector&sig,
+                                 sencode**privkey,
+                                 bool&dirty,
+                                 prng&rng)
+{
+	return fmtseq_generic_sign
+	       <4, 5, 512, cube512hash, cube256hash>
+	       (msg, sig, privkey, dirty, rng);
+}
+
+int algo_fmtseq256h20cube::verify (const bvector&sig,
+                                   const bvector&msg,
+                                   sencode*pubkey)
+{
+	return fmtseq_generic_verify
+	       <4, 5, 512, cube512hash, cube256hash>
+	       (sig, msg, pubkey);
+}
+
+int algo_fmtseq128h20cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	return fmtseq_create_keypair<cube128hash, 256, 4, 5>
+	       (pub, priv, rng);
+}
+
+int algo_fmtseq192h20cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	return fmtseq_create_keypair<cube192hash, 384, 4, 5>
+	       (pub, priv, rng);
+}
+
+int algo_fmtseq256h20cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	return fmtseq_create_keypair<cube256hash, 512, 4, 5>
+	       (pub, priv, rng);
+}
