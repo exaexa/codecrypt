@@ -21,6 +21,10 @@
 
 #include "algorithm.h"
 
+/*
+ * SHA-based variants
+ */
+
 class algo_mceqd128 : public algorithm
 {
 public:
@@ -78,6 +82,76 @@ public:
 
 	std::string get_alg_id() {
 		return "MCEQD256FO-SHA512-ARCFOUR";
+	}
+
+	int encrypt (const bvector&plain, bvector&cipher,
+	             sencode* pubkey, prng&rng);
+	int decrypt (const bvector&cipher, bvector&plain,
+	             sencode* privkey);
+	int create_keypair (sencode**pub, sencode**priv, prng&rng);
+};
+
+/*
+ * Cubehash-based variants
+ */
+
+class algo_mceqd128cube : public algorithm
+{
+public:
+	bool provides_signatures() {
+		return false;
+	}
+
+	bool provides_encryption() {
+		return true;
+	}
+
+	std::string get_alg_id() {
+		return "MCEQD128FO-CUBE256-ARCFOUR";
+	}
+
+	int encrypt (const bvector&plain, bvector&cipher,
+	             sencode* pubkey, prng&rng);
+	int decrypt (const bvector&cipher, bvector&plain,
+	             sencode* privkey);
+	int create_keypair (sencode**pub, sencode**priv, prng&rng);
+};
+
+class algo_mceqd192cube : public algorithm
+{
+public:
+	bool provides_signatures() {
+		return false;
+	}
+
+	bool provides_encryption() {
+		return true;
+	}
+
+	std::string get_alg_id() {
+		return "MCEQD192FO-CUBE384-ARCFOUR";
+	}
+
+	int encrypt (const bvector&plain, bvector&cipher,
+	             sencode* pubkey, prng&rng);
+	int decrypt (const bvector&cipher, bvector&plain,
+	             sencode* privkey);
+	int create_keypair (sencode**pub, sencode**priv, prng&rng);
+};
+
+class algo_mceqd256cube : public algorithm
+{
+public:
+	bool provides_signatures() {
+		return false;
+	}
+
+	bool provides_encryption() {
+		return true;
+	}
+
+	std::string get_alg_id() {
+		return "MCEQD256FO-CUBE512-ARCFOUR";
 	}
 
 	int encrypt (const bvector&plain, bvector&cipher,

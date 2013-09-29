@@ -24,43 +24,48 @@
  * keygen
  */
 
-int algo_mceqd128::create_keypair (sencode**pub, sencode**priv, prng&rng)
+template<int m, int T, int b, int d>
+static int mceqd_create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
 	mce_qd::pubkey Pub;
 	mce_qd::privkey Priv;
 
-	if (mce_qd::generate (Pub, Priv, rng, 16, 7, 32, 4) )
+	if (mce_qd::generate (Pub, Priv, rng, m, T, b, d) )
 		return 1;
 
 	*pub = Pub.serialize();
 	*priv = Priv.serialize();
 	return 0;
+}
+
+int algo_mceqd128::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	return mceqd_create_keypair<16, 7, 32, 4> (pub, priv, rng);
 }
 
 int algo_mceqd192::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
-	mce_qd::pubkey Pub;
-	mce_qd::privkey Priv;
-
-	if (mce_qd::generate (Pub, Priv, rng, 16, 8, 27, 4) )
-		return 1;
-
-	*pub = Pub.serialize();
-	*priv = Priv.serialize();
-	return 0;
+	return mceqd_create_keypair<16, 8, 27, 4> (pub, priv, rng);
 }
 
 int algo_mceqd256::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
-	mce_qd::pubkey Pub;
-	mce_qd::privkey Priv;
+	return mceqd_create_keypair<16, 8, 32, 4> (pub, priv, rng);
+}
 
-	if (mce_qd::generate (Pub, Priv, rng, 16, 8, 32, 4) )
-		return 1;
+int algo_mceqd128cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	return mceqd_create_keypair<16, 7, 32, 4> (pub, priv, rng);
+}
 
-	*pub = Pub.serialize();
-	*priv = Priv.serialize();
-	return 0;
+int algo_mceqd192cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	return mceqd_create_keypair<16, 8, 27, 4> (pub, priv, rng);
+}
+
+int algo_mceqd256cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	return mceqd_create_keypair<16, 8, 32, 4> (pub, priv, rng);
 }
 
 /*
@@ -104,10 +109,12 @@ int algo_mceqd256::create_keypair (sencode**pub, sencode**priv, prng&rng)
  * where h1 to h4 are hash functions to [0..127]
  */
 
-#include "rmd_hash.h"
 #include <stdint.h>
+#include "hash.h"
 
-static void msg_pad_length (const std::vector<byte>& msg, byte&start, byte&end)
+static void msg_pad_length (const std::vector<byte>& msg,
+                            byte&start, byte&end,
+                            hash_func&pad_hash)
 {
 	uint64_t len = msg.size();
 	std::vector<byte> lenbytes;
@@ -119,16 +126,16 @@ static void msg_pad_length (const std::vector<byte>& msg, byte&start, byte&end)
 
 	std::vector<byte> tmp;
 
-	rmd128hash hf;
-	tmp = hf (lenbytes);
+	tmp = pad_hash (lenbytes);
 	start = tmp[0] & 0x7f;
 	end = tmp[1] & 0x7f;
-	tmp = hf (msg);
+	tmp = pad_hash (msg);
 	start += tmp[0] & 0x7f;
 	end += tmp[1] & 0x7f;
 }
 
-static void message_pad (const bvector&in, std::vector<byte>&out, prng&rng)
+static void message_pad (const bvector&in, std::vector<byte>&out,
+                         prng&rng, hash_func&pad_hash)
 {
 	out.clear();
 
@@ -152,7 +159,7 @@ static void message_pad (const bvector&in, std::vector<byte>&out, prng&rng)
 
 	//byte stage
 	byte padsize_begin, padsize_end;
-	msg_pad_length (out, padsize_begin, padsize_end);
+	msg_pad_length (out, padsize_begin, padsize_end, pad_hash);
 
 	//padding at the beginning
 	out.insert (out.begin(), 1 + (uint) padsize_begin, 0);
@@ -168,7 +175,8 @@ static void message_pad (const bvector&in, std::vector<byte>&out, prng&rng)
 	out[out_end + padsize_end] = padsize_end;
 }
 
-static bool message_unpad (std::vector<byte> in, bvector&out)
+static bool message_unpad (std::vector<byte> in, bvector&out,
+                           hash_func&pad_hash)
 {
 	//check byte padding sizes
 	if (!in.size() ) return false;
@@ -191,7 +199,7 @@ static bool message_unpad (std::vector<byte> in, bvector&out)
 
 	//check if padding was really okay (TODO is it necessary?)
 	byte check_begin, check_end;
-	msg_pad_length (in, check_begin, check_end);
+	msg_pad_length (in, check_begin, check_end, pad_hash);
 	if (padsize_begin != check_begin || padsize_end != check_end)
 		return false;
 
@@ -221,7 +229,6 @@ static bool message_unpad (std::vector<byte> in, bvector&out)
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
-#include "sha_hash.h"
 #include "arcfour.h"
 
 /*
@@ -239,6 +246,7 @@ template < class pubkey_type,
          int ciphersize,
          int errorcount,
          class hash_type,
+         class pad_hash_type,
          int ranksize >
 static int fo_encrypt (const bvector&plain, bvector&cipher,
                        sencode* pubkey, prng&rng)
@@ -256,7 +264,8 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 
 	//create the unencrypted message part
 	std::vector<byte> M;
-	message_pad (plain, M, rng);
+	pad_hash_type phf;
+	message_pad (plain, M, rng, phf);
 
 	//create the symmetric key
 	std::vector<byte> K;
@@ -313,6 +322,7 @@ template < class privkey_type,
          int ciphersize,
          int errorcount,
          class hash_type,
+         class pad_hash_type,
          int ranksize >
 static int fo_decrypt (const bvector&cipher, bvector&plain,
                        sencode* privkey)
@@ -386,7 +396,8 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 
 
 	//if the message seems okay, unpad and return it.
-	if (!message_unpad (M, plain) ) return 9;
+	pad_hash_type phf;
+	if (!message_unpad (M, plain, phf) ) return 9;
 
 	return 0;
 }
@@ -395,6 +406,10 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
  * Instances for actual encryption/descryption algorithms
  */
 
+#include "sha_hash.h"
+#include "rmd_hash.h"
+#include "cube_hash.h"
+
 int algo_mceqd128::encrypt (const bvector&plain, bvector&cipher,
                             sencode* pubkey, prng&rng)
 {
@@ -402,6 +417,7 @@ int algo_mceqd128::encrypt (const bvector&plain, bvector&cipher,
 	       < mce_qd::pubkey,
 	       2048, 4096, 128,
 	       sha256hash,
+	       rmd128hash,
 	       816 >
 	       (plain, cipher, pubkey, rng);
 }
@@ -413,6 +429,7 @@ int algo_mceqd192::encrypt (const bvector&plain, bvector&cipher,
 	       < mce_qd::pubkey,
 	       2816, 6912, 256,
 	       sha384hash,
+	       rmd128hash,
 	       1574 >
 	       (plain, cipher, pubkey, rng);
 }
@@ -424,6 +441,7 @@ int algo_mceqd256::encrypt (const bvector&plain, bvector&cipher,
 	       < mce_qd::pubkey,
 	       4096, 8192, 256,
 	       sha512hash,
+	       rmd128hash,
 	       1638 >
 	       (plain, cipher, pubkey, rng);
 }
@@ -435,6 +453,7 @@ int algo_mceqd128::decrypt (const bvector&cipher, bvector&plain,
 	       < mce_qd::privkey,
 	       2048, 4096, 128,
 	       sha256hash,
+	       rmd128hash,
 	       816 >
 	       (cipher, plain, privkey);
 }
@@ -446,6 +465,7 @@ int algo_mceqd192::decrypt (const bvector&cipher, bvector&plain,
 	       < mce_qd::privkey,
 	       2816, 6912, 256,
 	       sha384hash,
+	       rmd128hash,
 	       1574 >
 	       (cipher, plain, privkey);
 }
@@ -457,6 +477,79 @@ int algo_mceqd256::decrypt (const bvector&cipher, bvector&plain,
 	       < mce_qd::privkey,
 	       4096, 8192, 256,
 	       sha512hash,
+	       rmd128hash,
+	       1638 >
+	       (cipher, plain, privkey);
+}
+
+int algo_mceqd128cube::encrypt (const bvector&plain, bvector&cipher,
+                                sencode* pubkey, prng&rng)
+{
+	return fo_encrypt
+	       < mce_qd::pubkey,
+	       2048, 4096, 128,
+	       cube256hash,
+	       cube128hash,
+	       816 >
+	       (plain, cipher, pubkey, rng);
+}
+
+int algo_mceqd192cube::encrypt (const bvector&plain, bvector&cipher,
+                                sencode* pubkey, prng&rng)
+{
+	return fo_encrypt
+	       < mce_qd::pubkey,
+	       2816, 6912, 256,
+	       cube384hash,
+	       cube128hash,
+	       1574 >
+	       (plain, cipher, pubkey, rng);
+}
+
+int algo_mceqd256cube::encrypt (const bvector&plain, bvector&cipher,
+                                sencode* pubkey, prng&rng)
+{
+	return fo_encrypt
+	       < mce_qd::pubkey,
+	       4096, 8192, 256,
+	       cube512hash,
+	       cube128hash,
+	       1638 >
+	       (plain, cipher, pubkey, rng);
+}
+
+int algo_mceqd128cube::decrypt (const bvector&cipher, bvector&plain,
+                                sencode* privkey)
+{
+	return fo_decrypt
+	       < mce_qd::privkey,
+	       2048, 4096, 128,
+	       cube256hash,
+	       cube128hash,
+	       816 >
+	       (cipher, plain, privkey);
+}
+
+int algo_mceqd192cube::decrypt (const bvector&cipher, bvector&plain,
+                                sencode* privkey)
+{
+	return fo_decrypt
+	       < mce_qd::privkey,
+	       2816, 6912, 256,
+	       cube384hash,
+	       cube128hash,
+	       1574 >
+	       (cipher, plain, privkey);
+}
+
+int algo_mceqd256cube::decrypt (const bvector&cipher, bvector&plain,
+                                sencode* privkey)
+{
+	return fo_decrypt
+	       < mce_qd::privkey,
+	       4096, 8192, 256,
+	       cube512hash,
+	       cube128hash,
 	       1638 >
 	       (cipher, plain, privkey);
 }

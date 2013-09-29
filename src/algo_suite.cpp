@@ -33,5 +33,9 @@ void fill_algorithm_suite (algorithm_suite&s)
 	do_alg (algo_fmtseq128h20);
 	do_alg (algo_fmtseq192h20);
 	do_alg (algo_fmtseq256h20);
+
+	do_alg (algo_mceqd128cube);
+	do_alg (algo_mceqd192cube);
+	do_alg (algo_mceqd256cube);
 #undef do_alg
 }
