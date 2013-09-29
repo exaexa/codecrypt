@@ -30,8 +30,6 @@
 #define ROT(a,b,n) (((a) << (b)) | ((a) >> (n - b)))
 #define i16(cmd) for(i=0;i<16;++i) cmd;
 
-#include "iohelpers.h"
-
 template < int I, //initialization rounds
          int R, //rounds
          int B, //input block size, less or equal 128
@@ -94,8 +92,6 @@ public:
 	}
 
 	void get_hash (byte*out) {
-		std::cout << std::hex;
-		for (int i = 0; i < 32; ++i) out (X[i]);
 		for (int i = 0; i < H; ++i)
 			out[i] = (X[i / 4] >> ( (i % 4) * 8) ) & 0xff;
 	}
