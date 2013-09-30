@@ -29,7 +29,7 @@ void keyring::clear()
  * simple fingerprint.
  */
 
-#include <crypto++/sha.h>
+#include "cube_hash.h"
 #include <inttypes.h>
 
 std::string keyring::get_keyid (const std::string&pubkey)
@@ -37,12 +37,13 @@ std::string keyring::get_keyid (const std::string&pubkey)
 	static const char hex[] = "0123456789abcdef";
 
 	std::string r;
-	std::vector<byte> tmp;
 
-	tmp.resize (CryptoPP::SHA256::DIGESTSIZE, 0);
-	CryptoPP::SHA256().CalculateDigest ( & (tmp[0]),
-	                                     (const byte*) & (pubkey[0]),
-	                                     pubkey.length() );
+	cube256hash hf;
+	std::vector<byte> tmp =
+	    hf (std::vector<byte>
+	        (&pubkey[0],
+	         &pubkey[pubkey.length()]) );
+
 	r.resize (tmp.size() * 2, ' ');
 	for (size_t i = 0; i < tmp.size(); ++i) {
 		r[2 * i] = hex[ (tmp[i] >> 4) & 0xf];
@@ -93,8 +94,8 @@ std::string keyring::get_keyid (const std::string&pubkey)
  * Serialization stuff first.
  */
 
-#define KEYPAIRS_ID "CCR-KEYPAIRS"
-#define PUBKEYS_ID "CCR-PUBKEYS"
+#define KEYPAIRS_ID "CCR-KEYPAIRS-v2"
+#define PUBKEYS_ID "CCR-PUBKEYS-v2"
 
 void keyring::clear_keypairs (keypair_storage&pairs)
 {
