@@ -53,7 +53,7 @@
  * Then hash it as usual, FMTSeq it, publish the signature, enjoy.
  */
 
-#define min(a,b) ((a)<(b)?(a):(b))
+#define MIN(a,b) ((a)<(b)?(a):(b))
 
 static void msg_pad (const bvector&in, std::vector<byte>&out, size_t minsize)
 {
@@ -72,7 +72,7 @@ static void msg_pad (const bvector&in, std::vector<byte>&out, size_t minsize)
 	//stuff in as much seed material as possible
 	for (i = 0; i < (out.size() >> 8); ++i) {
 		std::vector<byte> sub (out.begin() + (i << 8),
-		                       min (out.end(),
+		                       MIN (out.end(),
 		                            out.begin() + ( (i + 1) << 8) ) );
 		g.load_key (sub);
 	}
