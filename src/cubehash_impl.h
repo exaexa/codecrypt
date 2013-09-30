@@ -60,31 +60,51 @@ class cubehash_state
 
 public:
 	inline void init() {
+		static bool iv_init = false;
+		static uint32_t IV[32];
+		int i;
+
+		if (iv_init) {
+			for (i = 0; i < 32; ++i) X[i] = IV[i];
+			return;
+		}
+
 		X[0] = H;
 		X[1] = B;
 		X[2] = R;
-		for (int i = 3; i < 32; ++i) X[i] = 0;
+		for (i = 3; i < 32; ++i) X[i] = 0;
 		rounds (I);
+
+		for (i = 0; i < 32; ++i) IV[i] = X[i];
+		iv_init = true;
 	}
 
 	void process_block (const byte*data) {
-		for (int i = 0; i < B; ++i)
+
+		int i;
+
+		for (i = 0; i + 4 <= B; i += 4)
+			X[i / 4] ^= * (uint32_t*) &data[i];
+
+		for (; i < B; ++i)
 			X[i / 4] ^= ( (uint32_t) (data[i]) ) << ( (i % 4) * 8);
 		rounds (R);
 	}
 
-	void process_final_incomplete_block (const byte*data, size_t n) {
+	void process_final_incomplete_block (const byte*data, int n) {
 
-		byte new_block[B];
-		uint i;
+		int i;
 
-		for (i = 0; i < n; ++i) new_block[i] = data[i];
+		for (i = 0; i + 4 <= n; i += 4)
+			X[i / 4] ^= * (uint32_t*) &data[i];
 
-		new_block[i++] = 0x80;
+		for (; i < n; ++i)
+			X[i / 4] ^= ( (uint32_t) (data[i]) ) << ( (i % 4) * 8);
 
-		while (i < B) new_block[i++] = 0;
+		i++;
+		X[i / 2] ^= ( (uint32_t) 0x80) << ( (i % 4) * 8);
 
-		process_block (new_block);
+		rounds (R);
 
 		//finalize
 		X[31] ^= 1;
