@@ -38,6 +38,8 @@ static int mceqd_create_keypair (sencode**pub, sencode**priv, prng&rng)
 	return 0;
 }
 
+#if HAVE_CRYPTOPP==1
+
 int algo_mceqd128::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
 	return mceqd_create_keypair<16, 7, 32, 4> (pub, priv, rng);
@@ -52,6 +54,8 @@ int algo_mceqd256::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
 	return mceqd_create_keypair<16, 8, 32, 4> (pub, priv, rng);
 }
+
+#endif //HAVE_CRYPTOPP==1
 
 int algo_mceqd128cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
 {
@@ -406,9 +410,10 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
  * Instances for actual encryption/descryption algorithms
  */
 
+#if HAVE_CRYPTOPP==1
+
 #include "sha_hash.h"
 #include "rmd_hash.h"
-#include "cube_hash.h"
 
 int algo_mceqd128::encrypt (const bvector&plain, bvector&cipher,
                             sencode* pubkey, prng&rng)
@@ -481,6 +486,10 @@ int algo_mceqd256::decrypt (const bvector&cipher, bvector&plain,
 	       1638 >
 	       (cipher, plain, privkey);
 }
+
+#endif //HAVE_CRYPTOPP==1
+
+#include "cube_hash.h"
 
 int algo_mceqd128cube::encrypt (const bvector&plain, bvector&cipher,
                                 sencode* pubkey, prng&rng)

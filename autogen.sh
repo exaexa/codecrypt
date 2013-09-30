@@ -28,7 +28,7 @@ echo "${NAME}_CPPFLAGS = -I\$(srcdir)/$i/ ${COMMON_CPPFLAGS}" >>$OUT
 echo "${NAME}_CFLAGS = ${COMMON_CFLAGS}" >>$OUT
 echo "${NAME}_CXXFLAGS = ${COMMON_CXXFLAGS}" >>$OUT
 echo "${NAME}_LDFLAGS = ${COMMON_LDFLAGS}" >>$OUT
-echo "${NAME}_LDADD = -lgmp -lcrypto++ ${COMMON_LDADD} " >>$OUT
+echo "${NAME}_LDADD = -lgmp @CRYPTOPP_LIBS@ ${COMMON_LDADD} " >>$OUT
 
 libtoolize --force && aclocal && autoconf && automake --add-missing
 

@@ -24,6 +24,8 @@
 void fill_algorithm_suite (algorithm_suite&s)
 {
 #define do_alg(x) static x var_##x ; var_##x.register_into_suite(s);
+
+#if HAVE_CRYPTOPP==1
 	do_alg (algo_mceqd128);
 	do_alg (algo_mceqd192);
 	do_alg (algo_mceqd256);
@@ -33,6 +35,7 @@ void fill_algorithm_suite (algorithm_suite&s)
 	do_alg (algo_fmtseq128h20);
 	do_alg (algo_fmtseq192h20);
 	do_alg (algo_fmtseq256h20);
+#endif //HAVE_CRYPTOPP==1
 
 	do_alg (algo_mceqd128cube);
 	do_alg (algo_mceqd192cube);

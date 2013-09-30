@@ -19,6 +19,8 @@
 #ifndef _ccr_sha_hash_h_
 #define _ccr_sha_hash_h_
 
+#if HAVE_CRYPTOPP==1
+
 #include "hash.h"
 
 #include <crypto++/sha.h>
@@ -73,5 +75,7 @@ public:
 		return r;
 	}
 };
+
+#endif //HAVE_CRYPTOPP==1
 
 #endif

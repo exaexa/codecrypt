@@ -18,10 +18,24 @@ AC_PROG_INSTALL
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR([Codecrypt requires gmp.h]))
 AC_CHECK_LIB(gmp, __gmpz_init, , AC_MSG_ERROR([Codecrypt requires libgmp]))
 
-#check for presence of Crypto++
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([crypto++/sha.h crypto++/tiger.h crypto++/ripemd.h], , AC_MSG_ERROR([Codecrypt requires Crypto++]))
-AC_LANG_POP([C++])
+#check whether to build with crypto++
+AC_ARG_WITH([cryptopp],
+	AC_HELP_STRING([--with-cryptopp],[Build algorithms that need Crypto++ support]),
+	[WITH_CRYPTOPP=$withval],
+	[WITH_CRYPTOPP=yes])
+
+#and check crypto++
+if test "$WITH_CRYPTOPP" = "yes"; then
+	
+	AC_LANG_PUSH([C++])
+	AC_CHECK_HEADERS([crypto++/sha.h crypto++/tiger.h crypto++/ripemd.h], , AC_MSG_ERROR([Codecrypt requires Crypto++]))
+	AC_LANG_POP([C++])
+
+	AC_DEFINE([HAVE_CRYPTOPP], [1])
+	AC_SUBST([CRYPTOPP_LIBS], [-lcryptopp])
+else
+	AC_DEFINE([HAVE_CRYPTOPP], [0])
+fi
 
 #check for standard functions
 AC_CHECK_FUNCS([memset mkdir], , AC_MSG_ERROR([Required function missing]))

@@ -19,9 +19,7 @@
 #include "algos_sig.h"
 
 #include "fmtseq.h"
-#include "sha_hash.h"
-#include "rmd_hash.h"
-#include "tiger_hash.h"
+#include "hash.h"
 #include "arcfour.h"
 
 /*
@@ -181,6 +179,12 @@ static int fmtseq_create_keypair (sencode**pub, sencode**priv, prng&rng)
 /*
  * actual instantiations
  */
+
+#if HAVE_CRYPTOPP==1
+
+#include "sha_hash.h"
+#include "rmd_hash.h"
+#include "tiger_hash.h"
 
 int algo_fmtseq128::sign (const bvector&msg,
                           bvector&sig,
@@ -344,6 +348,8 @@ int algo_fmtseq256h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
 	return fmtseq_create_keypair<sha256hash, 512, 4, 5>
 	       (pub, priv, rng);
 }
+
+#endif //HAVE_CRYPTOPP==1
 
 /*
  * CubeHash variants of everything above.

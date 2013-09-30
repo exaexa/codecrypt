@@ -21,6 +21,8 @@
 
 #include "algorithm.h"
 
+#if HAVE_CRYPTOPP==1
+
 /*
  * SHA-based variants
  */
@@ -90,6 +92,8 @@ public:
 	             sencode* privkey);
 	int create_keypair (sencode**pub, sencode**priv, prng&rng);
 };
+
+#endif //HAVE_CRYPTOPP==1
 
 /*
  * Cubehash-based variants
