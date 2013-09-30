@@ -593,8 +593,8 @@ bool fmtseq::pubkey::unserialize (sencode*s)
 	return true;
 }
 
-#define ENC_MSG_IDENT "CCR-ENCRYPTED-MSG"
-#define SIG_MSG_IDENT "CCR-SIGNED-MSG"
+#define ENC_MSG_IDENT "CCR-ENCRYPTED-MSG-v2"
+#define SIG_MSG_IDENT "CCR-SIGNED-MSG-v2"
 
 sencode* encrypted_msg::serialize()
 {
