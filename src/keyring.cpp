@@ -94,8 +94,8 @@ std::string keyring::get_keyid (const std::string&pubkey)
  * Serialization stuff first.
  */
 
-#define KEYPAIRS_ID "CCR-KEYPAIRS-v2"
-#define PUBKEYS_ID "CCR-PUBKEYS-v2"
+#define KEYPAIRS_ID "CCR-KEYPAIRS"
+#define PUBKEYS_ID "CCR-PUBKEYS"
 
 void keyring::clear_keypairs (keypair_storage&pairs)
 {
