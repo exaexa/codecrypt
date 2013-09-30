@@ -1,6 +1,11 @@
 
 Codecrypt ChangeLog
 
+- add Cubehash, spawn all algorithms using only Cubehash
+- make crypto++ dependency optional
+- cubehash256 is now used for KeyIDs instead of SHA256
+- bump message and keyring version strings
+
 1.3.1
 
 - get rid of bundled hash sources and licensing problems
