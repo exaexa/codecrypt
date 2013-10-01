@@ -1,6 +1,8 @@
 
 Codecrypt ChangeLog
 
+1.4
+
 - add Cubehash, spawn all algorithms using only Cubehash
 - make crypto++ dependency optional
 - cubehash256 is now used for KeyIDs instead of SHA256
