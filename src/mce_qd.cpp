@@ -120,13 +120,6 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 				break;
 			}
 
-			//as we are having z's in used, this is not necessary.
-			//TODO verify, then TODO maybe delete.
-			if (g.eval (support[i], fld) == 0) {
-				consistent = false;
-				break;
-			}
-
 			used.insert (support[i]);
 		}
 		if (!consistent) continue; //retry
