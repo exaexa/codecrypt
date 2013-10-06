@@ -201,7 +201,10 @@ static bool message_unpad (std::vector<byte> in, bvector&out,
 	uint in_end = in.size() - padsize_end - 1;
 	in.resize (in_end);
 
-	//check if padding was really okay (TODO is it necessary?)
+	/* check if padding was really okay. Note that it is not necessary
+	 * since the padded message is "already checked" for mangling by F-O
+	 * padding. This is only a check that sender uses the same valid
+	 * padding method as we do. */
 	byte check_begin, check_end;
 	msg_pad_length (in, check_begin, check_end, pad_hash);
 	if (padsize_begin != check_begin || padsize_end != check_end)
