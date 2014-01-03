@@ -42,7 +42,7 @@ margin. Let's play with random data!
 	ccr -ina < friends_pubkeys.asc
 
 	#import Frank's key and rename it
-	ccr -i -R friends_pubkeys.asc --name "Friendly Frank"
+	ccr -ia -R friends_pubkeys.asc --name "Friendly Frank"
 
 	#send a nice message to Frank (you can also specify him by @12345 keyid)
 	ccr -se -r Frank < Document.doc > Message_to_frank.ccr
