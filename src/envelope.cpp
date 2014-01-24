@@ -216,3 +216,8 @@ std::string envelope_format (const std::string&type,
 		return res;
 	}
 }
+
+bool envelope_lookalike (const std::string&data)
+{
+	return data.find ("------ccr begin ") != data.npos;
+}

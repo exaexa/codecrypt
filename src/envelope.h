@@ -48,4 +48,10 @@ std::string envelope_format (const std::string&type,
                              const std::vector<std::string>& parts,
                              prng&rng);
 
+/*
+ * guesses whether input looks like an envelope
+ */
+bool envelope_lookalike (const std::string&);
+
+
 #endif

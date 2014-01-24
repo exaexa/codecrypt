@@ -240,6 +240,9 @@ int action_decrypt (bool armor,
 	sencode*M = sencode_decode (data);
 	if (!M) {
 		err ("error: could not parse input sencode");
+		if (!armor && envelope_lookalike (data) )
+			err ("notice: input looks ascii-armored, "
+			     "try using the armor option");
 		return 1;
 	}
 
@@ -599,6 +602,9 @@ int action_verify (bool armor, const std::string&detach,
 		sencode*M = sencode_decode (data);
 		if (!M) {
 			err ("error: could not parse input sencode");
+			if (!armor && envelope_lookalike (data) )
+				err ("notice: input looks ascii-armored, "
+				     "try using the armor option");
 			return 1;
 		}
 
@@ -821,6 +827,9 @@ int action_decrypt_verify (bool armor, bool yes,
 	sencode*M = sencode_decode (data);
 	if (!M) {
 		err ("error: could not parse input sencode");
+		if (!armor && envelope_lookalike (data) )
+			err ("notice: input looks ascii-armored, "
+			     "try using the armor option");
 		return 1;
 	}
 
@@ -1033,6 +1042,9 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 	sencode*S = sencode_decode (data);
 	if (!S) {
 		err ("error: could not parse input sencode");
+		if (!armor && envelope_lookalike (data) )
+			err ("notice: input looks ascii-armored, "
+			     "try using the armor option");
 		return 1;
 	}
 
@@ -1301,6 +1313,9 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 	sencode*S = sencode_decode (data);
 	if (!S) {
 		err ("error: could not parse input sencode");
+		if (!armor && envelope_lookalike (data) )
+			err ("notice: input looks ascii-armored, "
+			     "try using the armor option");
 		return 1;
 	}
 
