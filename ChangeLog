@@ -1,6 +1,9 @@
 
 Codecrypt ChangeLog
 
+- compile on Windows
+- cleanup some code, clarify&be helpful on the `-a' option
+
 1.4
 
 - add Cubehash, spawn all algorithms using only Cubehash
