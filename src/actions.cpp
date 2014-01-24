@@ -1178,12 +1178,14 @@ int action_delete (bool yes, const std::string & filter, keyring & KR)
 	PREPARE_KEYRING;
 
 	int kc = 0;
+	std::list<std::string> todel;
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end();
-	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.name, i->first) )
+	     i != e; ++i)
+		if (keyspec_matches (filter, i->second.name, i->first) ) {
 			++kc;
-	}
+			todel.push_back (i->first);
+		}
 	if (!kc) {
 		err ("no such key");
 		return 0;
@@ -1196,14 +1198,6 @@ int action_delete (bool yes, const std::string & filter, keyring & KR)
 	}
 
 	//all clear, delete them
-	std::list<std::string> todel;
-	for (keyring::pubkey_storage::iterator
-	     i = KR.pubs.begin(), e = KR.pubs.end();
-	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.name, i->first) )
-			todel.push_back (i->first);
-	}
-
 	for (std::list<std::string>::iterator
 	     i = todel.begin(), e = todel.end(); i != e; ++i)
 		KR.remove_pubkey (*i);
@@ -1440,12 +1434,15 @@ int action_delete_sec (bool yes, const std::string & filter, keyring & KR)
 	PREPARE_KEYRING;
 
 	int kc = 0;
+	std::list<std::string> todel;
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
-	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.pub.name, i->first) )
+	     i != e; ++i)
+		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
 			++kc;
-	}
+			todel.push_back (i->first);
+		}
+
 	if (!kc) {
 		err ("error: no such key");
 		return 0;
@@ -1458,14 +1455,6 @@ int action_delete_sec (bool yes, const std::string & filter, keyring & KR)
 	}
 
 	//all clear, delete them
-	std::list<std::string> todel;
-	for (keyring::keypair_storage::iterator
-	     i = KR.pairs.begin(), e = KR.pairs.end();
-	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.pub.name, i->first) )
-			todel.push_back (i->first);
-	}
-
 	for (std::list<std::string>::iterator
 	     i = todel.begin(), e = todel.end(); i != e; ++i)
 		KR.remove_keypair (*i);
