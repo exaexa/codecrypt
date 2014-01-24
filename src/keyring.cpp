@@ -256,6 +256,19 @@ sencode* keyring::serialize_pubkeys (const pubkey_storage&pubs)
 /*
  * OS/disk functions
  */
+
+#ifdef WIN32
+#define SECRETS_FILENAME "\\secrets"
+#define PUBKEYS_FILENAME "\\pubkeys"
+#define LOCK_FILENAME "\\lock"
+#define CCR_CONFDIR "\\.ccr"
+#else
+#define SECRETS_FILENAME "/secrets"
+#define PUBKEYS_FILENAME "/pubkeys"
+#define LOCK_FILENAME "/lock"
+#define CCR_CONFDIR "/.ccr"
+#endif
+
 #include <stdlib.h>
 
 static std::string get_user_dir()
@@ -263,8 +276,8 @@ static std::string get_user_dir()
 	const char*tmp = getenv ("CCR_DIR");
 	if (tmp) return std::string (tmp);
 	const char*home = getenv ("HOME");
-	if (home) return std::string (home) + "/.ccr";
-	return "./.ccr"; //fallback for absolutely desolate systems
+	if (home) return std::string (home) + CCR_CONFDIR;
+	return "." CCR_CONFDIR; //fallback for absolutely desolate systems
 }
 
 #include <sys/stat.h>
@@ -275,11 +288,6 @@ static std::string get_user_dir()
 #include <errno.h>
 
 #include <fstream>
-
-#define SECRETS_FILENAME "/secrets"
-#define PUBKEYS_FILENAME "/pubkeys"
-#define LOCK_FILENAME "/lock"
-
 
 /*
  * prepares the user directory with empty files and similar stuff.
@@ -322,7 +330,11 @@ static bool ensure_empty_sencode_file (const std::string&fn,
 static bool prepare_user_dir (const std::string&dir)
 {
 	//try to create the directory, continue if it's already there
+#ifdef WIN32
+	if (mkdir (dir.c_str() ) ) {
+#else
 	if (mkdir (dir.c_str(), 0777) ) {
+#endif
 		if (errno != EEXIST) return false;
 	}
 
@@ -419,11 +431,15 @@ bool keyring::open()
 	lockfd = creat (fn.c_str(), S_IRUSR | S_IWUSR);
 	if (lockfd < 0) return false;
 
+#ifdef WIN32
+	//no locking on windows yet
+#else
 	if (flock (lockfd, LOCK_EX) ) {
 		::close (lockfd);
 		lockfd = -1;
 		return false;
 	}
+#endif
 
 	//load the public keys
 	fn = dir + PUBKEYS_FILENAME;
@@ -470,7 +486,12 @@ bool keyring::close()
 	std::string fn = get_user_dir() + LOCK_FILENAME;
 	unlink (fn.c_str() );
 
+#ifdef WIN32
+	//no locking on windows yet
+#else
 	flock (lockfd, LOCK_UN);
+#endif
+
 	::close (lockfd);
 
 	lockfd = -1;
