@@ -93,6 +93,45 @@ static void store_desired (privkey&priv, uint did,
 	priv.desired[did][i.pos + (1 << depth) - 2] = i.item;
 }
 
+static bool check_privkey (privkey&priv, hash_func&hf)
+{
+	size_t i, j;
+	uint ts = (1 << (priv.h + 1) ) - 2;
+
+	/*
+	 * check the content of privkey caches to prevent reading/writing
+	 * unallocated memory.
+	 */
+
+	//exist tree count is always L
+	if (priv.exist.size() != priv.l) return false;
+
+	//exist tree sizes
+	for (i = 0; i < priv.exist.size(); ++i) {
+		if (priv.exist[i].size() != ts) return false;
+
+		//exist tree hash sizes must be OK
+		for (j = 0; j < ts; ++j)
+			if (priv.exist[i][j].size()
+			    != hf.size() )
+				return false;
+	}
+
+	//check desired stuff
+	if (priv.desired_stack.size() < priv.desired.size() ) return false;
+	if (priv.desired_progress.size() < priv.desired.size() ) return false;
+
+	for (i = 0; i < priv.desired.size(); ++i) {
+		if (priv.desired[i].size() != ts) return false;
+		for (j = 0; j < ts; ++j)
+			if (priv.desired[i][j].size()
+			    != hf.size() )
+				return false;
+	}
+
+	return true;
+}
+
 static void update_privkey (privkey&priv, hash_func&hf)
 {
 	uint i, j;
@@ -328,6 +367,11 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf)
 	if (!sigs_remaining() ) {
 		err ("fmtseq notice: no signatures left");
 		return 2;
+	}
+
+	if (!check_privkey (*this, hf) ) {
+		err ("fmtseq: mangled privkey");
+		return 3;
 	}
 
 	uint commitments = fmtseq_commitments (hs);

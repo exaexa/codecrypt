@@ -552,7 +552,8 @@ bool fmtseq::privkey::unserialize (sencode*s)
 		desired_progress[i] = I->i;
 	}
 
-	//TODO check the sizes of everything
+	//checking the sizes and correctness of everything is a job of FMTSeq
+	//implementation that has some insight into how it works :]
 	return true;
 }
 

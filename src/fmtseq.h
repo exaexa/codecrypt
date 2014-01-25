@@ -105,7 +105,6 @@ public:
 		return ( (H + fmtseq_commitments (hs) ) * hf.size() * 8) + H;
 	}
 
-
 	sencode* serialize();
 	bool unserialize (sencode*);
 };
