@@ -1,6 +1,8 @@
 
 Codecrypt ChangeLog
 
+1.4.1
+
 - compile on windows
 - cleanup some code, clarify&be helpful on the `-a' option
 - prevent possible memory corruption on FMTSeq mangled privkeys
