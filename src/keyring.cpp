@@ -391,6 +391,40 @@ static bool file_put_sencode (const std::string&fn, sencode*in)
 	return true;
 }
 
+#ifndef WIN32
+
+#include <signal.h>
+
+static void ignore_term_signals (bool ignore)
+{
+	int signums[] = {
+		SIGHUP,
+		SIGINT,
+		SIGQUIT,
+		SIGPIPE,
+		SIGTERM,
+		SIGUSR1,
+		SIGUSR2,
+		0
+	};
+
+	struct sigaction sa;
+
+	sa.sa_handler = ignore ? SIG_IGN : SIG_DFL;
+	sa.sa_flags = 0;
+
+	for (int*sig = signums; *sig; ++sig) {
+		sigaction (*sig, &sa, NULL);
+	}
+}
+
+#else
+static void ignore_term_signals (bool ignore)
+{
+	//no kill resistance on windows yet
+}
+#endif
+
 bool keyring::save()
 {
 	std::string dir, fn;
@@ -399,6 +433,8 @@ bool keyring::save()
 
 	dir = get_user_dir();
 
+	ignore_term_signals (true);
+
 	/*
 	 * pubkeys
 	 */
@@ -406,7 +442,7 @@ bool keyring::save()
 	fn = dir + PUBKEYS_FILENAME;
 	res = file_put_sencode (fn, S);
 	sencode_destroy (S);
-	if (!res) return false;
+	if (!res) goto failure;
 
 	/*
 	 * keypairs
@@ -415,9 +451,14 @@ bool keyring::save()
 	fn = dir + SECRETS_FILENAME;
 	res = file_put_sencode (fn, S);
 	sencode_destroy (S);
-	if (!res) return false;
+	if (!res) goto failure;
 
+	ignore_term_signals (false);
 	return true;
+
+failure:
+	ignore_term_signals (false);
+	return false;
 }
 
 bool keyring::open()
