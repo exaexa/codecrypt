@@ -430,7 +430,16 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf)
 	//move to the next signature and update the cache
 	update_privkey (*this, hf);
 
-	err ("fmtseq notice: " << sigs_remaining() << " signatures remaining");
+	//start moaning at around 1% of remaining signatures
+	if (!sigs_remaining() )
+		err ("fmtseq notice: no signatures left, "
+		     "you should discard this key");
+	else if (sigs_remaining() <= (uint) (1 << (h * l) ) / 100)
+		err ("fmtseq notice: only " << sigs_remaining()
+		     << " signatures left, you should certify new keys");
+	else
+		err ("fmtseq notice: " << sigs_remaining()
+		     << " signatures remaining");
 
 	return 0;
 }
