@@ -3,6 +3,9 @@ Codecrypt ChangeLog
 
 - compile on windows
 - cleanup some code, clarify&be helpful on the `-a' option
+- prevent possible memory corruption on FMTSeq mangled privkeys
+- prevent keyring corruption by interrupted write
+- make keyring backups and don't do unnecessary writes
 
 1.4
 
