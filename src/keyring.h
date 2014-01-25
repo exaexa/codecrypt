@@ -71,6 +71,8 @@ public:
 	pubkey_storage pubs;
 	keypair_storage pairs;
 
+	std::string backup_pubs, backup_pairs;
+
 	keyring() {
 		lockfd = -1;
 	}

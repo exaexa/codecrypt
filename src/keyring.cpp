@@ -269,6 +269,8 @@ sencode* keyring::serialize_pubkeys (const pubkey_storage&pubs)
 #define CCR_CONFDIR "/.ccr"
 #endif
 
+#define BAK_SUFFIX "~"
+
 #include <stdlib.h>
 
 static std::string get_user_dir()
@@ -295,6 +297,7 @@ static std::string get_user_dir()
  * We try to setup file permissions properly here and don't care about it later
  * (so that the user can override the default value by easy unixy way)
  */
+
 static bool ensure_empty_sencode_file (const std::string&fn,
                                        const std::string&ident)
 {
@@ -347,14 +350,19 @@ static bool prepare_user_dir (const std::string&dir)
 	if (!S_ISDIR (st.st_mode) )
 		return false;
 
-	//finally create empty key storages, if not present
+	//finally create empty key storages and backups, if not present
 	return ensure_empty_sencode_file (dir + PUBKEYS_FILENAME,
 	                                  PUBKEYS_ID) &&
+	       ensure_empty_sencode_file (dir + PUBKEYS_FILENAME BAK_SUFFIX,
+	                                  PUBKEYS_ID) &&
 	       ensure_empty_sencode_file (dir + SECRETS_FILENAME,
+	                                  KEYPAIRS_ID) &&
+	       ensure_empty_sencode_file (dir + SECRETS_FILENAME BAK_SUFFIX,
 	                                  KEYPAIRS_ID);
 }
 
-static sencode* file_get_sencode (const std::string&fn)
+static sencode* file_get_sencode (const std::string&fn,
+                                  std::string&data)
 {
 	//check whether it is a file first
 	struct stat st;
@@ -365,7 +373,6 @@ static sencode* file_get_sencode (const std::string&fn)
 		return NULL;
 
 	//not we got the size, prepare buffer space
-	std::string data;
 	data.resize (st.st_size, 0);
 
 	std::ifstream in (fn.c_str(), std::ios::in | std::ios::binary);
@@ -377,10 +384,14 @@ static sencode* file_get_sencode (const std::string&fn)
 	return sencode_decode (data);
 }
 
-static bool file_put_sencode (const std::string&fn, sencode*in)
+static sencode* file_get_sencode (const std::string&fn)
 {
-	std::string data = in->encode();
+	std::string data;
+	return file_get_sencode (fn, data);
+}
 
+static bool file_put_string (const std::string&fn, const std::string&data)
+{
 	std::ofstream out (fn.c_str(), std::ios::out | std::ios::binary);
 	if (!out) return false;
 	out.write (data.c_str(), data.length() );
@@ -389,6 +400,17 @@ static bool file_put_sencode (const std::string&fn, sencode*in)
 	if (!out.good() ) return false;
 
 	return true;
+}
+
+static bool file_put_sencode_with_backup (const std::string&fn, sencode*in,
+                                          const std::string&backup_fn,
+                                          const std::string&backup_data)
+{
+	std::string data = in->encode();
+	if (data == backup_data) return true; //nothing to do
+
+	return file_put_string (fn, data) &&
+	       file_put_string (backup_fn, backup_data);
 }
 
 #ifndef WIN32
@@ -427,7 +449,7 @@ static void ignore_term_signals (bool ignore)
 
 bool keyring::save()
 {
-	std::string dir, fn;
+	std::string dir, fn, bfn;
 	sencode*S;
 	bool res;
 
@@ -440,7 +462,8 @@ bool keyring::save()
 	 */
 	S = serialize_pubkeys (pubs);
 	fn = dir + PUBKEYS_FILENAME;
-	res = file_put_sencode (fn, S);
+	bfn = fn + BAK_SUFFIX;
+	res = file_put_sencode_with_backup (fn, S, bfn, backup_pubs);
 	sencode_destroy (S);
 	if (!res) goto failure;
 
@@ -449,7 +472,8 @@ bool keyring::save()
 	 */
 	S = serialize_keypairs (pairs);
 	fn = dir + SECRETS_FILENAME;
-	res = file_put_sencode (fn, S);
+	bfn = fn + BAK_SUFFIX;
+	res = file_put_sencode_with_backup (fn, S, bfn, backup_pairs);
 	sencode_destroy (S);
 	if (!res) goto failure;
 
@@ -488,7 +512,7 @@ bool keyring::open()
 	sencode *pubkeys, *keypairs;
 	bool res;
 
-	pubkeys = file_get_sencode (fn);
+	pubkeys = file_get_sencode (fn, backup_pubs);
 	if (!pubkeys) goto close_and_fail;
 
 	res = parse_pubkeys (pubkeys, pubs);
@@ -498,7 +522,7 @@ bool keyring::open()
 	//load keypairs
 	fn = dir + SECRETS_FILENAME;
 
-	keypairs = file_get_sencode (fn);
+	keypairs = file_get_sencode (fn, backup_pairs);
 	if (!keypairs) goto close_and_fail;
 
 	res = parse_keypairs (keypairs, pairs);
