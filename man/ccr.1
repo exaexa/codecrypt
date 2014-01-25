@@ -1,4 +1,4 @@
-.TH CCR 1 2013-05-24 "ccr" "Codecrypt"
+.TH CCR 1 2014-01-25 "ccr" "Codecrypt"
 .SH NAME
 .B ccr
 \- The post-quantum cryptography encryption and signing tool
@@ -194,6 +194,9 @@ Codecrypt stores user data in a directory specified by environment variable
 CCR_DIR, which defaults to "$HOME/.ccr". It contains the files "pubkeys" and
 "secrets" which are sencode keyring representations of user's public and
 private keyring.
+
+Backups of user data (i.e. for each file the last state that was loaded
+successfully) are, on each change, written to files "pubkeys~" and "secrets~".
 
 When Codecrypt is running, it locks the .ccr directory using a lockfile "lock"
 and applying flock(2) to it.
