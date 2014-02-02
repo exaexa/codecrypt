@@ -32,11 +32,11 @@ bool algorithm_name_matches (const std::string& search,
 	return true;
 }
 
-bool matches_icase (string name, string search)
+bool matches_icase (string name, string s)
 {
-	for_each (name.begin(), name.end(), ::tolower);
-	for_each (search.begin(), search.end(), ::tolower);
-	return name.find (search) != name.npos;
+	transform (name.begin(), name.end(), name.begin(), ::tolower);
+	transform (s.begin(), s.end(), s.begin(), ::tolower);
+	return name.find (s) != name.npos;
 }
 
 bool keyspec_matches (const std::string&search,
