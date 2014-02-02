@@ -18,7 +18,9 @@
 
 #include "str_match.h"
 
-#include <ctype.h> //for tolower()
+#include <algorithm>
+#include <cctype> //for tolower()
+using namespace std;
 
 bool algorithm_name_matches (const std::string& search,
                              const std::string&name)
@@ -28,6 +30,13 @@ bool algorithm_name_matches (const std::string& search,
 	for (size_t i = 0; i < search.length(); ++i)
 		if (tolower (search[i]) != tolower (name[i]) ) return false;
 	return true;
+}
+
+bool matches_icase (string name, string search)
+{
+	for_each (name.begin(), name.end(), ::tolower);
+	for_each (search.begin(), search.end(), ::tolower);
+	return name.find (search) != name.npos;
 }
 
 bool keyspec_matches (const std::string&search,
@@ -43,6 +52,5 @@ bool keyspec_matches (const std::string&search,
 		return true;
 	}
 
-	//TODO maybe get case-insensitive
-	return name.find (search) != name.npos;
+	return matches_icase (name, search);
 }
