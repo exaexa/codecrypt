@@ -384,12 +384,6 @@ static sencode* file_get_sencode (const std::string&fn,
 	return sencode_decode (data);
 }
 
-static sencode* file_get_sencode (const std::string&fn)
-{
-	std::string data;
-	return file_get_sencode (fn, data);
-}
-
 static bool file_put_string (const std::string&fn, const std::string&data)
 {
 	std::ofstream out (fn.c_str(), std::ios::out | std::ios::binary);
