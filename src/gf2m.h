@@ -61,6 +61,18 @@ public:
 		return antilog[ (n - 1 - log[a]) % (n - 1)];
 	}
 
+	inline uint inv_square (uint a) {
+		if (!a) return 0;
+		return antilog[ (2 * (n - 1 - log[a]) )
+		                % (n - 1)];
+	}
+
+	inline uint div (uint a, uint b) {
+		if (! (a && b) ) return 0;
+		return antilog[ (n - 1 - log[b] + log[a])
+		                % (n - 1)];
+	}
+
 	inline uint sq_root (uint a) {
 		if (!a) return 0;
 		uint t = log[a];

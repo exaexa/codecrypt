@@ -378,7 +378,7 @@ void polynomial::ext_euclid (polynomial&a_out, polynomial&b_out,
 		A.swap (a);
 		B.swap (b);
 		while ( (j = A.degree() - a.degree() ) >= 0) {
-			h = fld.mult (A.head(), fld.inv (a.head() ) );
+			h = fld.div (A.head(), a.head() );
 			tmp = a;
 			tmp.shift (j);
 			A.add_mult (tmp, h, fld);

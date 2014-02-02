@@ -411,8 +411,8 @@ int privkey::decrypt (const bvector & in, bvector & out, bvector & errors)
 	synd.clear();
 	synd.resize (h_size, 0);
 	for (i = 0; i < cipher_size(); ++i) if (in[i]) {
-			tmp = fld.inv (g.eval (permuted_support[i], fld) );
-			tmp = fld.mult (tmp, tmp); //g(Li)^{-2}
+			tmp = fld.inv_square //g(Li)^{-2}
+			      (g.eval (permuted_support[i], fld) );
 			synd[0] = fld.add (synd[0], tmp);
 			for (j = 1; j < h_size; ++j) {
 				tmp = fld.mult (tmp, permuted_support[i]);
