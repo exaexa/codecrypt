@@ -44,10 +44,14 @@ public:
 			item (i) = i;
 	}
 
-	//TODO permute_inv is easy, do it everywhere
 	template<class A, class R> void permute (const A&a, R&r) const {
 		r.resize (a.size() );
 		for (uint i = 0; i < size(); ++i) r[item (i) ] = a[i];
+	}
+
+	template<class A, class R> void permute_inv (const A&a, R&r) const {
+		r.resize (a.size() );
+		for (uint i = 0; i < size(); ++i) r[i] = a[item (i)];
 	}
 
 	void permute_rows (const matrix&, matrix&) const;

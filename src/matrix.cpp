@@ -174,7 +174,7 @@ void matrix::generate_random_with_inversion (uint size, matrix&inversion, prng&r
 	}
 	*this = lt;
 	this->mult (ut);
-	ut.compute_inversion (inversion,	true, false);
+	ut.compute_inversion (inversion, true, false);
 	lt.compute_inversion (ut, false, true);
 	inversion.mult (ut);
 }

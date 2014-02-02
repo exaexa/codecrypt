@@ -42,14 +42,12 @@ int mce::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
 	S.generate_random_with_inversion (generator.height(), priv.Sinv, rng);
 
 	//scramble permutation
-	permutation P;
-	P.generate_random (generator.width(), rng);
-	P.compute_inversion (priv.Pinv);
+	priv.Pinv.generate_random (generator.width(), rng);
 
 	//public key
 	pub.t = t;
 	S.mult (generator);
-	P.permute (S, pub.G);
+	priv.Pinv.permute_inv (S, pub.G);
 
 	return 0;
 }
@@ -96,11 +94,8 @@ int privkey::decrypt (const bvector&in, bvector&out, bvector&errors)
 	Pinv.permute (in, not_permuted);
 
 	//prepare for decoding
-	permutation hpermInv; //TODO pre-invert it in prepare()
-	hperm.compute_inversion (hpermInv);
-
 	bvector canonical, syndrome;
-	hpermInv.permute (not_permuted, canonical);
+	hperm.permute_inv (not_permuted, canonical);
 	h.mult_vec_right (canonical, syndrome);
 
 	//decode
@@ -140,7 +135,6 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 	uint i, s, t;
 	bvector p, e, synd, synd_orig, e2;
 	std::vector<uint> epos;
-	permutation hpermInv;
 	polynomial loc, Synd;
 
 	s = hash_size();
@@ -149,8 +143,7 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 
 	//first, prepare the codeword to canonical form for decoding
 	Pinv.permute (in, e2);
-	hperm.compute_inversion (hpermInv);
-	hpermInv.permute (e2, p);
+	hperm.permute_inv (e2, p);
 
 	//prepare extra error vector
 	e.resize (s, 0);
