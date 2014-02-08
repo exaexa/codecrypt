@@ -82,6 +82,24 @@ public:
 
 	sencode* serialize();
 	bool unserialize (sencode*);
+
+	//optimized part of creating alternant check matrix
+	template<class iter>
+	inline void add_mults (uint base, uint step, iter begin, iter end) {
+		if (begin == end || base == 0) return;
+
+		*begin = add (*begin, base);
+		++begin;
+
+		if (begin == end || step == 0) return;
+
+		uint lb = log[base], ls = log[step];
+
+		for (; begin != end; ++begin) {
+			lb = (lb + ls) % (n - 1);
+			*begin = add (*begin, antilog[lb]);
+		}
+	}
 };
 
 #endif

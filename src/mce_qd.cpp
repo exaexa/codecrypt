@@ -413,11 +413,8 @@ int privkey::decrypt (const bvector & in, bvector & out, bvector & errors)
 	for (i = 0; i < cipher_size(); ++i) if (in[i]) {
 			tmp = fld.inv_square //g(Li)^{-2}
 			      (g.eval (permuted_support[i], fld) );
-			synd[0] = fld.add (synd[0], tmp);
-			for (j = 1; j < h_size; ++j) {
-				tmp = fld.mult (tmp, permuted_support[i]);
-				synd[j] = fld.add (synd[j], tmp);
-			}
+			fld.add_mults (tmp, permuted_support[i],
+			               synd.begin(), synd.end() );
 		}
 
 	//decoding
