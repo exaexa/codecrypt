@@ -401,7 +401,7 @@ int privkey::decrypt (const bvector & in, bvector & out, bvector & errors)
 {
 	if (in.size() != cipher_size() ) return 2;
 	polynomial synd;
-	uint i, j, tmp;
+	uint i, tmp;
 
 	/*
 	 * compute the syndrome from alternant check matrix
