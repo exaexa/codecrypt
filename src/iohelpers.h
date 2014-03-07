@@ -27,6 +27,8 @@
 #include <fstream>
 #include <string>
 
+#include "types.h"
+
 #define out(x) std::cout << x << std::endl
 #define out_bin(x) std::cout << x
 #define outeol std::cout << std::endl
@@ -41,6 +43,22 @@
 bool redirect_cin (const std::string& fn);
 bool redirect_cout (const std::string& fn);
 
-bool read_all_input (std::string&, std::istream&in = std::cin);
+#define readall_bufsize 8192
+template<class output_seq>
+bool read_all_input (output_seq&data, std::istream&input = std::cin)
+{
+	data.clear();
+	char buf[readall_bufsize];
+	for (;;) {
+		input.read (buf, readall_bufsize);
+		if (input) data.insert (data.end(), buf,
+			                        buf + readall_bufsize);
+		else if (input.eof() ) {
+			data.insert (data.end(), buf,
+			             buf + input.gcount() );
+			return true;
+		} else return false;
+	}
+}
 
 #endif

@@ -36,17 +36,3 @@ bool redirect_cout (const std::string& fn)
 	return true;
 }
 
-#define bufsize 1024
-bool read_all_input (std::string&data, std::istream&input)
-{
-	data.clear();
-	char buf[bufsize];
-	for (;;) {
-		input.read (buf, bufsize);
-		if (input) data.append (buf, bufsize);
-		else if (input.eof() ) {
-			data.append (buf, input.gcount() );
-			return true;
-		} else return false;
-	}
-}
