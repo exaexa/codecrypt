@@ -317,7 +317,8 @@ int action_decrypt (bool armor,
 
 
 int action_sign (const std::string&user, bool armor, const std::string&detach,
-                 bool clearsign, keyring&KR, algorithm_suite&AS)
+                 bool clearsign, const std::string&symmetric,
+                 keyring&KR, algorithm_suite&AS)
 {
 
 	/*
@@ -452,7 +453,7 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 
 
 int action_verify (bool armor, const std::string&detach,
-                   bool clearsign, bool yes,
+                   bool clearsign, bool yes, const std::string&symmetric,
                    keyring&KR, algorithm_suite&AS)
 {
 	/*

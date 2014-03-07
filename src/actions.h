@@ -40,10 +40,11 @@ int action_decrypt (bool armor,
                     keyring&, algorithm_suite&);
 
 int action_sign (const std::string&user, bool armor, const std::string&detach,
-                 bool clearsign, keyring&, algorithm_suite&);
+                 bool clearsign, const std::string&symmetric,
+                 keyring&, algorithm_suite&);
 
 int action_verify (bool armor, const std::string&detach,
-                   bool clearsign, bool yes,
+                   bool clearsign, bool yes, const std::string&symmetric,
                    keyring&, algorithm_suite&);
 
 int action_sign_encrypt (const std::string&user, const std::string&recipient,

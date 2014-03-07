@@ -56,6 +56,9 @@ void print_help (char*pname)
 	out (" -u, --user         use specified secret key");
 	out (" -C, --clearsign    work with cleartext signatures");
 	out (" -b, --detach-sign  specify file with detached signature");
+	out (" -S, --symmetric    enable symmetric mode of operation where encryption");
+	out ("                    is done using symmetric cipher and signatures are");
+	out ("                    hashes, and specify a filename of symmetric key or hashes");
 	outeol;
 	out ("Key management:");
 	out (" -g, --gen-key        generate specified keypair, `help' lists algorithms");
@@ -119,7 +122,8 @@ int main (int argc, char**argv)
 	    input, output,
 	    name, filter,
 	    action_param,
-	    detach_sign;
+	    detach_sign,
+	    symmetric;
 
 	char action = 0;
 
@@ -170,6 +174,7 @@ int main (int argc, char**argv)
 			//action options
 			{"clearsign",	0,	0,	'C' },
 			{"detach-sign",	1,	0,	'b' },
+			{"symmetric",	1,	0,	'S' },
 
 			{0,		0,	0,	0 }
 		};
@@ -177,7 +182,7 @@ int main (int argc, char**argv)
 		option_index = -1;
 		c = getopt_long
 		    (argc, argv,
-		     "hVTayr:u:R:o:kipx:m:KIPX:M:g:N:F:fnsvedCb:",
+		     "hVTayr:u:R:o:kipx:m:KIPX:M:g:N:F:fnsvedCb:S:",
 		     long_opts, &option_index);
 		if (c == -1) break;
 
@@ -261,6 +266,8 @@ int main (int argc, char**argv)
 			read_flag ('C', opt_clearsign)
 			read_single_opt ('b', detach_sign,
 			                 "specify only one detach-sign file")
+			read_single_opt ('S', symmetric,
+			                 "specify only one symmetric parameter")
 
 #undef read_flag
 #undef read_single_opt
@@ -324,6 +331,16 @@ int main (int argc, char**argv)
 		goto exit;
 	}
 
+	if (symmetric.length() ) switch (action) {
+		case 's':
+		case 'v':
+			break;
+		default:
+			progerr ("specified action doesn't support symmetric operation");
+			exitval = 1;
+			goto exit;
+		}
+
 	switch (action) {
 	case 'g':
 		exitval = action_gen_key (action_param, name, KR, AS);
@@ -339,13 +356,12 @@ int main (int argc, char**argv)
 
 	case 's':
 		exitval = action_sign (user, opt_armor, detach_sign,
-		                       opt_clearsign, KR, AS);
+		                       opt_clearsign, symmetric, KR, AS);
 		break;
 
 	case 'v':
-		exitval = action_verify (opt_armor, detach_sign,
-		                         opt_clearsign, opt_yes,
-		                         KR, AS);
+		exitval = action_verify (opt_armor, detach_sign, opt_clearsign,
+		                         opt_yes, symmetric, KR, AS);
 		break;
 
 	case 'E':
