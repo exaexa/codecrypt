@@ -101,6 +101,20 @@ verifying, read the detached signature from \fIfile\fR. Note that files that is
 being signed or verified must be put into program's input (potentially using
 "-R" option.
 
+.TP
+\fB\-S\fR, \fB\-\-symmetric\fR <\fIfile\fR>
+Use symmetric cryptography.
+
+When doing "sign" or "verify" operation, do not sign asymmetrically, but
+instead generate \fIfile\fR with cryptographic hashes that can later be used to
+verify if the contents of input was changed.
+
+Purpose of the \fB\-\-symmetric\fR option is that symmetric cryptography is a
+lot faster than asymmetric, and symmetric primitives usually work also on very
+large files and data streams. If working with a large file, process it
+symetrically, then process the \fIfile\fR asymetrically and send it along with
+the large file.
+
 .SS
 Key management:
 
