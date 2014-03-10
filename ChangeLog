@@ -1,6 +1,12 @@
 
 Codecrypt ChangeLog
 
+1.5
+
+- add hashfile support with -S
+- gf2m log/antilog saving, and several other speedups
+- switched to icase matching for key names
+
 1.4.1
 
 - compile on windows

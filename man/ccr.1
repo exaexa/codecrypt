@@ -111,9 +111,10 @@ verify if the contents of input was changed.
 
 Purpose of the \fB\-\-symmetric\fR option is that symmetric cryptography is a
 lot faster than asymmetric, and symmetric primitives usually work also on very
-large files and data streams. If working with a large file, process it
-symetrically, then process the \fIfile\fR asymetrically and send it along with
-the large file.
+large files and data streams, as they don't need to be fully copied into
+allocated memory for this purpose. Thus, if working with a large file, process
+it symetrically first, then process the resulting small \fIfile\fR
+asymetrically and send it along with the large file.
 
 .SS
 Key management:
@@ -267,7 +268,7 @@ the message format and code clarity, whole input files and messages are usually
 loaded into memory before getting signed/encrypted. Fixing the problem requires
 some deep structural changes in Codecrypt, but you can easily workaround the
 whole problem using symmetric ciphers (for encryption of large files) or
-hashfiles (for signatures of large files).
+hashfiles (for signatures of large files). See the \fB\-\-symmetric\fR option.
 
 FMTSeq signatures are constructed from one-time signature scheme, for this
 reason the private key changes after each signature, basically by increasing
@@ -332,6 +333,12 @@ ccr -m Frank -N "Unfriendly Frank"
 
 #and delete pukeys of everyone who's Unfriendly
 ccr -x Unfri
+
+#create hashfile from a large file
+ccr -sS hashfile.ccr < big_data.iso
+
+#verify the hashfile
+ccr -vS hashfile.ccr < the_same_big_data.iso
 .fi
 
 .SH DISCLAIMER

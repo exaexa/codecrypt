@@ -56,6 +56,12 @@ margin. Let's play with random data!
 	#and delete pukeys of everyone who's Unfriendly
 	ccr -x Unfri
 
+	#create hashfile from a large file
+	ccr -sS hashfile.ccr < big_data.iso
+
+	#verify the hashfile
+	ccr -vS hashfile.ccr < the_same_big_data.iso
+
 ## Option reference
 
 For completeness I add listing of all options here (also available from
@@ -85,6 +91,9 @@ For completeness I add listing of all options here (also available from
 	 -u, --user         use specified secret key
 	 -C, --clearsign    work with cleartext signatures
 	 -b, --detach-sign  specify file with detached signature
+	 -S, --symmetric    enable symmetric mode of operation where encryption
+			    is done using symmetric cipher and signatures are
+			    hashes, and specify a filename of symmetric key or hashes
 
 	Key management:
 	 -g, --gen-key        generate specified keypair, `help' lists algorithms
