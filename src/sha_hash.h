@@ -25,56 +25,56 @@
 
 #include <crypto++/sha.h>
 
-class sha256hash : public hash_func
+template <class shatype>
+class shahash : public hash_func
 {
 public:
 	uint size() {
-		return CryptoPP::SHA256::DIGESTSIZE;
+		return shatype::DIGESTSIZE;
 	}
 
 	std::vector<byte> operator() (const std::vector<byte>&a) {
 		std::vector<byte> r;
 		r.resize (size() );
-		CryptoPP::SHA256().CalculateDigest (& (r[0]),
-		                                    & (a[0]),
-		                                    a.size() );
+		shatype().CalculateDigest (& (r[0]),
+		                           & (a[0]),
+		                           a.size() );
 		return r;
 	}
 };
 
-class sha384hash : public hash_func
+class sha256hash : public shahash<CryptoPP::SHA256> {};
+class sha384hash : public shahash<CryptoPP::SHA384> {};
+class sha512hash : public shahash<CryptoPP::SHA512> {};
+
+template <class shatype>
+class shaproc : public hash_proc
 {
+	shatype state;
 public:
 	uint size() {
-		return CryptoPP::SHA384::DIGESTSIZE;
+		return shatype::DIGESTSIZE;
 	}
 
-	std::vector<byte> operator() (const std::vector<byte>&a) {
+	void init() {
+		state.Restart();
+	}
+
+	void eat (const std::vector<byte>&a) {
+		state.Update (& (a[0]), a.size() );
+	}
+
+	std::vector<byte> finish() {
 		std::vector<byte> r;
 		r.resize (size() );
-		CryptoPP::SHA384().CalculateDigest (& (r[0]),
-		                                    & (a[0]),
-		                                    a.size() );
+		state.Final (& (r[0]) );
 		return r;
 	}
 };
 
-class sha512hash : public hash_func
-{
-public:
-	uint size() {
-		return CryptoPP::SHA512::DIGESTSIZE;
-	}
-
-	std::vector<byte> operator() (const std::vector<byte>&a) {
-		std::vector<byte> r;
-		r.resize (size() );
-		CryptoPP::SHA512().CalculateDigest (& (r[0]),
-		                                    & (a[0]),
-		                                    a.size() );
-		return r;
-	}
-};
+class sha256proc : public shaproc<CryptoPP::SHA256> {};
+class sha384proc : public shaproc<CryptoPP::SHA384> {};
+class sha512proc : public shaproc<CryptoPP::SHA512> {};
 
 #endif //HAVE_CRYPTOPP==1
 

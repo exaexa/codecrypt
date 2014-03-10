@@ -22,25 +22,12 @@
 
 #if HAVE_CRYPTOPP==1
 
-#include "hash.h"
+#include "sha_hash.h"
 #include <crypto++/ripemd.h>
 
-class rmd128hash : public hash_func
-{
-public:
-	uint size() {
-		return CryptoPP::RIPEMD128::DIGESTSIZE;
-	}
-
-	std::vector<byte> operator() (const std::vector<byte>&a) {
-		std::vector<byte> r;
-		r.resize (size() );
-		CryptoPP::RIPEMD128().CalculateDigest (& (r[0]),
-		                                       & (a[0]),
-		                                       a.size() );
-		return r;
-	}
-};
+//it's used just like SHA, so create it from SHA
+class rmd128hash : public shahash<CryptoPP::RIPEMD128> {};
+class rmd128proc : public shaproc<CryptoPP::RIPEMD128> {};
 
 #endif //HAVE_CRYPTOPP==1
 

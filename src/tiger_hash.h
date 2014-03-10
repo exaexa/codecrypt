@@ -22,25 +22,12 @@
 
 #if HAVE_CRYPTOPP==1
 
-#include "hash.h"
+#include "sha_hash.h"
 #include <crypto++/tiger.h>
 
-class tiger192hash : public hash_func
-{
-public:
-	uint size() {
-		return CryptoPP::Tiger::DIGESTSIZE;
-	}
-
-	std::vector<byte> operator() (const std::vector<byte>&a) {
-		std::vector<byte> r;
-		r.resize (size() );
-		CryptoPP::Tiger().CalculateDigest (& (r[0]),
-		                                   & (a[0]),
-		                                   a.size() );
-		return r;
-	}
-};
+//it's used just like SHA, so create it from SHA
+class tiger192hash : public shahash<CryptoPP::Tiger> {};
+class tiger192proc : public shaproc<CryptoPP::Tiger> {};
 
 #endif //HAVE_CRYPTOPP==1
 
