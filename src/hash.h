@@ -32,5 +32,14 @@ public:
 	virtual uint size() = 0; //in bytes
 };
 
+class hash_proc
+{
+public:
+	virtual uint size() = 0;
+	virtual void init() = 0;
+	virtual void eat (const std::vector<byte>&) = 0;
+	virtual std::vector<byte> finish() = 0;
+};
+
 #endif
 

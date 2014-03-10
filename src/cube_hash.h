@@ -45,9 +45,59 @@ public:
 	}
 };
 
+template<int I, int R, int B, int F, int H>
+class cubehashproc : public hash_proc
+{
+	cubehash_state<I, R, B, F, H> state;
+	byte buf[B];
+	int bpos;
+public:
+	uint size() {
+		return H;
+	}
+
+	void init() {
+		state.init();
+		bpos = 0;
+	}
+
+	void eat (const std::vector<byte>&a) {
+		int apos = 0;
+		if (bpos) {
+			for (; bpos < B && apos < a.size(); ++bpos, ++apos)
+				buf[bpos] = a[apos];
+			if (bpos == B) {
+				state.process_block (buf);
+				bpos = 0;
+			}
+		}
+		while (apos + B <= a.size() ) {
+			state.process_block (& (a[apos]) );
+			apos += B;
+		}
+		for (; apos < a.size(); ++apos, ++bpos)
+			buf[bpos] = a[apos];
+	}
+
+	std::vector<byte> finish() {
+		state.process_final_incomplete_block (buf, bpos);
+		std::vector<byte> result;
+		result.resize (H, 0);
+		state.get_hash (& (result[0]) );
+		return result;
+	}
+};
+
+
+
 class cube128hash : public cubehash<16, 16, 32, 32, 16> {};
 class cube192hash : public cubehash<16, 16, 32, 32, 24> {};
 class cube256hash : public cubehash<16, 16, 32, 32, 32> {};
 class cube384hash : public cubehash<16, 16, 32, 32, 48> {};
 class cube512hash : public cubehash<16, 16, 32, 32, 64> {};
 
+class cube128proc : public cubehashproc<16, 16, 32, 32, 16> {};
+class cube192proc : public cubehashproc<16, 16, 32, 32, 24> {};
+class cube256proc : public cubehashproc<16, 16, 32, 32, 32> {};
+class cube384proc : public cubehashproc<16, 16, 32, 32, 48> {};
+class cube512proc : public cubehashproc<16, 16, 32, 32, 64> {};
