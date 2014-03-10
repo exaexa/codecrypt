@@ -21,6 +21,7 @@
 #include <map>
 using namespace std;
 
+#include "rmd_hash.h"
 #include "sha_hash.h"
 #include "tiger_hash.h"
 #include "cube_hash.h"
@@ -28,17 +29,26 @@ using namespace std;
 #include "iohelpers.h"
 
 /*
- * helper -- size measurement is a hash as well
+ * helper -- size measurement is a kindof-hash as well
  */
 
-class size64hash : public hash_func
+class size64proc : public hash_proc
 {
+	uint64_t s;
+
 	uint size() {
 		return 8;
 	}
 
-	std::vector<byte> operator() (const std::vector<byte>&a) {
-		uint64_t s = a.size();
+	void init() {
+		s = 0;
+	}
+
+	void eat (const std::vector<byte>&a) {
+		s += a.size();
+	}
+
+	std::vector<byte> finish() {
 		std::vector<byte> r;
 		r.resize (8, 0);
 		for (int i = 0; i < 8; ++i) {
@@ -53,62 +63,114 @@ class size64hash : public hash_func
  * list of hash functions availabel
  */
 
-typedef map<string, hash_func*> hashmap;
+typedef map<string, hash_proc*> hashmap;
 
 void fill_hashmap (hashmap&t)
 {
 #if HAVE_CRYPTOPP==1
-	static tiger192hash th;
+	static rmd128proc rh;
+	t["RIPEMD128"] = &rh;
+	static tiger192proc th;
 	t["TIGER192"] = &th;
-	static sha256hash sh256;
+	static sha256proc sh256;
 	t["SHA256"] = &sh256;
-	static sha512hash sh512;
+	static sha512proc sh512;
 	t["SHA512"] = &sh512;
 #endif //HAVE_CRYPTOPP
-	static cube512hash c512;
+	static cube512proc c512;
 	t["CUBE512"] = &c512;
-	static size64hash s;
-	t["SIZE64"] = &s;
+	static size64proc sh;
+	t["SIZE64"] = &sh;
 }
 
 bool hashfile::create (istream&in)
 {
 	hashes.clear();
 
-	/* TODO this should use streams, rewrite it. */
-
-	std::vector<byte> data;
-	if (!read_all_input (data, in) )
-		return false;
-
 	hashmap hm;
 	fill_hashmap (hm);
 
 	for (hashmap::iterator i = hm.begin(), e = hm.end(); i != e; ++i)
-		hashes[i->first] = (*i->second) (data);
+		i->second->init();
 
-	return true;
+	std::vector<byte> buf;
+	buf.resize (8192);
+
+	for (;;) {
+		in.read ( (char*) & (buf[0]), 8192);
+		if (in)
+			for (hashmap::iterator i = hm.begin(), e = hm.end();
+			     i != e; ++i)
+				i->second->eat (buf);
+		else if (in.eof() ) {
+			buf.resize (in.gcount() );
+			for (hashmap::iterator i = hm.begin(), e = hm.end();
+			     i != e; ++i) {
+				i->second->eat (buf);
+				hashes[i->first] = i->second->finish();
+			}
+			return true;
+		} else return false;
+	}
 }
 
 int hashfile::verify (istream&in)
 {
-	std::vector<byte> data;
-	if (!read_all_input (data, in) ) return 1;
+	hashmap hm_all, hm;
+	fill_hashmap (hm_all);
 
-	hashmap hm;
-	fill_hashmap (hm);
+	for (hashes_t::iterator i = hashes.begin(), e = hashes.end(); i != e; ++i)
+		if (hm_all.count (i->first) )
+			hm[i->first] = hm_all[i->first];
 
-	bool matched_one_hash = false;
-	for (hashmap::iterator i = hm.begin(), e = hm.end(); i != e; ++i) {
 
-		if (!hashes.count (i->first) ) continue;
-
-		if (hashes[i->first] != (*i->second) (data) )
-			return 3; //verification failed
-
-		matched_one_hash = true;
+	if (hm.empty() ) {
+		err ("notice: no verifiable hash found in hashfile");
+		return 2;
 	}
 
-	if (matched_one_hash) return 0; //all OK
-	else return 2; //more data needed.
+	for (hashmap::iterator i = hm.begin(), e = hm.end(); i != e; ++i)
+		i->second->init();
+
+	std::vector<byte> buf;
+	buf.resize (8192);
+
+	for (;;) {
+		in.read ( (char*) & (buf[0]), 8192);
+		if (in)
+			for (hashmap::iterator i = hm.begin(), e = hm.end();
+			     i != e; ++i)
+				i->second->eat (buf);
+		else if (in.eof() ) {
+			buf.resize (in.gcount() );
+			for (hashmap::iterator i = hm.begin(), e = hm.end();
+			     i != e; ++i) {
+				i->second->eat (buf);
+			}
+			break;
+		} else return 1;
+	}
+
+	int ok = 0, failed = 0;
+	for (hashes_t::iterator i = hashes.begin(), e = hashes.end();
+	     i != e; ++i) {
+		if (!hm.count (i->first) ) {
+			err ("hash verification: :-/ "
+			     << i->first << " not supported");
+			continue;
+		}
+		if (i->second == hm[i->first]->finish() ) {
+			++ok;
+			err ("hash verification: ;-) "
+			     << i->first << " is GOOD");
+		} else {
+			++failed;
+			err ("hash verification: :-( "
+			     << i->first << " is BAD");
+		}
+	}
+
+	if (failed) return 3;
+	if (ok) return 0;
+	return 2;
 }
