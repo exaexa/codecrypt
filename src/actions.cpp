@@ -24,6 +24,7 @@
 #include "envelope.h"
 #include "base64.h"
 #include "message.h"
+#include "hashfile.h"
 #include "bvector.h"
 
 #include <list>
@@ -34,6 +35,7 @@
 #define ENVELOPE_SIG "signed"
 #define ENVELOPE_CLEARSIGN "clearsigned"
 #define ENVELOPE_DETACHSIGN "detachsign"
+#define ENVELOPE_HASHFILE "hashfile"
 
 #define MSG_CLEARTEXT "MESSAGE-IN-CLEARTEXT"
 #define MSG_DETACHED "MESSAGE-DETACHED"
@@ -315,11 +317,57 @@ int action_decrypt (bool armor,
 	return 0;
 }
 
+int action_hash_sign (bool armor, const std::string&symmetric)
+{
+	hashfile hf;
+	if (!hf.create (std::cin) ) {
+		err ("error: hashing failed");
+		return 1;
+	}
+
+	sencode*H = hf.serialize();
+	std::string data = H->encode();
+	sencode_destroy (H);
+
+	std::ofstream hf_out;
+	hf_out.open (symmetric == "-" ? "/dev/stdin" : symmetric.c_str(),
+	             std::ios::out | std::ios::binary);
+	if (!hf_out) {
+		err ("error: can't open hashfile for writing");
+		return 1;
+	}
+
+	if (armor) {
+		std::vector<std::string> parts;
+		parts.resize (1);
+		base64_encode (data, parts[0]);
+		arcfour_rng r;
+		r.seed (256);
+		data = envelope_format (ENVELOPE_HASHFILE, parts, r);
+	}
+
+	hf_out << data;
+	if (!hf_out.good() ) {
+		err ("error: can't write to hashfile");
+		return 1;
+	}
+
+	hf_out.close();
+	if (!hf_out.good() ) {
+		err ("error: couldn't close hashfile");
+		return 1;
+	}
+
+	return 0;
+}
 
 int action_sign (const std::string&user, bool armor, const std::string&detach,
                  bool clearsign, const std::string&symmetric,
                  keyring&KR, algorithm_suite&AS)
 {
+	//symmetric processing has its own function
+	if (symmetric.length() )
+		return action_hash_sign (armor, symmetric);
 
 	/*
 	 * check detach/armor/clearsign validity first.
@@ -451,11 +499,70 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 	return 0;
 }
 
+int action_hash_verify (bool armor, const std::string&symmetric)
+{
+	// first, input the hashfile
+	std::ifstream hf_in;
+	hf_in.open (symmetric.c_str(), std::ios::in | std::ios::binary);
+	if (!hf_in) {
+		err ("error: can't open hashfile");
+		return 1;
+	}
+
+	std::string hf_data;
+	if (!read_all_input (hf_data, hf_in) ) {
+		err ("error: can't read hashfile");
+		return 1;
+	}
+	hf_in.close();
+
+	if (armor) {
+		std::vector<std::string> parts;
+		std::string type;
+		if (!envelope_read (hf_data, 0, type, parts) ) {
+			err ("error: no data envelope found");
+			return 1;
+		}
+
+		if (type != ENVELOPE_HASHFILE || parts.size() != 1) {
+			err ("error: wrong envelope format");
+			return 1;
+		}
+
+		if (!base64_decode (parts[0], hf_data) ) {
+			err ("error: malformed data");
+			return 1;
+		}
+	}
+
+	sencode*H = sencode_decode (hf_data);
+	if (!H) {
+		err ("error: could not parse input sencode");
+		return 1;
+	}
+
+	hashfile hf;
+	if (!hf.unserialize (H) ) {
+		err ("error: could not parse input structure");
+		return 1;
+	}
+
+	sencode_destroy (H);
+
+	int ret = hf.verify (std::cin);
+	if (ret) err ("error: hashfile verification failed");
+
+	return ret;
+}
 
 int action_verify (bool armor, const std::string&detach,
                    bool clearsign, bool yes, const std::string&symmetric,
                    keyring&KR, algorithm_suite&AS)
 {
+	//symmetric processing has its own function
+	if (symmetric.length() )
+		return action_hash_verify (armor, symmetric);
+
 	/*
 	 * check flags validity, open detach if possible
 	 */

@@ -28,6 +28,7 @@
 #include "mce_qd.h"
 #include "fmtseq.h"
 #include "message.h"
+#include "hashfile.h"
 
 static sencode* serialize_uint_vector (std::vector<uint>*v)
 {
@@ -665,4 +666,64 @@ bool signed_msg::unserialize (sencode*s)
 
 	return message.unserialize (L->items[3]) &&
 	       signature.unserialize (L->items[4]);
+}
+
+/*
+ * hashfiles are stored as
+ *
+ * ( CCR-HASHFILE
+ *   ( HASH1NAME HASH1DATA )
+ *   ( HASH2NAME HASH2DATA )
+ *   ...
+ * )
+ */
+
+#define HASHFILE_IDENT "CCR-HASHFILE"
+
+sencode* hashfile::serialize()
+{
+	sencode_list*L = new sencode_list();
+	L->items.resize (1 + hashes.size() );
+	L->items[0] = new sencode_bytes (HASHFILE_IDENT);
+	uint pos = 1;
+	for (hashes_t::iterator i = hashes.begin(), e = hashes.end(); i != e; ++i, ++pos) {
+		sencode_list*hash = new sencode_list();
+		hash->items.resize (2);
+		hash->items[0] = new sencode_bytes (i->first);
+		hash->items[1] = new sencode_bytes (i->second);
+		L->items[pos] = hash;
+	}
+
+	return L;
+}
+
+bool hashfile::unserialize (sencode*s)
+{
+	sencode_list*L = dynamic_cast<sencode_list*> (s);
+	if (!L) return false;
+	if (L->items.size() < 1) return false;
+
+	sencode_bytes*ID;
+
+	ID = dynamic_cast<sencode_bytes*> (L->items[0]);
+	if (!ID) return false;
+	if (ID->b != HASHFILE_IDENT) return false;
+
+	for (uint pos = 1; pos < L->items.size(); ++pos) {
+		sencode_list*hash = dynamic_cast<sencode_list*> (L->items[pos]);
+		if (hash->items.size() != 2) return false;
+
+		sencode_bytes
+		*name = dynamic_cast<sencode_bytes*> (hash->items[0]),
+		 *value = dynamic_cast<sencode_bytes*> (hash->items[1]);
+
+		if (!name || !value) return false;
+
+		//prevent multiple hash entries of same hash
+		if (hashes.count (name->b) ) return false;
+
+		hashes[name->b] = std::vector<byte> (value->b.begin(), value->b.end() );
+	}
+
+	return true;
 }

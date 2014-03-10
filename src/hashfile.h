@@ -20,6 +20,8 @@
 #define _ccr_hashfile_h_
 
 #include "types.h"
+#include "sencode.h"
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -28,10 +30,14 @@
 class hashfile
 {
 public:
-	std::map<std::string, std::vector<byte> > hashes;
+	typedef std::map<std::string, std::vector<byte> > hashes_t;
+	hashes_t hashes;
 
 	bool create (std::istream&);
 	int verify (std::istream&);
+
+	sencode* serialize();
+	bool unserialize (sencode*);
 };
 
 #endif
