@@ -266,9 +266,11 @@ can rename or delete more keys at once.
 Codecrypt is not very good for working directly with large files. Because of
 the message format and code clarity, whole input files and messages are usually
 loaded into memory before getting signed/encrypted. Fixing the problem requires
-some deep structural changes in Codecrypt, but you can easily workaround the
-whole problem using symmetric ciphers (for encryption of large files) or
-hashfiles (for signatures of large files). See the \fB\-\-symmetric\fR option.
+some deep structural changes in Codecrypt that would break most of the achieved
+internal simplicity, therefore the fix is probably not going to happen. You can
+easily workaround the whole problem using symmetric ciphers (for encryption of
+large files) or hashfiles (for signatures of large files). See the
+\fB\-\-symmetric\fR option.
 
 FMTSeq signatures are constructed from one-time signature scheme, for this
 reason the private key changes after each signature, basically by increasing
@@ -302,6 +304,19 @@ Q: I can't read/verify messages from versions 1.3.1 and older!
 A: KeyID algorithm changed after that version. If you want, you can manually
 rewrite the message sencode envelopes to contain new recipient/signer KeyIDs
 and new message identificators, things should work perfectly after that.
+
+Q: Some signatures from version 1.5 and older fail to verify!
+
+A: There was a slight mistake in padding of messages shorter than signature
+hash function size (64 bytes in the 256-bit-secure signature types) with no
+security implications. It was decided not to provide backward compatibility for
+this minor use-case. If you really need to verify such signatures, edit the
+msg_pad function in src/algos_sig.h so that the `load_key()' function os called
+on empty vector instead of `out'.
+
+Q: I want to sign/encrypt a large file but it took all my RAM and takes ages!
+
+A: Use \fB--symmetric\fR option. See the `CAVEATS' section for more details.
 
 .SH EXAMPLE
 Following commands roughly demonstrate command line usage of \fBccr\fR:
