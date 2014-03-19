@@ -19,17 +19,18 @@
 #ifndef _ccr_rc4_h_
 #define _ccr_rc4_h_
 
+#include "sc.h"
+
 #include <vector>
 
-#include <sys/types.h>
-
-template<class inttype> class arcfour
+template<class inttype = byte, int bits = 8, int disc_bytes = 0>
+class arcfour : public streamcipher
 {
 	std::vector<inttype> S;
 	inttype I, J;
 	inttype mask;
 public:
-	bool init (unsigned bits) {
+	bool init () {
 		size_t Ssize = 1 << bits;
 		if (bits > 8 * sizeof (inttype) ) return false;
 		I = J = 0;
@@ -46,14 +47,30 @@ public:
 		S.clear();
 	}
 
-	void load_key (const std::vector<inttype>&K) {
-		inttype j = 0, t;
-		for (size_t i = 0; i <= mask; ++i) {
-			j = (j + S[i] + K[i % K.size()]) & mask;
-			t = S[j];
-			S[j] = S[i];
-			S[i] = t;
+	void load_key (const inttype*begin, const inttype*end) {
+		inttype j, t;
+		size_t i;
+		const inttype *keypos;
+
+		//eat whole key iteratively, even if longer than permutation
+		for (; begin < end; begin += mask + 1) {
+			j = 0;
+			for (i = 0, keypos = begin;
+			     i <= mask;
+			     ++i, ++keypos) {
+				if (keypos >= end) keypos = begin; //rotate
+				j = (j + S[i] + (*keypos) ) & mask;
+				t = S[j];
+				S[j] = S[i];
+				S[i] = t;
+			}
 		}
+
+		discard (disc_bytes);
+	}
+
+	void load_key (const std::vector<inttype>&K) {
+		load_key (& (K[0]), & (K[K.size()]) );
 	}
 
 	inttype gen() {
@@ -68,13 +85,20 @@ public:
 		return S[ (S[I] + S[J]) & mask];
 	}
 
-	void discard (size_t n) {
-		for (size_t i = 0; i < n; ++i) gen();
+	void gen (size_t n, inttype*out) {
+		if (out)
+			for (size_t i = 0; i < n; ++i) out[i] = gen();
+		else
+			for (size_t i = 0; i < n; ++i) gen();
 	}
 
 	void gen (size_t n, std::vector<inttype>&out) {
 		out.resize (n);
-		for (size_t i = 0; i < n; ++i) out[i] = gen();
+		gen (n, & (out[0]) );
+	}
+
+	size_t block_size() {
+		return 1;
 	}
 };
 

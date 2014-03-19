@@ -1,6 +1,9 @@
 
 Codecrypt ChangeLog
 
+- virtualize the stream ciphers
+- fix fmtseq short message padding bug (fixed by previous)
+
 1.5
 
 - add hashfile support with -S

@@ -21,10 +21,12 @@
 
 using namespace fmtseq;
 
-void prepare_keygen (arcfour<byte>& kg, const std::vector<byte>&SK, uint idx)
+typedef arcfour<byte, 8, 0> privgen;
+
+void prepare_keygen (privgen& kg, const std::vector<byte>&SK, uint idx)
 {
 	kg.clear();
-	kg.init (8);
+	kg.init ();
 	kg.load_key (SK);
 	std::vector<byte>tmp;
 	while (idx) {
@@ -34,6 +36,8 @@ void prepare_keygen (arcfour<byte>& kg, const std::vector<byte>&SK, uint idx)
 	tmp.resize (16, 0); //prevent chaining to other numbers
 	kg.load_key (tmp);
 	kg.discard (4096);
+	//discarding is done manually here,
+	//for the purpose of double key loading.
 }
 
 static void add_zero_checksum (bvector& v)
@@ -135,7 +139,7 @@ static bool check_privkey (privkey&priv, hash_func&hf)
 static void update_privkey (privkey&priv, hash_func&hf)
 {
 	uint i, j;
-	arcfour<byte> generator;
+	privgen generator;
 	std::vector<byte> x, Y;
 	uint commitments = fmtseq_commitments (priv.hs);
 
@@ -289,7 +293,7 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 
 	uint commitments = fmtseq_commitments (hs);
 
-	arcfour<byte> generator;
+	privgen generator;
 	std::vector<byte> x, Y;
 
 	alloc_exist (priv);
@@ -384,7 +388,7 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf)
 
 	Sig.reserve (hf.size() * (commitments + h * l) );
 	//first, compute the commitments and push them to the signature
-	arcfour<byte> generator;
+	privgen generator;
 	prepare_keygen (generator, SK, sigs_used);
 	for (i = 0; i < commitments; ++i) {
 		//generate x_i

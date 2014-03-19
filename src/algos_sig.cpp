@@ -55,6 +55,8 @@
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
+typedef arcfour<byte, 8, 256> padding_generator;
+
 static void msg_pad (const bvector&in, std::vector<byte>&out, size_t minsize)
 {
 	uint i;
@@ -66,17 +68,10 @@ static void msg_pad (const bvector&in, std::vector<byte>&out, size_t minsize)
 
 	if (out.size() >= minsize) return;
 
-	arcfour<byte> g;
-	g.init (8);
-
+	padding_generator g;
+	g.init ();
 	//stuff in as much seed material as possible
-	for (i = 0; i < (out.size() >> 8); ++i) {
-		std::vector<byte> sub (out.begin() + (i << 8),
-		                       MIN (out.end(),
-		                            out.begin() + ( (i + 1) << 8) ) );
-		g.load_key (sub);
-	}
-	g.discard (256);
+	g.load_key (out);
 
 	i = out.size();
 	out.resize (minsize);

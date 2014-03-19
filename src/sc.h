@@ -16,31 +16,25 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ccr_generator_h_
-#define _ccr_generator_h_
+#ifndef _ccr_sc_h_
+#define _ccr_sc_h_
 
-#include "arcfour.h"
-#include "prng.h"
+#include "types.h"
 
-class arcfour_rng : public prng
+#include <sys/types.h>
+
+class streamcipher
 {
 public:
-	arcfour<byte, 8, 4096> r;
+	virtual bool init() = 0;
+	virtual void clear() = 0;
+	virtual void load_key (const byte*begin, const byte*end) = 0;
+	virtual byte gen() = 0;
+	virtual void gen (size_t n, byte*out) = 0;
+	virtual size_t block_size() = 0;
 
-	arcfour_rng() {
-		r.init ();
-	}
-
-	~arcfour_rng() {
-		r.clear();
-	}
-
-	void seed (uint bits, bool quick = true);
-
-	uint random (uint n) {
-		//rand_max is 2^32.
-		return ( (r.gen() << 24) | (r.gen() << 16)
-		         | (r.gen() << 8) | r.gen() ) % n;
+	void discard (size_t n) {
+		gen (n, 0);
 	}
 };
 

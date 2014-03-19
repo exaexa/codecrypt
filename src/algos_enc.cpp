@@ -246,14 +246,13 @@ static bool message_unpad (std::vector<byte> in, bvector&out,
  * otherwise it probably fails. miserably.
  */
 
-#define arcfour_discard 4096
-
 template < class pubkey_type,
          int plainsize,
          int ciphersize,
          int errorcount,
          class hash_type,
          class pad_hash_type,
+         class scipher,
          int ranksize >
 static int fo_encrypt (const bvector&plain, bvector&cipher,
                        sencode* pubkey, prng&rng)
@@ -304,17 +303,13 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	if (Pub.encrypt (mce_plain, cipher, ev) ) return 5;
 
 	//encrypt the message part (xor with arcfour)
-	arcfour<byte> arc;
-	arc.init (8);
+	scipher sc;
+	sc.init ();
 	//whole key must be tossed in, so split if when necessary
-	for (i = 0; i < (K.size() >> 8); ++i) {
-		std::vector<byte> subkey (K.begin() + (i << 8),
-		                          MIN (K.end(),
-		                               K.begin() + ( (i + 1) << 8) ) );
-		arc.load_key (subkey);
-	}
-	arc.discard (arcfour_discard);
-	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ arc.gen();
+	sc.load_key (K);
+
+	//encrypt
+	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ sc.gen();
 
 	//append the message part to the ciphertext
 	cipher.resize (ciphersize + (M.size() << 3) );
@@ -330,6 +325,7 @@ template < class privkey_type,
          int errorcount,
          class hash_type,
          class pad_hash_type,
+         class scipher,
          int ranksize >
 static int fo_decrypt (const bvector&cipher, bvector&plain,
                        sencode* privkey)
@@ -370,18 +366,13 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 		if (cipher[ciphersize + i]) M[i >> 3] |= 1 << (i & 0x7);
 
 	//prepare arcfour
-	arcfour<byte> arc;
-	arc.init (8);
+	scipher sc;
+	sc.init ();
 	//stuff in the whole key
-	for (i = 0; i < (K.size() >> 8); ++i) {
-		std::vector<byte> subkey (K.begin() + (i << 8),
-		                          MIN (K.end(),
-		                               K.begin() + ( (i + 1) << 8) ) );
-		arc.load_key (subkey);
-	}
-	arc.discard (arcfour_discard);
+	sc.load_key (K);
+
 	//decrypt the message part
-	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ arc.gen();
+	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ sc.gen();
 
 	//compute the hash of K+M
 	std::vector<byte>H, M2;
@@ -413,6 +404,8 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
  * Instances for actual encryption/descryption algorithms
  */
 
+typedef arcfour<byte, 8, 4096> arcfour_fo_cipher;
+
 #if HAVE_CRYPTOPP==1
 
 #include "sha_hash.h"
@@ -426,6 +419,7 @@ int algo_mceqd128::encrypt (const bvector&plain, bvector&cipher,
 	       2048, 4096, 128,
 	       sha256hash,
 	       rmd128hash,
+	       arcfour_fo_cipher,
 	       816 >
 	       (plain, cipher, pubkey, rng);
 }
@@ -438,6 +432,7 @@ int algo_mceqd192::encrypt (const bvector&plain, bvector&cipher,
 	       2816, 6912, 256,
 	       sha384hash,
 	       rmd128hash,
+	       arcfour_fo_cipher,
 	       1574 >
 	       (plain, cipher, pubkey, rng);
 }
@@ -450,6 +445,7 @@ int algo_mceqd256::encrypt (const bvector&plain, bvector&cipher,
 	       4096, 8192, 256,
 	       sha512hash,
 	       rmd128hash,
+	       arcfour_fo_cipher,
 	       1638 >
 	       (plain, cipher, pubkey, rng);
 }
@@ -462,6 +458,7 @@ int algo_mceqd128::decrypt (const bvector&cipher, bvector&plain,
 	       2048, 4096, 128,
 	       sha256hash,
 	       rmd128hash,
+	       arcfour_fo_cipher,
 	       816 >
 	       (cipher, plain, privkey);
 }
@@ -474,6 +471,7 @@ int algo_mceqd192::decrypt (const bvector&cipher, bvector&plain,
 	       2816, 6912, 256,
 	       sha384hash,
 	       rmd128hash,
+	       arcfour_fo_cipher,
 	       1574 >
 	       (cipher, plain, privkey);
 }
@@ -486,6 +484,7 @@ int algo_mceqd256::decrypt (const bvector&cipher, bvector&plain,
 	       4096, 8192, 256,
 	       sha512hash,
 	       rmd128hash,
+	       arcfour_fo_cipher,
 	       1638 >
 	       (cipher, plain, privkey);
 }
@@ -502,6 +501,7 @@ int algo_mceqd128cube::encrypt (const bvector&plain, bvector&cipher,
 	       2048, 4096, 128,
 	       cube256hash,
 	       cube128hash,
+	       arcfour_fo_cipher,
 	       816 >
 	       (plain, cipher, pubkey, rng);
 }
@@ -514,6 +514,7 @@ int algo_mceqd192cube::encrypt (const bvector&plain, bvector&cipher,
 	       2816, 6912, 256,
 	       cube384hash,
 	       cube128hash,
+	       arcfour_fo_cipher,
 	       1574 >
 	       (plain, cipher, pubkey, rng);
 }
@@ -526,6 +527,7 @@ int algo_mceqd256cube::encrypt (const bvector&plain, bvector&cipher,
 	       4096, 8192, 256,
 	       cube512hash,
 	       cube128hash,
+	       arcfour_fo_cipher,
 	       1638 >
 	       (plain, cipher, pubkey, rng);
 }
@@ -538,6 +540,7 @@ int algo_mceqd128cube::decrypt (const bvector&cipher, bvector&plain,
 	       2048, 4096, 128,
 	       cube256hash,
 	       cube128hash,
+	       arcfour_fo_cipher,
 	       816 >
 	       (cipher, plain, privkey);
 }
@@ -550,6 +553,7 @@ int algo_mceqd192cube::decrypt (const bvector&cipher, bvector&plain,
 	       2816, 6912, 256,
 	       cube384hash,
 	       cube128hash,
+	       arcfour_fo_cipher,
 	       1574 >
 	       (cipher, plain, privkey);
 }
@@ -562,6 +566,7 @@ int algo_mceqd256cube::decrypt (const bvector&cipher, bvector&plain,
 	       4096, 8192, 256,
 	       cube512hash,
 	       cube128hash,
+	       arcfour_fo_cipher,
 	       1638 >
 	       (cipher, plain, privkey);
 }

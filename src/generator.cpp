@@ -41,6 +41,5 @@ void arcfour_rng::seed (uint bits, bool quick)
 	f.close();
 
 	r.load_key (s);
-	r.discard (4096);
 }
 
