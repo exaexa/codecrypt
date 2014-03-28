@@ -30,15 +30,13 @@ class arcfour : public streamcipher
 	inttype I, J;
 	inttype mask;
 public:
-	bool init () {
+	void init () {
 		size_t Ssize = 1 << bits;
-		if (bits > 8 * sizeof (inttype) ) return false;
 		I = J = 0;
 		S.resize (Ssize);
 		mask = ~ (inttype) 0;
 		if ( (inttype) (1 << bits) ) mask %= 1 << bits;
 		for (size_t i = 0; i < Ssize; ++i) S[i] = i;
-		return true;
 	}
 
 	void clear() {
@@ -95,6 +93,10 @@ public:
 	void gen (size_t n, std::vector<inttype>&out) {
 		out.resize (n);
 		gen (n, & (out[0]) );
+	}
+
+	size_t key_size() {
+		return 256;
 	}
 
 	size_t block_size() {

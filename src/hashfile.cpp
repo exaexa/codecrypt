@@ -60,7 +60,7 @@ class size64proc : public hash_proc
 };
 
 /*
- * list of hash functions availabel
+ * list of hash functions available
  */
 
 typedef map<string, hash_proc*> hashmap;

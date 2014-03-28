@@ -26,11 +26,14 @@
 class streamcipher
 {
 public:
-	virtual bool init() = 0;
+	virtual void init() = 0;
 	virtual void clear() = 0;
 	virtual void load_key (const byte*begin, const byte*end) = 0;
 	virtual byte gen() = 0;
 	virtual void gen (size_t n, byte*out) = 0;
+
+	//advisory values for effective usage
+	virtual size_t key_size() = 0;
 	virtual size_t block_size() = 0;
 
 	void discard (size_t n) {
