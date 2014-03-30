@@ -109,13 +109,15 @@ void chacha20::gen (size_t n, byte*out)
 {
 	//empty the block buffer first
 	while (n && blockpos < 64) {
-		* (out++) = block[blockpos++];
+		if (out) * (out++) = block[blockpos++];
+		else blockpos++;
 		--n;
 	}
 
 	//fill in whole blocks
 	while (n >= 64) {
-		chacha_gen (key, counter, (uint32_t*) &out);
+		if (out) chacha_gen (key, counter, (uint32_t*) &out);
+
 		chacha_incr_counter (counter);
 		out += 64;
 		n -= 64;
@@ -129,7 +131,8 @@ void chacha20::gen (size_t n, byte*out)
 	chacha_incr_counter (counter);
 
 	while (n) {
-		* (out++) = block[blockpos++];
+		if (out) * (out++) = block[blockpos++];
+		else blockpos++;
 		--n;
 	}
 }
