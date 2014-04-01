@@ -33,6 +33,7 @@ class chacha20 : public streamcipher
 	 * are 40byte (320bit). We always use the "32byte" expansion.
 	 */
 
+public:
 	uint32_t key[10];
 	uint32_t counter[2];
 
