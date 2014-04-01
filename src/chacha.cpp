@@ -32,10 +32,10 @@ void chacha_gen (const uint32_t*key, const uint32_t*counter, uint32_t*out)
 		j[4 + i] = key[i]; //key material
 
 	for (i = 0; i < 2; ++i)
-		j[14 + i] = key[8 + i]; //IV, taken from key
+		j[14 + i] = key[8 + i]; //part of key also counts as nonce
 
 	for (i = 0; i < 2; ++i)
-		j[12 + i] = counter[i]; //block position
+		j[12 + i] = counter[i]; //counter
 
 	//rounds&mixing
 	for (i = 0; i < 16; ++i) x[i] = j[i];
@@ -49,7 +49,7 @@ void chacha_gen (const uint32_t*key, const uint32_t*counter, uint32_t*out)
 	x[a]=x[a]+x[b]; x[d]=rotl32(x[d]^x[a], 8); \
 	x[c]=x[c]+x[d]; x[b]=rotl32(x[b]^x[c], 7);
 
-	for (i = 0; i < 20; ++i) {
+	for (i = 0; i < 10 /* lol quarterjoke */; ++i) {
 		qtrround (0, 4, 8, 12);
 		qtrround (1, 5, 9, 13);
 		qtrround (2, 6, 10, 14);
