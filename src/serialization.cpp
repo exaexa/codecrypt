@@ -29,6 +29,7 @@
 #include "fmtseq.h"
 #include "message.h"
 #include "hashfile.h"
+#include "symkey.h"
 
 static sencode* serialize_uint_vector (std::vector<uint>*v)
 {
@@ -723,6 +724,98 @@ bool hashfile::unserialize (sencode*s)
 		if (hashes.count (name->b) ) return false;
 
 		hashes[name->b] = std::vector<byte> (value->b.begin(), value->b.end() );
+	}
+
+	return true;
+}
+
+/*
+ * Symmetric key structure:
+ *
+ * ( CCR-SYMKEY
+ *   ( streamcipher1 streamcipher2 )
+ *   ( hash1 hash2 hash3 )
+ *   int_blocksize
+ *   seed_data
+ * )
+ */
+
+#define SYMKEY_IDENT "CCR-SYMKEY"
+
+sencode* symkey::serialize()
+{
+	int k;
+
+	sencode_list*L = new sencode_list(), *LL;
+	L->items.resize (5);
+	L->items[0] = new sencode_bytes (SYMKEY_IDENT);
+	L->items[3] = new sencode_int (blocksize);
+	L->items[4] = new sencode_bytes (seed);
+
+	LL = new sencode_list();
+	LL->items.resize (ciphers.size() );
+	k = 0;
+	for (std::set<std::string>::iterator
+	     i = ciphers.begin(), e = ciphers.end();
+	     i != e; ++i)
+		LL->items[k++] = new sencode_bytes (*i);
+	L->items[1] = LL;
+
+	LL = new sencode_list();
+	LL->items.resize (hashes.size() );
+	k = 0;
+	for (std::list<std::string>::iterator
+	     i = hashes.begin(), e = hashes.end();
+	     i != e; ++i)
+		LL->items[k++] = new sencode_bytes (*i);
+	L->items[2] = LL;
+
+	return L;
+}
+
+bool symkey::unserialize (sencode*s)
+{
+	sencode_list*L = dynamic_cast<sencode_list*> (s);
+	if (!L) return false;
+	if (L->items.size() != 5) return false;
+
+	sencode_bytes*ID;
+
+	ID = dynamic_cast<sencode_bytes*> (L->items[0]);
+	if (!ID) return false;
+	if (ID->b != SYMKEY_IDENT) return false;
+
+	sencode_int*bs = dynamic_cast<sencode_int*> (L->items[3]);
+	if (!bs) return false;
+	blocksize = bs->i;
+
+	sencode_bytes*B;
+
+	B = dynamic_cast<sencode_bytes*> (L->items[4]);
+	if (!B) return false;
+	seed.clear();
+	seed.insert (seed.begin(), B->b.begin(), B->b.end() );
+
+	sencode_list*LL;
+	uint i;
+
+	LL = dynamic_cast<sencode_list*> (L->items[1]);
+	if (!LL) return false;
+	ciphers.clear();
+	for (i = 0; i < LL->items.size(); ++i) {
+		B = dynamic_cast<sencode_bytes*> (LL->items[i]);
+		if (!B) return false;
+		if (ciphers.count (B->b) ) return false;
+		ciphers.insert (B->b);
+	}
+
+	LL = dynamic_cast<sencode_list*> (L->items[2]);
+	if (!LL) return false;
+	hashes.clear();
+	for (i = 0; i < LL->items.size(); ++i) {
+		B = dynamic_cast<sencode_bytes*> (LL->items[i]);
+		if (!B) return false;
+		hashes.push_back (B->b);
 	}
 
 	return true;
