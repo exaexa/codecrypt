@@ -40,9 +40,7 @@ public:
 	}
 
 	void clear() {
-		I = J = 0;
-		mask = 0;
-		S.clear();
+		init();
 	}
 
 	void load_key (const inttype*begin, const inttype*end) {

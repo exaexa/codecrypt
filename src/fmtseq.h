@@ -26,6 +26,7 @@
 #include "sencode.h"
 #include "hash.h"
 #include "prng.h"
+#include "sc.h"
 
 /*
  * FMTseq - Merkle signatures with fractal tree traversal, using original
@@ -70,7 +71,7 @@ public:
 	std::vector<std::vector<tree_stk_item> > desired_stack;
 	std::vector<uint> desired_progress;
 
-	int sign (const bvector&, bvector&, hash_func&);
+	int sign (const bvector&, bvector&, hash_func&, streamcipher&);
 
 	uint sigs_remaining() {
 		return (1 << (h * l) ) - sigs_used;
@@ -109,7 +110,8 @@ public:
 	bool unserialize (sencode*);
 };
 
-int generate (pubkey&, privkey&, prng&, hash_func&, uint hs, uint h, uint l);
+int generate (pubkey&, privkey&, prng&, hash_func&, streamcipher&,
+              uint hs, uint h, uint l);
 }
 
 #endif

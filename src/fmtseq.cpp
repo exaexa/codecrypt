@@ -17,32 +17,25 @@
  */
 
 #include "fmtseq.h"
-#include "arcfour.h"
 
 using namespace fmtseq;
 
-typedef arcfour<byte, 8, 0> privgen;
-
-void prepare_keygen (privgen& kg, const std::vector<byte>&SK, uint idx)
+void prepare_keygen (streamcipher& kg, const std::vector<byte>&SK, uint idx)
 {
-	kg.clear();
-	kg.init ();
+	kg.init();
 	kg.load_key_vector (SK);
 	std::vector<byte>tmp;
+	tmp.reserve (16);
 	while (idx) {
 		tmp.push_back (idx & 0xff);
 		idx >>= 8;
 	}
 	tmp.resize (16, 0); //prevent chaining to other numbers
 	kg.load_key_vector (tmp);
-	kg.discard (4096);
-	//discarding is done manually here,
-	//for the purpose of double key loading.
 }
 
 static void add_zero_checksum (bvector& v)
 {
-
 	uint s = v.size();
 	if (!s) return;
 
@@ -136,10 +129,9 @@ static bool check_privkey (privkey&priv, hash_func&hf)
 	return true;
 }
 
-static void update_privkey (privkey&priv, hash_func&hf)
+static void update_privkey (privkey&priv, hash_func&hf, streamcipher&generator)
 {
 	uint i, j;
-	privgen generator;
 	std::vector<byte> x, Y;
 	uint commitments = fmtseq_commitments (priv.hs);
 
@@ -170,6 +162,8 @@ static void update_privkey (privkey&priv, hash_func&hf)
 	 * whole algorithm is kindof complex. Omitted for simplicity.
 	 */
 
+	x.resize (hf.size() );
+
 	uint d_leaves, d_startpos, d_h;
 	for (i = 0; i < priv.desired.size(); ++i) {
 		d_h = (i + 1) * priv.h;
@@ -184,7 +178,7 @@ static void update_privkey (privkey&priv, hash_func&hf)
 		prepare_keygen (generator, priv.SK, leafid);
 		Y.clear();
 		for (j = 0; j < commitments; ++j) {
-			generator.gen (hf.size(), x);
+			generator.gen (hf.size(), & (x[0]) );
 			x = hf (x);
 			Y.insert (Y.end(), x.begin(), x.end() );
 		}
@@ -265,7 +259,7 @@ static void update_privkey (privkey&priv, hash_func&hf)
  */
 
 int fmtseq::generate (pubkey&pub, privkey&priv,
-                      prng&rng, hash_func&hf,
+                      prng&rng, hash_func&hf, streamcipher&generator,
                       uint hs, uint h, uint l)
 {
 	uint i, j;
@@ -293,8 +287,8 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 
 	uint commitments = fmtseq_commitments (hs);
 
-	privgen generator;
 	std::vector<byte> x, Y;
+	x.resize (hf.size() );
 
 	alloc_exist (priv);
 
@@ -304,7 +298,7 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 		Y.reserve (commitments * hf.size() );
 		prepare_keygen (generator, priv.SK, i);
 		for (j = 0; j < commitments; ++j) {
-			generator.gen (hf.size(), x);
+			generator.gen (hf.size(), & (x[0]) );
 			x = hf (x);
 			Y.insert (Y.end(), x.begin(), x.end() );
 		}
@@ -365,7 +359,8 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 
 #include "iohelpers.h"
 
-int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf)
+int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf,
+                   streamcipher&generator)
 {
 	if (hash.size() != hash_size() ) return 2;
 	if (!sigs_remaining() ) {
@@ -386,13 +381,14 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf)
 	std::vector<byte> Sig, t;
 	uint i;
 
+	t.resize (hf.size() );
+
 	Sig.reserve (hf.size() * (commitments + h * l) );
 	//first, compute the commitments and push them to the signature
-	privgen generator;
 	prepare_keygen (generator, SK, sigs_used);
 	for (i = 0; i < commitments; ++i) {
 		//generate x_i
-		generator.gen (hf.size(), t);
+		generator.gen (hf.size(), & (t[0]) );
 
 		//if it's 0, publish y_i, else publish x_i
 		if (!M2[i]) t = hf (t);
@@ -432,7 +428,7 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf)
 	}
 
 	//move to the next signature and update the cache
-	update_privkey (*this, hf);
+	update_privkey (*this, hf, generator);
 
 	//start moaning at around 1% of remaining signatures
 	if (!sigs_remaining() )

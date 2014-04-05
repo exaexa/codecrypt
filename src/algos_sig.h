@@ -33,7 +33,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ128-SHA256-RIPEMD128";
+		return "FMTSEQ128C-SHA256-RIPEMD128";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -55,7 +55,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ192-SHA384-TIGER192";
+		return "FMTSEQ192C-SHA384-TIGER192";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -77,7 +77,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ256-SHA512-SHA256";
+		return "FMTSEQ256C-SHA512-SHA256";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -99,7 +99,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ128H20-SHA256-RIPEMD128";
+		return "FMTSEQ128H20C-SHA256-RIPEMD128";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -121,7 +121,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ192H20-SHA384-TIGER192";
+		return "FMTSEQ192H20C-SHA384-TIGER192";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -143,7 +143,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ256H20-SHA512-SHA256";
+		return "FMTSEQ256H20C-SHA512-SHA256";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -169,7 +169,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ128-CUBE256-CUBE128";
+		return "FMTSEQ128C-CUBE256-CUBE128";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -191,7 +191,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ192-CUBE384-CUBE192";
+		return "FMTSEQ192C-CUBE384-CUBE192";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -213,7 +213,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ256-CUBE512-CUBE256";
+		return "FMTSEQ256C-CUBE512-CUBE256";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -235,7 +235,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ128H20-CUBE256-CUBE128";
+		return "FMTSEQ128H20C-CUBE256-CUBE128";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -257,7 +257,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ192H20-CUBE384-CUBE192";
+		return "FMTSEQ192H20C-CUBE384-CUBE192";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
@@ -279,7 +279,7 @@ public:
 	}
 
 	std::string get_alg_id() {
-		return "FMTSEQ256H20-CUBE512-CUBE256";
+		return "FMTSEQ256H20C-CUBE512-CUBE256";
 	}
 
 	virtual int sign (const bvector&msg, bvector&sig,
