@@ -1,6 +1,12 @@
 
 Codecrypt ChangeLog
 
+
+- remove RC4 usage from FMTSEQ, replace with ChaCha20, rename algos
+- fix possible side-channel attack on F-O decryption timing
+- remove RC4 from standard PRNG
+- add XSYND
+- add ChaCha20
 - virtualize the stream ciphers
 - fix fmtseq short message padding bug (fixed by previous)
 
