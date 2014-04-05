@@ -31,6 +31,14 @@
 #include "hashfile.h"
 #include "symkey.h"
 
+#define CAST(IN,OUT,TYPE) \
+	OUT=dynamic_cast<TYPE>(IN); \
+	if(!OUT) return false;
+
+#define CAST_LIST(IN,OUT) CAST(IN,OUT,sencode_list*)
+#define CAST_BYTES(IN,OUT) CAST(IN,OUT,sencode_bytes*)
+#define CAST_INT(IN,OUT) CAST(IN,OUT,sencode_int*)
+
 static sencode* serialize_uint_vector (std::vector<uint>*v)
 {
 	sencode_list*l = new sencode_list;
@@ -42,13 +50,12 @@ static sencode* serialize_uint_vector (std::vector<uint>*v)
 
 static bool unserialize_uint_vector (std::vector<uint>*v, sencode*s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list* CAST_LIST (s, l);
+
 	v->clear();
 	v->resize (l->items.size() );
 	for (uint i = 0; i < v->size(); ++i) {
-		sencode_int*x = dynamic_cast<sencode_int*> (l->items[i]);
-		if (!x) return false;
+		sencode_int*CAST_INT (l->items[i], x);
 		(*v) [i] = x->i;
 	}
 	return true;
@@ -70,12 +77,10 @@ sencode* bvector::serialize()
 bool bvector::unserialize (sencode* s)
 {
 	uint i;
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 2) return false;
-	sencode_int*size = dynamic_cast<sencode_int*> (l->items[0]);
-	sencode_bytes*bytes = dynamic_cast<sencode_bytes*> (l->items[1]);
-	if (! (size && bytes) ) return false;
+	sencode_int*CAST_INT (l->items[0], size);
+	sencode_bytes*CAST_BYTES (l->items[1], bytes);
 	if (bytes->b.size() != ( (size->i + 7) / 8) ) return false;
 	clear();
 	resize (size->i, 0);
@@ -111,13 +116,11 @@ sencode* matrix::serialize()
 
 bool matrix::unserialize (sencode* s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 3) return false;
-	sencode_int*w = dynamic_cast<sencode_int*> (l->items[0]);
-	sencode_int*h = dynamic_cast<sencode_int*> (l->items[1]);
-	sencode_bytes*bytes = dynamic_cast<sencode_bytes*> (l->items[2]);
-	if (! (h && w && bytes) ) return false;
+	sencode_int*CAST_INT (l->items[0], w);
+	sencode_int*CAST_INT (l->items[1], h);
+	sencode_bytes*CAST_BYTES (l->items[2], bytes);
 	if (bytes->b.size() != ( ( (h->i * w->i) + 7) / 8) ) return false;
 	clear();
 	resize2 (w->i, h->i, 0);
@@ -149,8 +152,7 @@ sencode* gf2m::serialize()
 
 bool gf2m::unserialize (sencode* s)
 {
-	sencode_int*p = dynamic_cast<sencode_int*> (s);
-	if (!p) return false;
+	sencode_int*CAST_INT (s, p);
 	return create (p->i);
 }
 
@@ -182,12 +184,10 @@ sencode* mce::privkey::serialize()
 
 bool mce::privkey::unserialize (sencode* s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 6) return false;
 
-	sencode_bytes*ident = dynamic_cast<sencode_bytes*> (l->items[0]);
-	if (!ident) return false;
+	sencode_bytes*CAST_BYTES (l->items[0], ident);
 	if (ident->b.compare (PRIVKEY_IDENT "MCE") ) return false;
 
 	if (! (fld.unserialize (l->items[1]) &&
@@ -211,16 +211,13 @@ sencode* mce::pubkey::serialize()
 
 bool mce::pubkey::unserialize (sencode* s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 3) return false;
 
-	sencode_bytes*ident = dynamic_cast<sencode_bytes*> (l->items[0]);
-	if (!ident) return false;
+	sencode_bytes*CAST_BYTES (l->items[0], ident);
 	if (ident->b.compare (PUBKEY_IDENT "MCE") ) return false;
 
-	sencode_int*p = dynamic_cast<sencode_int*> (l->items[0]);
-	if (!p) return false;
+	sencode_int*CAST_INT (l->items[0], p);
 	t = p->i;
 
 	if (!G.unserialize (l->items[1]) ) return false;
@@ -242,12 +239,10 @@ sencode* nd::privkey::serialize()
 
 bool nd::privkey::unserialize (sencode* s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 5) return false;
 
-	sencode_bytes*ident = dynamic_cast<sencode_bytes*> (l->items[0]);
-	if (!ident) return false;
+	sencode_bytes*CAST_BYTES (l->items[0], ident);
 	if (ident->b.compare (PRIVKEY_IDENT "ND") ) return false;
 
 	if (! (fld.unserialize (l->items[1]) &&
@@ -270,16 +265,13 @@ sencode* nd::pubkey::serialize()
 
 bool nd::pubkey::unserialize (sencode* s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 3) return false;
 
-	sencode_bytes*ident = dynamic_cast<sencode_bytes*> (l->items[0]);
-	if (!ident) return false;
+	sencode_bytes*CAST_BYTES (l->items[0], ident);
 	if (ident->b.compare (PRIVKEY_IDENT "ND") ) return false;
 
-	sencode_int*p = dynamic_cast<sencode_int*> (l->items[1]);
-	if (!p) return false;
+	sencode_int*CAST_INT (l->items[1], p);
 	t = p->i;
 
 	if (!H.unserialize (l->items[2]) ) return false;
@@ -303,16 +295,13 @@ sencode* mce_qd::privkey::serialize()
 
 bool mce_qd::privkey::unserialize (sencode* s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 7) return false;
 
-	sencode_bytes*ident = dynamic_cast<sencode_bytes*> (l->items[0]);
-	if (!ident) return false;
+	sencode_bytes*CAST_BYTES (l->items[0], ident);
 	if (ident->b.compare (PRIVKEY_IDENT "QD-MCE") ) return false;
 
-	sencode_int*p = dynamic_cast<sencode_int*> (l->items[2]);
-	if (!p) return false;
+	sencode_int*CAST_INT (l->items[2], p);
 	T = p->i;
 
 	if (! (fld.unserialize (l->items[1]) &&
@@ -336,16 +325,13 @@ sencode* mce_qd::pubkey::serialize()
 
 bool mce_qd::pubkey::unserialize (sencode* s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 3) return false;
 
-	sencode_bytes*ident = dynamic_cast<sencode_bytes*> (l->items[0]);
-	if (!ident) return false;
+	sencode_bytes*CAST_BYTES (l->items[0], ident);
 	if (ident->b.compare (PUBKEY_IDENT "QD-MCE") ) return false;
 
-	sencode_int*p = dynamic_cast<sencode_int*> (l->items[1]);
-	if (!p) return false;
+	sencode_int*CAST_INT (l->items[1], p);
 	T = p->i;
 
 	if (!qd_sigs.unserialize (l->items[2]) ) return false;
@@ -365,21 +351,17 @@ sencode* fmtseq::privkey::tree_stk_item::serialize()
 
 bool fmtseq::privkey::tree_stk_item::unserialize (sencode*s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 3) return false;
 
 	sencode_int*p;
-	p = dynamic_cast<sencode_int*> (l->items[0]);
-	if (!p) return false;
+	CAST_INT (l->items[0], p);
 	level = p->i;
 
-	p = dynamic_cast<sencode_int*> (l->items[1]);
-	if (!p) return false;
+	CAST_INT (l->items[1], p);
 	pos = p->i;
 
-	sencode_bytes* a = dynamic_cast<sencode_bytes*> (l->items[2]);
-	if (!a) return false;
+	sencode_bytes* CAST_BYTES (l->items[2], a);
 	item = std::vector<byte> (a->b.begin(), a->b.end() );
 
 	return true;
@@ -458,52 +440,41 @@ sencode* fmtseq::privkey::serialize()
 bool fmtseq::privkey::unserialize (sencode*s)
 {
 	uint i, j;
-	sencode_list*L = dynamic_cast<sencode_list*> (s);
-	if (!L) return false;
+	sencode_list*CAST_LIST (s, L);
 	if (L->items.size() != 10) return false;
 
-	sencode_bytes*ident = dynamic_cast<sencode_bytes*> (L->items[0]);
-	if (!ident) return false;
+	sencode_bytes*CAST_BYTES (L->items[0], ident);
 	if (ident->b.compare (PRIVKEY_IDENT "FMTSEQ") ) return false;
 
 	sencode_bytes*B;
 	sencode_int*I;
 
-	B = dynamic_cast<sencode_bytes*> (L->items[1]);
-	if (!B) return false;
+	CAST_BYTES (L->items[1], B);
 	SK = std::vector<byte> (B->b.begin(), B->b.end() );
 
-	I = dynamic_cast<sencode_int*> (L->items[2]);
-	if (!I) return false;
+	CAST_INT (L->items[2], I);
 	h = I->i;
 
-	I = dynamic_cast<sencode_int*> (L->items[3]);
-	if (!I) return false;
+	CAST_INT (L->items[3], I);
 	l = I->i;
 
-	I = dynamic_cast<sencode_int*> (L->items[4]);
-	if (!I) return false;
+	CAST_INT (L->items[4], I);
 	hs = I->i;
 
-	I = dynamic_cast<sencode_int*> (L->items[5]);
-	if (!I) return false;
+	CAST_INT (L->items[5], I);
 	sigs_used = I->i;
 
 	sencode_list*A;
 
 	//exist subtrees
-	A = dynamic_cast<sencode_list*> (L->items[6]);
-	if (!A) return false;
+	CAST_LIST (L->items[6], A);
 	exist.clear();
 	exist.resize (A->items.size() );
 	for (i = 0; i < exist.size(); ++i) {
-		sencode_list*e = dynamic_cast<sencode_list*> (A->items[i]);
-		if (!e) return false;
+		sencode_list*CAST_LIST (A->items[i], e);
 		exist[i].resize (e->items.size() );
 		for (j = 0; j < exist[i].size(); ++j) {
-			sencode_bytes*item = dynamic_cast<sencode_bytes*>
-			                     (e->items[j]);
-			if (!item) return false;
+			sencode_bytes*CAST_BYTES (e->items[j], item);
 			exist[i][j] = std::vector<byte>
 			              (item->b.begin(),
 			               item->b.end() );
@@ -511,18 +482,14 @@ bool fmtseq::privkey::unserialize (sencode*s)
 	}
 
 	//desired subtrees
-	A = dynamic_cast<sencode_list*> (L->items[7]);
-	if (!A) return false;
+	CAST_LIST (L->items[7], A);
 	desired.clear();
 	desired.resize (A->items.size() );
 	for (i = 0; i < desired.size(); ++i) {
-		sencode_list*d = dynamic_cast<sencode_list*> (A->items[i]);
-		if (!d) return false;
+		sencode_list*CAST_LIST (A->items[i], d);
 		desired[i].resize (d->items.size() );
 		for (j = 0; j < desired[i].size(); ++j) {
-			sencode_bytes*item = dynamic_cast<sencode_bytes*>
-			                     (d->items[j]);
-			if (!item) return false;
+			sencode_bytes*CAST_BYTES (d->items[j], item);
 			desired[i][j] = std::vector<byte>
 			                (item->b.begin(),
 			                 item->b.end() );
@@ -530,13 +497,11 @@ bool fmtseq::privkey::unserialize (sencode*s)
 	}
 
 	//desired stacks
-	A = dynamic_cast<sencode_list*> (L->items[8]);
-	if (!A) return false;
+	CAST_LIST (L->items[8], A);
 	desired_stack.clear();
 	desired_stack.resize (A->items.size() );
 	for (i = 0; i < desired_stack.size(); ++i) {
-		sencode_list*d = dynamic_cast<sencode_list*> (A->items[i]);
-		if (!d) return false;
+		sencode_list*CAST_LIST (A->items[i], d);
 		desired_stack[i].resize (d->items.size() );
 		for (j = 0; j < desired_stack[i].size(); ++j)
 			if (!desired_stack[i][j].unserialize (d->items[j]) )
@@ -544,13 +509,11 @@ bool fmtseq::privkey::unserialize (sencode*s)
 	}
 
 	//desired progress
-	A = dynamic_cast<sencode_list*> (L->items[9]);
-	if (!A) return false;
+	CAST_LIST (L->items[9], A);
 	desired_progress.clear();
 	desired_progress.resize (A->items.size() );
 	for (i = 0; i < desired_progress.size(); ++i) {
-		I = dynamic_cast<sencode_int*> (A->items[i]);
-		if (!I) return false;
+		CAST_INT (A->items[i], I);
 		desired_progress[i] = I->i;
 	}
 
@@ -572,25 +535,20 @@ sencode* fmtseq::pubkey::serialize()
 
 bool fmtseq::pubkey::unserialize (sencode*s)
 {
-	sencode_list*l = dynamic_cast<sencode_list*> (s);
-	if (!l) return false;
+	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 4) return false;
 
-	sencode_bytes*ident = dynamic_cast<sencode_bytes*> (l->items[0]);
-	if (!ident) return false;
+	sencode_bytes*CAST_BYTES (l->items[0], ident);
 	if (ident->b.compare (PUBKEY_IDENT "FMTSEQ") ) return false;
 
 	sencode_int*p;
-	p = dynamic_cast<sencode_int*> (l->items[1]);
-	if (!p) return false;
+	CAST_INT (l->items[1], p);
 	H = p->i;
 
-	p = dynamic_cast<sencode_int*> (l->items[2]);
-	if (!p) return false;
+	CAST_INT (l->items[2], p);
 	hs = p->i;
 
-	sencode_bytes* a = dynamic_cast<sencode_bytes*> (l->items[3]);
-	if (!a) return false;
+	sencode_bytes* CAST_BYTES (l->items[3], a);
 	check = std::vector<byte> (a->b.begin(), a->b.end() );
 
 	return true;
@@ -612,22 +570,18 @@ sencode* encrypted_msg::serialize()
 
 bool encrypted_msg::unserialize (sencode*s)
 {
-	sencode_list*L = dynamic_cast<sencode_list*> (s);
-	if (!L) return false;
+	sencode_list*CAST_LIST (s, L);
 	if (L->items.size() != 4) return false;
 
 	sencode_bytes*B;
 
-	B = dynamic_cast<sencode_bytes*> (L->items[0]);
-	if (!B) return false;
+	CAST_BYTES (L->items[0], B);
 	if (B->b != ENC_MSG_IDENT) return false;
 
-	B = dynamic_cast<sencode_bytes*> (L->items[1]);
-	if (!B) return false;
+	CAST_BYTES (L->items[1], B);
 	alg_id = B->b;
 
-	B = dynamic_cast<sencode_bytes*> (L->items[2]);
-	if (!B) return false;
+	CAST_BYTES (L->items[2], B);
 	key_id = B->b;
 
 	return ciphertext.unserialize (L->items[3]);
@@ -647,22 +601,18 @@ sencode* signed_msg::serialize()
 
 bool signed_msg::unserialize (sencode*s)
 {
-	sencode_list*L = dynamic_cast<sencode_list*> (s);
-	if (!L) return false;
+	sencode_list*CAST_LIST (s, L);
 	if (L->items.size() != 5) return false;
 
 	sencode_bytes*B;
 
-	B = dynamic_cast<sencode_bytes*> (L->items[0]);
-	if (!B) return false;
+	CAST_BYTES (L->items[0], B);
 	if (B->b != SIG_MSG_IDENT) return false;
 
-	B = dynamic_cast<sencode_bytes*> (L->items[1]);
-	if (!B) return false;
+	CAST_BYTES (L->items[1], B);
 	alg_id = B->b;
 
-	B = dynamic_cast<sencode_bytes*> (L->items[2]);
-	if (!B) return false;
+	CAST_BYTES (L->items[2], B);
 	key_id = B->b;
 
 	return message.unserialize (L->items[3]) &&
@@ -700,25 +650,20 @@ sencode* hashfile::serialize()
 
 bool hashfile::unserialize (sencode*s)
 {
-	sencode_list*L = dynamic_cast<sencode_list*> (s);
-	if (!L) return false;
+	sencode_list*CAST_LIST (s, L);
 	if (L->items.size() < 1) return false;
 
 	sencode_bytes*ID;
 
-	ID = dynamic_cast<sencode_bytes*> (L->items[0]);
-	if (!ID) return false;
+	CAST_BYTES (L->items[0], ID);
 	if (ID->b != HASHFILE_IDENT) return false;
 
 	for (uint pos = 1; pos < L->items.size(); ++pos) {
-		sencode_list*hash = dynamic_cast<sencode_list*> (L->items[pos]);
+		sencode_list*CAST_LIST (L->items[pos], hash);
 		if (hash->items.size() != 2) return false;
 
-		sencode_bytes
-		*name = dynamic_cast<sencode_bytes*> (hash->items[0]),
-		 *value = dynamic_cast<sencode_bytes*> (hash->items[1]);
-
-		if (!name || !value) return false;
+		sencode_bytes*CAST_BYTES (hash->items[0], name);
+		sencode_bytes*CAST_BYTES (hash->items[1], value);
 
 		//prevent multiple hash entries of same hash
 		if (hashes.count (name->b) ) return false;
@@ -775,46 +720,38 @@ sencode* symkey::serialize()
 
 bool symkey::unserialize (sencode*s)
 {
-	sencode_list*L = dynamic_cast<sencode_list*> (s);
-	if (!L) return false;
+	sencode_list*CAST_LIST (s, L);
 	if (L->items.size() != 5) return false;
 
 	sencode_bytes*ID;
 
-	ID = dynamic_cast<sencode_bytes*> (L->items[0]);
-	if (!ID) return false;
+	CAST_BYTES (L->items[0], ID);
 	if (ID->b != SYMKEY_IDENT) return false;
 
-	sencode_int*bs = dynamic_cast<sencode_int*> (L->items[3]);
-	if (!bs) return false;
+	sencode_int*CAST_INT (L->items[3], bs);
 	blocksize = bs->i;
 
 	sencode_bytes*B;
 
-	B = dynamic_cast<sencode_bytes*> (L->items[4]);
-	if (!B) return false;
+	CAST_BYTES (L->items[4], B);
 	seed.clear();
 	seed.insert (seed.begin(), B->b.begin(), B->b.end() );
 
 	sencode_list*LL;
 	uint i;
 
-	LL = dynamic_cast<sencode_list*> (L->items[1]);
-	if (!LL) return false;
+	CAST_LIST (L->items[1], LL);
 	ciphers.clear();
 	for (i = 0; i < LL->items.size(); ++i) {
-		B = dynamic_cast<sencode_bytes*> (LL->items[i]);
-		if (!B) return false;
+		CAST_BYTES (LL->items[i], B);
 		if (ciphers.count (B->b) ) return false;
 		ciphers.insert (B->b);
 	}
 
-	LL = dynamic_cast<sencode_list*> (L->items[2]);
-	if (!LL) return false;
+	CAST_LIST (L->items[2], LL);
 	hashes.clear();
 	for (i = 0; i < LL->items.size(); ++i) {
-		B = dynamic_cast<sencode_bytes*> (LL->items[i]);
-		if (!B) return false;
+		CAST_BYTES (LL->items[i], B);
 		hashes.push_back (B->b);
 	}
 
