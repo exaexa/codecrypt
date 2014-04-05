@@ -71,7 +71,7 @@ static void msg_pad (const bvector&in, std::vector<byte>&out, size_t minsize)
 	padding_generator g;
 	g.init ();
 	//stuff in as much seed material as possible
-	g.load_key (out);
+	g.load_key_vector (out);
 
 	i = out.size();
 	out.resize (minsize);

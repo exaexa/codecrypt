@@ -67,10 +67,6 @@ public:
 		discard (disc_bytes);
 	}
 
-	void load_key (const std::vector<inttype>&K) {
-		load_key (& (K[0]), & (K[K.size()]) );
-	}
-
 	inttype gen() {
 		I = (I + 1) & mask;
 		J = (J + S[I]) & mask;

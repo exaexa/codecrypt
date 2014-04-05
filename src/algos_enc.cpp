@@ -306,7 +306,7 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	scipher sc;
 	sc.init ();
 	//whole key must be tossed in, so split if when necessary
-	sc.load_key (K);
+	sc.load_key_vector (K);
 
 	//encrypt
 	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ sc.gen();
@@ -369,7 +369,7 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	scipher sc;
 	sc.init ();
 	//stuff in the whole key
-	sc.load_key (K);
+	sc.load_key_vector (K);
 
 	//decrypt the message part
 	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ sc.gen();

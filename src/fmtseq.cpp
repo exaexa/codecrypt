@@ -27,14 +27,14 @@ void prepare_keygen (privgen& kg, const std::vector<byte>&SK, uint idx)
 {
 	kg.clear();
 	kg.init ();
-	kg.load_key (SK);
+	kg.load_key_vector (SK);
 	std::vector<byte>tmp;
 	while (idx) {
 		tmp.push_back (idx & 0xff);
 		idx >>= 8;
 	}
 	tmp.resize (16, 0); //prevent chaining to other numbers
-	kg.load_key (tmp);
+	kg.load_key_vector (tmp);
 	kg.discard (4096);
 	//discarding is done manually here,
 	//for the purpose of double key loading.

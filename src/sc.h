@@ -23,6 +23,8 @@
 
 #include <sys/types.h>
 
+#include <vector>
+
 class streamcipher
 {
 public:
@@ -39,6 +41,11 @@ public:
 	void discard (size_t n) {
 		gen (n, 0);
 	}
+
+	void load_key_vector (const std::vector<byte>&K) {
+		load_key (& (K[0]), & (K[K.size()]) );
+	}
+
 };
 
 #endif

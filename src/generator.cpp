@@ -26,7 +26,7 @@ static inline uint bytes (uint bits)
 	return (bits >> 3) + ( (bits & 7) ? 1 : 0);
 }
 
-void arcfour_rng::seed (uint bits, bool quick)
+void ccr_rng::seed (uint bits, bool quick)
 {
 	std::vector<byte> s;
 	std::ifstream f;
@@ -40,6 +40,6 @@ void arcfour_rng::seed (uint bits, bool quick)
 	for (uint i = 0; i < b; ++i) f >> s[i];
 	f.close();
 
-	r.load_key (s);
+	r.load_key_vector (s);
 }
 

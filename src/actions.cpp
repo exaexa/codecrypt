@@ -94,7 +94,7 @@ int action_gen_key (const std::string& algspec, const std::string&name,
 	}
 
 	sencode *pub, *priv;
-	arcfour_rng r;
+	ccr_rng r;
 
 	err ("Gathering random seed bits from kernel...");
 	err ("If nothing happens, move mouse, type random stuff on keyboard,");
@@ -188,7 +188,7 @@ int action_encrypt (const std::string&recipient, bool armor,
 
 	//encryption part
 	encrypted_msg msg;
-	arcfour_rng r;
+	ccr_rng r;
 	r.seed (256);
 
 	bvector plaintext;
@@ -341,8 +341,8 @@ int action_hash_sign (bool armor, const std::string&symmetric)
 		std::vector<std::string> parts;
 		parts.resize (1);
 		base64_encode (data, parts[0]);
-		arcfour_rng r;
-		r.seed (256);
+		ccr_rng r;
+		r.seed (128);
 		data = envelope_format (ENVELOPE_HASHFILE, parts, r);
 	}
 
@@ -431,7 +431,7 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 
 	//signature production part
 	signed_msg msg;
-	arcfour_rng r;
+	ccr_rng r;
 	r.seed (256);
 
 	bvector message;
@@ -869,7 +869,7 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 
 	//make a signature
 	signed_msg smsg;
-	arcfour_rng r;
+	ccr_rng r;
 	r.seed (256);
 
 	bvector bv;
@@ -1270,7 +1270,7 @@ int action_export (bool armor,
 		std::vector<std::string> parts;
 		parts.resize (1);
 		base64_encode (data, parts[0]);
-		arcfour_rng r;
+		ccr_rng r;
 		r.seed (128);
 		data = envelope_format (ENVELOPE_PUBKEYS, parts, r);
 	}
@@ -1526,7 +1526,7 @@ int action_export_sec (bool armor, bool yes,
 		std::vector<std::string> parts;
 		parts.resize (1);
 		base64_encode (data, parts[0]);
-		arcfour_rng r;
+		ccr_rng r;
 		r.seed (128);
 		data = envelope_format (ENVELOPE_SECRETS, parts, r);
 	}

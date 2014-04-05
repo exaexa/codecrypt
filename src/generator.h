@@ -19,28 +19,31 @@
 #ifndef _ccr_generator_h_
 #define _ccr_generator_h_
 
-#include "arcfour.h"
+#include "chacha.h"
 #include "prng.h"
 
-class arcfour_rng : public prng
+#include <stdint.h>
+#define randmax_type uint64_t
+
+class ccr_rng : public prng
 {
 public:
-	arcfour<byte, 8, 4096> r;
+	chacha20 r;
 
-	arcfour_rng() {
+	ccr_rng() {
 		r.init ();
 	}
 
-	~arcfour_rng() {
+	~ccr_rng() {
 		r.clear();
 	}
 
 	void seed (uint bits, bool quick = true);
 
 	uint random (uint n) {
-		//rand_max is 2^32.
-		return ( (r.gen() << 24) | (r.gen() << 16)
-		         | (r.gen() << 8) | r.gen() ) % n;
+		randmax_type i;
+		r.gen (sizeof (randmax_type), (byte*) &i);
+		return i % n;
 	}
 };
 
