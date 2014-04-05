@@ -421,10 +421,10 @@ int privkey::decrypt (const bvector & in, bvector & out, bvector & errors)
 	polynomial loc;
 	compute_alternant_error_locator (synd, fld, 1 << T, loc);
 
+	bool failed = false;
 	bvector ev;
 	if (!evaluate_error_locator_trace (loc, ev, fld) )
-		return 1; //couldn't decode
-	//TODO evaluator should return error positions, not bvector. fix it everywhere!
+		failed = true;
 
 	out = in;
 	out.resize (plain_size() );
@@ -433,17 +433,16 @@ int privkey::decrypt (const bvector & in, bvector & out, bvector & errors)
 	//flip error positions of out.
 	for (i = 0; i < ev.size(); ++i) if (ev[i]) {
 			uint epos = support_pos[fld.inv (i)];
-			if (epos == fld.n) {
-				//found unexpected support, die.
-				out.clear();
-				return 1;
+			if (epos == fld.n || epos >= cipher_size() ) {
+				//found unexpected/wrong support, die.
+				failed = true;
+				continue;
 			}
-			if (epos >= cipher_size() ) return 1;
 			errors[epos] = 1;
 			if (epos < plain_size() )
 				out[epos] = !out[epos];
 		}
 
-	return 0;
+	return failed ? 1 : 0;
 }
 

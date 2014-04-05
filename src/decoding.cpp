@@ -141,6 +141,8 @@ bool evaluate_error_locator_trace (polynomial&sigma, bvector&ev, gf2m&fld)
 
 	stk.insert (make_pair (0, sigma) );
 
+	bool failed = false;
+
 	while (!stk.empty() ) {
 
 		uint i = stk.begin()->first;
@@ -156,7 +158,10 @@ bool evaluate_error_locator_trace (polynomial&sigma, bvector&ev, gf2m&fld)
 			continue;
 		}
 
-		if (i >= fld.m) return false;
+		if (i >= fld.m) {
+			failed = true;
+			continue;
+		}
 
 		if (trace[i].zero() ) {
 			//compute the trace if it isn't cached
@@ -176,6 +181,6 @@ bool evaluate_error_locator_trace (polynomial&sigma, bvector&ev, gf2m&fld)
 		stk.insert (make_pair (i + 1, q) );
 	}
 
-	return true;
+	return !failed;
 }
 

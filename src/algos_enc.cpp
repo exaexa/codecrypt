@@ -236,8 +236,6 @@ static bool message_unpad (std::vector<byte> in, bvector&out,
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
-#include "arcfour.h"
-
 /*
  * Generic F-O functions. Note that ranksize must be equal to
  *
@@ -302,7 +300,7 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	//run McEliece
 	if (Pub.encrypt (mce_plain, cipher, ev) ) return 5;
 
-	//encrypt the message part (xor with arcfour)
+	//encrypt the message part
 	scipher sc;
 	sc.init ();
 	//whole key must be tossed in, so split if when necessary
@@ -350,8 +348,40 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	                   cipher.begin(),
 	                   cipher.begin() + ciphersize);
 
+	//get and check the message size for later
+	uint msize = cipher.size() - ciphersize;
+	if (msize & 0x7) return 6;
+
+	/*
+	 * There is an (easy) timing attack on McEliece variants' decryption
+	 * that determines whether McEliece decoding failed or CCA2 padding
+	 * verification failed and can be (pretty easily) used to recover all
+	 * errors in the error vector. To make it a (whole lot) harder, we make
+	 * sure that following computation runs the same in both cases, at
+	 * least to practical extent.
+	 *
+	 * Note that this doesn't cover potential attack on underlying
+	 * rootfinding algorithm (but that one is way harder to run correctly).
+	 *
+	 * bool failed is volatile because we need to force the compiler not to
+	 * optimize out the loop that constructs the dummy error vector.
+	 */
+
 	//decrypt the symmetric key
-	if (Priv.decrypt (mce_cipher, mce_plain, ev) ) return 6;
+	volatile bool failed = Priv.decrypt (mce_cipher, mce_plain, ev);
+
+	/*
+	 * if decoding failed, ev contains something weird. We need to make it
+	 * to contain some dummy (but still valid) error vector that would work
+	 * with CCA2 verification and fail later.
+	 *
+	 * ev now contains the broken error vector; let's fix it up to
+	 *
+	 * 11111(errorcount of 1s)111100000000000
+	 */
+
+	for (i = 0; i < ev.size(); ++i)
+		ev[i] = failed ? (i < errorcount) : ev[i];
 
 	//convert stuff to byte vectors
 	std::vector<byte> K, M;
@@ -359,13 +389,11 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	for (i = 0; i < plainsize; ++i)
 		if (mce_plain[i]) K[i >> 3] |= 1 << (i & 0x7);
 
-	uint msize = cipher.size() - ciphersize;
-	if (msize & 0x7) return 7;
 	M.resize (msize >> 3, 0);
 	for (i = 0; i < msize; ++i)
 		if (cipher[ciphersize + i]) M[i >> 3] |= 1 << (i & 0x7);
 
-	//prepare arcfour
+	//prepare symmetric cipher
 	scipher sc;
 	sc.init ();
 	//stuff in the whole key
@@ -381,21 +409,19 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	hash_type hf;
 	H = hf (M2);
 
-	/*
-	 * Colex rank the vector to hash (it is faster than unranking)
-	 */
+	//colex rank the vector to hash (it is faster than unranking)
 	bvector ev_rank;
 	ev.colex_rank (ev_rank);
 	ev_rank.resize (ranksize, 0);
 	for (i = 0; i < ranksize; ++i)
 		if (ev_rank[i] != (1 & (H[ (i >> 3) % H.size()]
 		                        >> (i & 0x7) ) ) )
-			return 8;
+			return 7;
 
 
 	//if the message seems okay, unpad and return it.
 	pad_hash_type phf;
-	if (!message_unpad (M, plain, phf) ) return 9;
+	if (!message_unpad (M, plain, phf) ) return 8;
 
 	return 0;
 }
@@ -403,6 +429,8 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 /*
  * Instances for actual encryption/descryption algorithms
  */
+
+#include "arcfour.h"
 
 typedef arcfour<byte, 8, 4096> arcfour_fo_cipher;
 
