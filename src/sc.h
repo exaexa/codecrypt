@@ -20,10 +20,13 @@
 #define _ccr_sc_h_
 
 #include "types.h"
+#include "factoryof.h"
 
 #include <sys/types.h>
 
 #include <vector>
+#include <map>
+#include <string>
 
 class streamcipher
 {
@@ -38,6 +41,8 @@ public:
 	virtual size_t key_size() = 0;
 	virtual size_t block_size() = 0;
 
+	virtual ~streamcipher() {}
+
 	void discard (size_t n) {
 		gen (n, 0);
 	}
@@ -46,6 +51,8 @@ public:
 		load_key (& (K[0]), & (K[K.size()]) );
 	}
 
+	typedef std::map<std::string, factoryof<streamcipher>*> suite_t;
+	static suite_t& suite();
 };
 
 #endif

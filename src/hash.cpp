@@ -16,37 +16,28 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ccr_hash_h_
-#define _ccr_hash_h_
+#include "hash.h"
 
-#include <vector>
-#include <string>
-#include <map>
-#include "types.h"
-#include "factoryof.h"
+#include "sha_hash.h"
+#include "rmd_hash.h"
+#include "tiger_hash.h"
+#include "cube_hash.h"
 
-/*
- * hash-providing functor class, meant to be instantiated by user.
- */
-class hash_func
+hash_proc::suite_t& hash_proc::suite()
 {
-public:
-	virtual std::vector<byte> operator() (const std::vector<byte>&) = 0;
-	virtual uint size() = 0; //in bytes
-};
+	static suite_t s;
 
-class hash_proc
-{
-public:
-	virtual uint size() = 0;
-	virtual void init() = 0;
-	virtual void eat (const std::vector<byte>&) = 0;
-	virtual std::vector<byte> finish() = 0;
-	virtual ~hash_proc() {}
+#define do_hash(name,type) \
+	static factoryof<hash_proc,type> type##_var; \
+	s[name]=&type##_var;
 
-	typedef std::map<std::string, factoryof<hash_proc>*> suite_t;
-	static suite_t& suite();
-};
+	if (s.empty() ) {
+		do_hash ("CUBE512", cube512proc);
+		do_hash ("RIPEMD128", rmd128proc);
+		do_hash ("TIGER192", tiger192proc);
+		do_hash ("SHA256", sha256proc);
+		do_hash ("SHA512", sha512proc);
+	}
 
-#endif
-
+	return s;
+}

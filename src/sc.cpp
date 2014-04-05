@@ -16,37 +16,26 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ccr_hash_h_
-#define _ccr_hash_h_
+#include "sc.h"
 
-#include <vector>
-#include <string>
-#include <map>
-#include "types.h"
-#include "factoryof.h"
+#include "arcfour.h"
+#include "xsynd.h"
+#include "chacha.h"
 
-/*
- * hash-providing functor class, meant to be instantiated by user.
- */
-class hash_func
+typedef arcfour<> arcfour_t; //template god demands sacrifice
+
+streamcipher::suite_t& streamcipher::suite()
 {
-public:
-	virtual std::vector<byte> operator() (const std::vector<byte>&) = 0;
-	virtual uint size() = 0; //in bytes
-};
+	static suite_t s;
+#define do_cipher(name,type) \
+	static factoryof<streamcipher,type> type##_var; \
+	s[name]=&type##_var;
 
-class hash_proc
-{
-public:
-	virtual uint size() = 0;
-	virtual void init() = 0;
-	virtual void eat (const std::vector<byte>&) = 0;
-	virtual std::vector<byte> finish() = 0;
-	virtual ~hash_proc() {}
+	if (s.empty() ) {
+		do_cipher ("ARCFOUR", arcfour_t);
+		do_cipher ("CHACHA20", chacha20);
+		do_cipher ("XSYND", xsynd);
+	}
 
-	typedef std::map<std::string, factoryof<hash_proc>*> suite_t;
-	static suite_t& suite();
-};
-
-#endif
-
+	return s;
+}

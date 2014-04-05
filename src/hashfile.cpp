@@ -21,11 +21,9 @@
 #include <map>
 using namespace std;
 
-#include "rmd_hash.h"
-#include "sha_hash.h"
-#include "tiger_hash.h"
-#include "cube_hash.h"
+#include <stdint.h>
 
+#include "hash.h"
 #include "iohelpers.h"
 
 /*
@@ -63,24 +61,21 @@ class size64proc : public hash_proc
  * list of hash functions available
  */
 
-typedef map<string, hash_proc*> hashmap;
+typedef map<string, instanceof<hash_proc> > hashmap;
 
 void fill_hashmap (hashmap&t)
 {
-#if HAVE_CRYPTOPP==1
-	static rmd128proc rh;
-	t["RIPEMD128"] = &rh;
-	static tiger192proc th;
-	t["TIGER192"] = &th;
-	static sha256proc sh256;
-	t["SHA256"] = &sh256;
-	static sha512proc sh512;
-	t["SHA512"] = &sh512;
-#endif //HAVE_CRYPTOPP
-	static cube512proc c512;
-	t["CUBE512"] = &c512;
-	static size64proc sh;
-	t["SIZE64"] = &sh;
+	//copy contents of the hash suite
+	for (hash_proc::suite_t::iterator
+	     i = hash_proc::suite().begin(),
+	     e = hash_proc::suite().end();
+	     i != e; ++i) {
+		t[i->first] = i->second->get();
+		t[i->first].collect();
+	}
+
+	//add size64 check
+	t["SIZE64"] = new size64proc;
 }
 
 bool hashfile::create (istream&in)
@@ -120,8 +115,10 @@ int hashfile::verify (istream&in)
 	fill_hashmap (hm_all);
 
 	for (hashes_t::iterator i = hashes.begin(), e = hashes.end(); i != e; ++i)
-		if (hm_all.count (i->first) )
+		if (hm_all.count (i->first) ) {
 			hm[i->first] = hm_all[i->first];
+			hm_all[i->first].forget();
+		}
 
 
 	if (hm.empty() ) {
