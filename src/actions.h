@@ -27,6 +27,7 @@
 #include "algorithm.h"
 
 int action_gen_key (const std::string& algspec, const std::string&name,
+                    const std::string&symmetric, bool armor,
                     keyring&, algorithm_suite&);
 
 /*
@@ -34,9 +35,10 @@ int action_gen_key (const std::string& algspec, const std::string&name,
  */
 
 int action_encrypt (const std::string&recipient, bool armor,
+                    const std::string&symmetric,
                     keyring&, algorithm_suite&);
 
-int action_decrypt (bool armor,
+int action_decrypt (bool armor, const std::string&symmetric,
                     keyring&, algorithm_suite&);
 
 int action_sign (const std::string&user, bool armor, const std::string&detach,

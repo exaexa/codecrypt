@@ -46,7 +46,7 @@ bool symkey::create (const std::string&in, prng&rng)
 		tok = to_unicase (tok);
 		if (tok == "SHORTBLOCK") blocksize = 1024;
 		else if (tok == "LONGBLOCK") blocksize = 64 * 1024 * 1024;
-		else if (tok == "LONGKEY") keysize = 256;
+		else if (tok == "LONGKEY") keysize = 512; //overkill ;]
 		else if (streamcipher::suite().count (tok) )
 			ciphers.insert (tok);
 		else if (hash_proc::suite().count (tok) )

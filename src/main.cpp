@@ -332,6 +332,9 @@ int main (int argc, char**argv)
 	}
 
 	if (symmetric.length() ) switch (action) {
+		case 'd':
+		case 'e':
+		case 'g':
 		case 's':
 		case 'v':
 			break;
@@ -343,15 +346,18 @@ int main (int argc, char**argv)
 
 	switch (action) {
 	case 'g':
-		exitval = action_gen_key (action_param, name, KR, AS);
+		exitval = action_gen_key (action_param, name,
+		                          symmetric, opt_armor,
+		                          KR, AS);
 		break;
 
 	case 'e':
-		exitval = action_encrypt (recipient, opt_armor, KR, AS);
+		exitval = action_encrypt (recipient, opt_armor, symmetric,
+		                          KR, AS);
 		break;
 
 	case 'd':
-		exitval = action_decrypt (opt_armor, KR, AS);
+		exitval = action_decrypt (opt_armor, symmetric, KR, AS);
 		break;
 
 	case 's':

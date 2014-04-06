@@ -18,14 +18,17 @@
 
 #include "actions.h"
 
-#include "iohelpers.h"
-#include "generator.h"
-#include "str_match.h"
-#include "envelope.h"
 #include "base64.h"
-#include "message.h"
-#include "hashfile.h"
 #include "bvector.h"
+#include "envelope.h"
+#include "generator.h"
+#include "hashfile.h"
+#include "hash.h"
+#include "iohelpers.h"
+#include "message.h"
+#include "sc.h"
+#include "str_match.h"
+#include "symkey.h"
 
 #include <list>
 
@@ -36,6 +39,7 @@
 #define ENVELOPE_CLEARSIGN "clearsigned"
 #define ENVELOPE_DETACHSIGN "detachsign"
 #define ENVELOPE_HASHFILE "hashfile"
+#define ENVELOPE_SYMKEY "symkey"
 
 #define MSG_CLEARTEXT "MESSAGE-IN-CLEARTEXT"
 #define MSG_DETACHED "MESSAGE-DETACHED"
@@ -51,21 +55,86 @@ inline bool open_keyring (keyring&KR)
 
 #define PREPARE_KEYRING if(!open_keyring(KR)) return 1
 
+int action_gen_symkey (const std::string&algspec,
+                       const std::string&symmetric, bool armor)
+{
+	symkey sk;
+	ccr_rng r;
+	r.seed (256);
+
+	if (!sk.create (algspec, r) ) {
+		err ("error: symkey creation failed");
+		return 1;
+	}
+
+	sencode*SK = sk.serialize();
+	std::string data = SK->encode();
+	sencode_destroy (SK);
+
+	std::ofstream sk_out;
+	sk_out.open (symmetric == "-" ? "/dev/stdout" : symmetric.c_str(),
+	             std::ios::out | std::ios::binary);
+	if (!sk_out) {
+		err ("error: can't open symkey file for writing");
+		return 1;
+	}
+
+	if (armor) {
+		std::vector<std::string> parts;
+		parts.resize (1);
+		base64_encode (data, parts[0]);
+		data = envelope_format (ENVELOPE_SYMKEY, parts, r);
+	}
+
+	sk_out << data;
+	if (!sk_out.good() ) {
+		err ("error: can't write to symkey file");
+		return 1;
+	}
+
+	sk_out.close();
+	if (!sk_out.good() ) {
+		err ("error: couldn't close symkey file");
+		return 1;
+	}
+
+	return 0;
+}
+
 int action_gen_key (const std::string& algspec, const std::string&name,
+                    const std::string&symmetric, bool armor,
                     keyring&KR, algorithm_suite&AS)
 {
 	if (algspec == "help") {
 		//provide overview of algorithms available
-		err ("available algorithms:");
-		std::string tag = "     ";
+		err ("available algorithms: "
+		     "([S]ig., [E]nc., sym. [C]ipher, [H]ash) ");
+		std::string tag;
 		for (algorithm_suite::iterator i = AS.begin(), e = AS.end();
 		     i != e; ++i) {
-			tag[1] = i->second->provides_signatures() ? 'S' : '-';
-			tag[3] = i->second->provides_encryption() ? 'E' : '-';
+			tag = " " +
+			      std::string (i->second->provides_signatures()
+			                   ? "S" : "") +
+			      std::string (i->second->provides_encryption()
+			                   ? "E" : "") + "\t";
 			out (tag << i->first);
 		}
+
+		for (streamcipher::suite_t::iterator
+		     i = streamcipher::suite().begin();
+		     i != streamcipher::suite().end(); ++i)
+			out (" C\t" << i->first);
+
+		for (hash_proc::suite_t::iterator
+		     i = hash_proc::suite().begin();
+		     i != hash_proc::suite().end(); ++i)
+			out (" H\t" << i->first);
+
 		return 0;
 	}
+
+	if (symmetric.length() )
+		return action_gen_symkey (algspec, symmetric, armor);
 
 	algorithm*alg = NULL;
 	std::string algname;
@@ -140,9 +209,76 @@ int action_gen_key (const std::string& algspec, const std::string&name,
  * signatures/encryptions
  */
 
+int action_sym_encrypt (const std::string&symmetric, bool armor)
+{
+	//read the symmetric key first
+	std::ifstream sk_in;
+	sk_in.open (symmetric == "-" ? "/dev/stdin" : symmetric.c_str(),
+	            std::ios::in | std::ios::binary);
+
+	if (!sk_in) {
+		err ("error: can't open symkey file");
+		return 1;
+	}
+
+	std::string sk_data;
+	if (!read_all_input (sk_data, sk_in) ) {
+		err ("error: can't read symkey");
+		return 1;
+	}
+	sk_in.close();
+
+	if (armor) {
+		std::vector<std::string> parts;
+		std::string type;
+		if (!envelope_read (sk_data, 0, type, parts) ) {
+			err ("error: no data envelope found");
+			return 1;
+		}
+
+		if (type != ENVELOPE_SYMKEY || parts.size() != 1) {
+			err ("error: wrong envelope format");
+			return 1;
+		}
+
+		if (!base64_decode (parts[0], sk_data) ) {
+			err ("error: malformed data");
+			return 1;
+		}
+	}
+
+	sencode*SK = sencode_decode (sk_data);
+	if (!SK) {
+		err ("error: could not parse input sencode");
+		return 1;
+	}
+
+	symkey sk;
+	if (!sk.unserialize (SK) ) {
+		err ("error: could not parse input structure");
+		return 1;
+	}
+
+	sencode_destroy (SK);
+
+	ccr_rng r;
+	r.seed (256);
+
+	if (!sk.encrypt (std::cin, std::cout, r) ) {
+		err ("error: encryption failed");
+		return 1;
+	}
+
+	return 0;
+}
+
 int action_encrypt (const std::string&recipient, bool armor,
+                    const std::string&symmetric,
                     keyring&KR, algorithm_suite&AS)
 {
+	if (symmetric.length() )
+		return action_sym_encrypt (symmetric, armor);
+
 	//first, read plaintext
 	std::string data;
 	read_all_input (data);
@@ -215,9 +351,69 @@ int action_encrypt (const std::string&recipient, bool armor,
 }
 
 
-int action_decrypt (bool armor,
+int action_sym_decrypt (const std::string&symmetric, bool armor)
+{
+	std::ifstream sk_in;
+	sk_in.open (symmetric == "-" ? "/dev/stdin" : symmetric.c_str(),
+	            std::ios::in | std::ios::binary);
+
+	if (!sk_in) {
+		err ("error: can't open symkey file");
+		return 1;
+	}
+
+	std::string sk_data;
+	if (!read_all_input (sk_data, sk_in) ) {
+		err ("error: can't read symkey");
+		return 1;
+	}
+	sk_in.close();
+
+	if (armor) {
+		std::vector<std::string> parts;
+		std::string type;
+		if (!envelope_read (sk_data, 0, type, parts) ) {
+			err ("error: no data envelope found");
+			return 1;
+		}
+
+		if (type != ENVELOPE_SYMKEY || parts.size() != 1) {
+			err ("error: wrong envelope format");
+			return 1;
+		}
+
+		if (!base64_decode (parts[0], sk_data) ) {
+			err ("error: malformed data");
+			return 1;
+		}
+	}
+
+	sencode*SK = sencode_decode (sk_data);
+	if (!SK) {
+		err ("error: could not parse input sencode");
+		return 1;
+	}
+
+	symkey sk;
+	if (!sk.unserialize (SK) ) {
+		err ("error: could not parse input structure");
+		return 1;
+	}
+
+	sencode_destroy (SK);
+
+	int ret = sk.decrypt (std::cin, std::cout);
+
+	if (ret) err ("error: decryption failed");
+	return ret;
+}
+
+int action_decrypt (bool armor, const std::string&symmetric,
                     keyring&KR, algorithm_suite&AS)
 {
+	if (symmetric.length() )
+		return action_sym_decrypt (symmetric, armor);
+
 	std::string data;
 	read_all_input (data);
 
@@ -330,7 +526,7 @@ int action_hash_sign (bool armor, const std::string&symmetric)
 	sencode_destroy (H);
 
 	std::ofstream hf_out;
-	hf_out.open (symmetric == "-" ? "/dev/stdin" : symmetric.c_str(),
+	hf_out.open (symmetric == "-" ? "/dev/stdout" : symmetric.c_str(),
 	             std::ios::out | std::ios::binary);
 	if (!hf_out) {
 		err ("error: can't open hashfile for writing");
@@ -503,7 +699,8 @@ int action_hash_verify (bool armor, const std::string&symmetric)
 {
 	// first, input the hashfile
 	std::ifstream hf_in;
-	hf_in.open (symmetric.c_str(), std::ios::in | std::ios::binary);
+	hf_in.open (symmetric == "-" ? "/dev/stdin" : symmetric.c_str(),
+	            std::ios::in | std::ios::binary);
 	if (!hf_in) {
 		err ("error: can't open hashfile");
 		return 1;
