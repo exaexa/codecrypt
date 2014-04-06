@@ -35,10 +35,12 @@ hash_proc::suite_t& hash_proc::suite()
 
 	if (s.empty() ) {
 		do_hash ("CUBE512", cube512proc);
+#if HAVE_CRYPTOPP==1
 		do_hash ("RIPEMD128", rmd128proc);
 		do_hash ("TIGER192", tiger192proc);
 		do_hash ("SHA256", sha256proc);
 		do_hash ("SHA512", sha512proc);
+#endif
 	}
 
 	return s;
