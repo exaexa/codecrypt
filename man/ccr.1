@@ -109,12 +109,26 @@ When doing "sign" or "verify" operation, do not sign asymmetrically, but
 instead generate \fIfile\fR with cryptographic hashes that can later be used to
 verify if the contents of input was changed.
 
+When doing "generate", "encrypt" or "decrypt" operation, do not encrypt
+asymmetrically, but instead generate or use a file with a key for specified
+symmetric cipher. Use "-g help" to see available symmetric primitives. For
+symmetric encryption to work, at least one stream cipher (marked with C) and at
+least one hash function (marked with H, used to protect agains malleability)
+separated by comma need to be selected. Additionally, user can specify
+"longblock" or "shortblock" keyword to manipulate size of internal encryption
+block structure (longer blocks consume more RAM, but the ciphertext doesn't
+grow very much); or the "longkey" flag which creates larger symmetric key to
+provide more key material to the ciphers (which can help to protect against
+low-quality random numbers, but is generally unneccesary and even considered to
+be a bad practice). It is also possible to combine more stream ciphers and hash
+functions.
+
 Purpose of the \fB\-\-symmetric\fR option is that symmetric cryptography is a
 lot faster than asymmetric, and symmetric primitives usually work also on very
 large files and data streams, as they don't need to be fully copied into
 allocated memory for this purpose. Thus, if working with a large file, process
-it symetrically first, then process the resulting small \fIfile\fR
-asymetrically and send it along with the large file.
+it symmetrically first, then process the resulting small \fIfile\fR
+asym,etrically and send it along with the large file.
 
 .SS
 Key management:
@@ -139,8 +153,10 @@ has a name that contains that string.
 \fB\-g\fR, \fB\-\-gen\-key\fR <\fIalgorithm\fR>
 Generate a keypair for usage with specified algorithm. Use "-g help" to get
 list of all algorithms available. Listing also contains flags "S" and "E",
-meaning that algorithm can be used for signatures or encryption. Algorithm name
-does not need to be a full name, but must match only one available algorithm.
+meaning that algorithm can be used for signatures or encryption, or "H" and "C"
+for usage with symmetric hashes and ciphers. In asymmetric case (where the
+algorithm names are long) the supplied algorithm name does not need to be a
+full name, but must match only one available algorithm.
 
 .TP
 \fB\-N\fR, \fB\-\-name\fR <\fIkeyname\fR>
@@ -354,6 +370,13 @@ ccr -sS hashfile.ccr < big_data.iso
 
 #verify the hashfile
 ccr -vS hashfile.ccr < the_same_big_data.iso
+
+#create symmetric key and encrypt a large file
+ccr -g sha256,xsynd -S symkey.ccr
+ccr -eaS symkey.ccr -R big_data.iso -o big_data_encrypted.iso
+
+#decrypt a large file
+ccr -daS symkey.ccr <big_data_encrypted.iso >big_data.iso
 .fi
 
 .SH DISCLAIMER

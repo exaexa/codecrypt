@@ -2,6 +2,7 @@
 Codecrypt ChangeLog
 
 
+- add support for symmetric encryption (long files!)
 - remove RC4 usage from FMTSEQ, replace with ChaCha20, rename algos
 - fix possible side-channel attack on F-O decryption timing
 - remove RC4 from standard PRNG

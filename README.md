@@ -57,10 +57,18 @@ margin. Let's play with random data!
 	ccr -x Unfri
 
 	#create hashfile from a large file
-	ccr -sS hashfile.ccr < big_data.iso
+	ccr -s -S hashfile.ccr < big_data.iso
 
 	#verify the hashfile
 	ccr -vS hashfile.ccr < the_same_big_data.iso
+
+	#create symmetric key and encrypt a large file
+	ccr -g sha256,xsynd -S symkey.ccr
+	ccr -eaS symkey.ccr -R big_data.iso -o big_data_encrypted.iso
+
+	#decrypt a large file
+	ccr -daS symkey.ccr <big_data_encrypted.iso >big_data.iso
+
 
 ## Option reference
 
@@ -92,8 +100,8 @@ For completeness I add listing of all options here (also available from
 	 -C, --clearsign    work with cleartext signatures
 	 -b, --detach-sign  specify file with detached signature
 	 -S, --symmetric    enable symmetric mode of operation where encryption
-			    is done using symmetric cipher and signatures are
-			    hashes, and specify a filename of symmetric key or hashes
+	                    is done using symmetric cipher and signatures are
+	                    hashes, and specify a filename of symmetric key or hashes
 
 	Key management:
 	 -g, --gen-key        generate specified keypair, `help' lists algorithms
