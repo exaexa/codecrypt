@@ -40,9 +40,14 @@ class hash_proc
 public:
 	virtual uint size() = 0;
 	virtual void init() = 0;
-	virtual void eat (const std::vector<byte>&) = 0;
+
+	virtual void eat (const byte*begin, const byte*end) = 0;
 	virtual std::vector<byte> finish() = 0;
 	virtual ~hash_proc() {}
+
+	void eat (const std::vector<byte>&a) {
+		return eat (& (a[0]), & (a[a.size()]) );
+	}
 
 	typedef std::map<std::string, factoryof<hash_proc>*> suite_t;
 	static suite_t& suite();

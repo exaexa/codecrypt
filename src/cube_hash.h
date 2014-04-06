@@ -61,21 +61,22 @@ public:
 		bpos = 0;
 	}
 
-	void eat (const std::vector<byte>&a) {
+	void eat (const byte*a, const byte*aend) {
 		int apos = 0;
+		int asize = aend - a;
 		if (bpos) {
-			for (; bpos < B && apos < a.size(); ++bpos, ++apos)
+			for (; bpos < B && apos < asize; ++bpos, ++apos)
 				buf[bpos] = a[apos];
 			if (bpos == B) {
 				state.process_block (buf);
 				bpos = 0;
 			}
 		}
-		while (apos + B <= a.size() ) {
+		while (apos + B <= asize ) {
 			state.process_block (& (a[apos]) );
 			apos += B;
 		}
-		for (; apos < a.size(); ++apos, ++bpos)
+		for (; apos < asize; ++apos, ++bpos)
 			buf[bpos] = a[apos];
 	}
 

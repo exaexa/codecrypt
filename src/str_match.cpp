@@ -54,3 +54,9 @@ bool keyspec_matches (const std::string&search,
 
 	return matches_icase (name, search);
 }
+
+std::string to_unicase (std::string str)
+{
+	transform (str.begin(), str.end(), str.begin(), ::toupper);
+	return str;
+}

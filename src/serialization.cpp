@@ -681,7 +681,7 @@ bool hashfile::unserialize (sencode*s)
  *   ( streamcipher1 streamcipher2 )
  *   ( hash1 hash2 hash3 )
  *   int_blocksize
- *   seed_data
+ *   key_data
  * )
  */
 
@@ -695,13 +695,13 @@ sencode* symkey::serialize()
 	L->items.resize (5);
 	L->items[0] = new sencode_bytes (SYMKEY_IDENT);
 	L->items[3] = new sencode_int (blocksize);
-	L->items[4] = new sencode_bytes (seed);
+	L->items[4] = new sencode_bytes (key);
 
+	std::set<std::string>::iterator i, e;
 	LL = new sencode_list();
 	LL->items.resize (ciphers.size() );
 	k = 0;
-	for (std::set<std::string>::iterator
-	     i = ciphers.begin(), e = ciphers.end();
+	for (i = ciphers.begin(), e = ciphers.end();
 	     i != e; ++i)
 		LL->items[k++] = new sencode_bytes (*i);
 	L->items[1] = LL;
@@ -709,8 +709,7 @@ sencode* symkey::serialize()
 	LL = new sencode_list();
 	LL->items.resize (hashes.size() );
 	k = 0;
-	for (std::list<std::string>::iterator
-	     i = hashes.begin(), e = hashes.end();
+	for (i = hashes.begin(), e = hashes.end();
 	     i != e; ++i)
 		LL->items[k++] = new sencode_bytes (*i);
 	L->items[2] = LL;
@@ -734,8 +733,8 @@ bool symkey::unserialize (sencode*s)
 	sencode_bytes*B;
 
 	CAST_BYTES (L->items[4], B);
-	seed.clear();
-	seed.insert (seed.begin(), B->b.begin(), B->b.end() );
+	key.clear();
+	key.insert (key.begin(), B->b.begin(), B->b.end() );
 
 	sencode_list*LL;
 	uint i;
@@ -752,7 +751,8 @@ bool symkey::unserialize (sencode*s)
 	hashes.clear();
 	for (i = 0; i < LL->items.size(); ++i) {
 		CAST_BYTES (LL->items[i], B);
-		hashes.push_back (B->b);
+		if (hashes.count (B->b) ) return false;
+		hashes.insert (B->b);
 	}
 
 	return true;

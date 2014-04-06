@@ -60,8 +60,8 @@ public:
 		state.Restart();
 	}
 
-	void eat (const std::vector<byte>&a) {
-		state.Update (& (a[0]), a.size() );
+	void eat (const byte*a, const byte*aend) {
+		state.Update (a, aend - a);
 	}
 
 	std::vector<byte> finish() {

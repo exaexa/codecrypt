@@ -42,8 +42,8 @@ class size64proc : public hash_proc
 		s = 0;
 	}
 
-	void eat (const std::vector<byte>&a) {
-		s += a.size();
+	void eat (const byte*a, const byte*aend) {
+		s += aend - a;
 	}
 
 	std::vector<byte> finish() {

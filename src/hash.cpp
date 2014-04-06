@@ -18,6 +18,8 @@
 
 #include "hash.h"
 
+#include "str_match.h"
+
 #include "sha_hash.h"
 #include "rmd_hash.h"
 #include "tiger_hash.h"
@@ -29,7 +31,7 @@ hash_proc::suite_t& hash_proc::suite()
 
 #define do_hash(name,type) \
 	static factoryof<hash_proc,type> type##_var; \
-	s[name]=&type##_var;
+	s[to_unicase(name)]=&type##_var;
 
 	if (s.empty() ) {
 		do_hash ("CUBE512", cube512proc);

@@ -75,7 +75,7 @@ void chacha20::init()
 	for (int i = 0; i < 10; ++i) key[i] = 0;
 	for (int i = 0; i < 2; ++i) counter[i] = 0;
 
-	blockpos = 256;
+	blockpos = 64;
 }
 
 void chacha20::load_key (const byte*begin, const byte*end)
@@ -116,7 +116,7 @@ void chacha20::gen (size_t n, byte*out)
 
 	//fill in whole blocks
 	while (n >= 64) {
-		if (out) chacha_gen (key, counter, (uint32_t*) &out);
+		if (out) chacha_gen (key, counter, (uint32_t*) out);
 
 		chacha_incr_counter (counter);
 		out += 64;

@@ -26,23 +26,26 @@
 #include <vector>
 
 #include "types.h"
+#include "generator.h"
 #include "sencode.h"
 
 class symkey
 {
 public:
-	std::set<std::string> ciphers;
-	std::list<std::string> hashes;
+	std::set<std::string> ciphers, hashes;
 
 	uint blocksize;
 
-	std::vector<byte> seed;
+	std::vector<byte> key;
 
 	sencode* serialize();
 	bool unserialize (sencode*);
 
-	bool encrypt (std::istream&, std::ostream&);
+	bool encrypt (std::istream&, std::ostream&, prng&);
 	int decrypt (std::istream&, std::ostream&);
+
+	bool is_valid();
+	bool create (const std::string&, prng&);
 };
 
 #endif

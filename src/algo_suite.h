@@ -21,9 +21,10 @@
 
 #include <map>
 #include <string>
+
 class algorithm;
+
 typedef std::map<std::string, algorithm*> algorithm_suite;
 
 void fill_algorithm_suite (algorithm_suite&);
-
 #endif

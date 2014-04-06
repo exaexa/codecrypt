@@ -18,6 +18,8 @@
 
 #include "sc.h"
 
+#include "str_match.h"
+
 #include "arcfour.h"
 #include "xsynd.h"
 #include "chacha.h"
@@ -29,7 +31,7 @@ streamcipher::suite_t& streamcipher::suite()
 	static suite_t s;
 #define do_cipher(name,type) \
 	static factoryof<streamcipher,type> type##_var; \
-	s[name]=&type##_var;
+	s[to_unicase(name)]=&type##_var;
 
 	if (s.empty() ) {
 		do_cipher ("ARCFOUR", arcfour_t);

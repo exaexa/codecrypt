@@ -28,4 +28,6 @@ bool keyspec_matches (const std::string&search,
                       const std::string&name,
                       const std::string&keyid);
 
+std::string to_unicase (std::string);
+
 #endif
