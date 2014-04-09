@@ -407,14 +407,28 @@ int algo_mceqd##name::create_keypair (sencode**pub, sencode**priv, prng&rng) \
 mceqd_create_keypair_func (128, 16, 7, 32, 4)
 mceqd_create_keypair_func (192, 16, 8, 27, 4)
 mceqd_create_keypair_func (256, 16, 8, 32, 4)
+mceqd_create_keypair_func (128cha, 16, 7, 32, 4)
+mceqd_create_keypair_func (192cha, 16, 8, 27, 4)
+mceqd_create_keypair_func (256cha, 16, 8, 32, 4)
+mceqd_create_keypair_func (128xs, 16, 7, 32, 4)
+mceqd_create_keypair_func (192xs, 16, 8, 27, 4)
+mceqd_create_keypair_func (256xs, 16, 8, 32, 4)
 
 #endif //HAVE_CRYPTOPP==1
 
 mceqd_create_keypair_func (128cube, 16, 7, 32, 4)
 mceqd_create_keypair_func (192cube, 16, 8, 27, 4)
 mceqd_create_keypair_func (256cube, 16, 8, 32, 4)
+mceqd_create_keypair_func (128cubecha, 16, 7, 32, 4)
+mceqd_create_keypair_func (192cubecha, 16, 8, 27, 4)
+mceqd_create_keypair_func (256cubecha, 16, 8, 32, 4)
+mceqd_create_keypair_func (128cubexs, 16, 7, 32, 4)
+mceqd_create_keypair_func (192cubexs, 16, 8, 27, 4)
+mceqd_create_keypair_func (256cubexs, 16, 8, 32, 4)
 
 #include "arcfour.h"
+#include "chacha.h"
+#include "xsynd.h"
 
 typedef arcfour<byte, 8, 4096> arcfour_fo_cipher;
 
@@ -450,38 +464,26 @@ int algo_mceqd##name::decrypt (const bvector&cipher, bvector&plain, \
 #include "sha_hash.h"
 #include "rmd_hash.h"
 
-mceqd_create_encdec_func (128, 2048, 4096, 128,
-                          sha256hash, rmd128hash,
-                          arcfour_fo_cipher,
-                          816)
-
-
-mceqd_create_encdec_func (192, 2816, 6912, 256,
-                          sha384hash, rmd128hash,
-                          arcfour_fo_cipher,
-                          1574)
-
-mceqd_create_encdec_func (256, 4096, 8192, 256,
-                          sha512hash, rmd128hash,
-                          arcfour_fo_cipher,
-                          1638)
+mceqd_create_encdec_func (128, 2048, 4096, 128, sha256hash, rmd128hash, arcfour_fo_cipher, 816)
+mceqd_create_encdec_func (192, 2816, 6912, 256, sha384hash, rmd128hash, arcfour_fo_cipher, 1574)
+mceqd_create_encdec_func (256, 4096, 8192, 256, sha512hash, rmd128hash, arcfour_fo_cipher, 1638)
+mceqd_create_encdec_func (128cha, 2048, 4096, 128, sha256hash, rmd128hash, chacha20, 816)
+mceqd_create_encdec_func (192cha, 2816, 6912, 256, sha384hash, rmd128hash, chacha20, 1574)
+mceqd_create_encdec_func (256cha, 4096, 8192, 256, sha512hash, rmd128hash, chacha20, 1638)
+mceqd_create_encdec_func (128xs, 2048, 4096, 128, sha256hash, rmd128hash, xsynd, 816)
+mceqd_create_encdec_func (192xs, 2816, 6912, 256, sha384hash, rmd128hash, xsynd, 1574)
+mceqd_create_encdec_func (256xs, 4096, 8192, 256, sha512hash, rmd128hash, xsynd, 1638)
 
 #endif //HAVE_CRYPTOPP==1
 
 #include "cube_hash.h"
 
-mceqd_create_encdec_func (128cube, 2048, 4096, 128,
-                          cube256hash, cube128hash,
-                          arcfour_fo_cipher,
-                          816)
-
-
-mceqd_create_encdec_func (192cube, 2816, 6912, 256,
-                          cube384hash, cube128hash,
-                          arcfour_fo_cipher,
-                          1574)
-
-mceqd_create_encdec_func (256cube, 4096, 8192, 256,
-                          cube512hash, cube128hash,
-                          arcfour_fo_cipher,
-                          1638)
+mceqd_create_encdec_func (128cube, 2048, 4096, 128, cube256hash, cube128hash, arcfour_fo_cipher, 816)
+mceqd_create_encdec_func (192cube, 2816, 6912, 256, cube384hash, cube128hash, arcfour_fo_cipher, 1574)
+mceqd_create_encdec_func (256cube, 4096, 8192, 256, cube512hash, cube128hash, arcfour_fo_cipher, 1638)
+mceqd_create_encdec_func (128cubecha, 2048, 4096, 128, cube256hash, cube128hash, chacha20, 816)
+mceqd_create_encdec_func (192cubecha, 2816, 6912, 256, cube384hash, cube128hash, chacha20, 1574)
+mceqd_create_encdec_func (256cubecha, 4096, 8192, 256, cube512hash, cube128hash, chacha20, 1638)
+mceqd_create_encdec_func (128cubexs, 2048, 4096, 128, cube256hash, cube128hash, xsynd, 816)
+mceqd_create_encdec_func (192cubexs, 2816, 6912, 256, cube384hash, cube128hash, xsynd, 1574)
+mceqd_create_encdec_func (256cubexs, 4096, 8192, 256, cube512hash, cube128hash, xsynd, 1638)

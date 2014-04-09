@@ -50,6 +50,12 @@ public: \
 mceqd_alg_class (128, "MCEQD128FO-SHA256-ARCFOUR");
 mceqd_alg_class (192, "MCEQD192FO-SHA384-ARCFOUR");
 mceqd_alg_class (256, "MCEQD256FO-SHA512-ARCFOUR");
+mceqd_alg_class (128cha, "MCEQD128FO-SHA256-CHACHA20");
+mceqd_alg_class (192cha, "MCEQD192FO-SHA384-CHACHA20");
+mceqd_alg_class (256cha, "MCEQD256FO-SHA512-CHACHA20");
+mceqd_alg_class (128xs, "MCEQD128FO-SHA256-XSYND");
+mceqd_alg_class (192xs, "MCEQD192FO-SHA384-XSYND");
+mceqd_alg_class (256xs, "MCEQD256FO-SHA512-XSYND");
 
 #endif //HAVE_CRYPTOPP==1
 
@@ -60,6 +66,12 @@ mceqd_alg_class (256, "MCEQD256FO-SHA512-ARCFOUR");
 mceqd_alg_class (128cube, "MCEQD128FO-CUBE256-ARCFOUR");
 mceqd_alg_class (192cube, "MCEQD192FO-CUBE384-ARCFOUR");
 mceqd_alg_class (256cube, "MCEQD256FO-CUBE512-ARCFOUR");
+mceqd_alg_class (128cubecha, "MCEQD128FO-CUBE256-CHACHA20");
+mceqd_alg_class (192cubecha, "MCEQD192FO-CUBE384-CHACHA20");
+mceqd_alg_class (256cubecha, "MCEQD256FO-CUBE512-CHACHA20");
+mceqd_alg_class (128cubexs, "MCEQD128FO-CUBE256-XSYND");
+mceqd_alg_class (192cubexs, "MCEQD192FO-CUBE384-XSYND");
+mceqd_alg_class (256cubexs, "MCEQD256FO-CUBE512-XSYND");
 
 #endif
 
