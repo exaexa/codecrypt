@@ -101,11 +101,35 @@ int action_gen_symkey (const std::string&algspec,
 	return 0;
 }
 
-int action_gen_key (const std::string& algspec, const std::string&name,
+typedef std::map<std::string, std::string> algspectable_t;
+algspectable_t& algspectable()
+{
+	static algspectable_t table;
+	static bool init = false;
+
+	if (!init) {
+		table["enc"] = "MCEQD128FO-CUBE256-CHACHA20";
+		table["enc-strong"] = "MCEQD192FO-CUBE384-CHACHA20";
+		table["enc-strongest"] = "MCEQD256FO-CUBE512-CHACHA20";
+
+		table["sig"] = "FMTSEQ128C-CUBE256-CUBE128";
+		table["sig-strong"] = "FMTSEQ192C-CUBE384-CUBE192";
+		table["sig-strongest"] = "FMTSEQ256C-CUBE512-CUBE256";
+
+		table["sym"] = "chacha20,sha256";
+		table["sym-strong"] = "chacha20,xsynd,arcfour,cube512,sha512";
+
+		init = true;
+	}
+
+	return table;
+}
+
+int action_gen_key (const std::string& p_algspec, const std::string&name,
                     const std::string&symmetric, bool armor,
                     keyring&KR, algorithm_suite&AS)
 {
-	if (algspec == "help") {
+	if (p_algspec == "help") {
 		//provide overview of algorithms available
 		err ("available algorithms: "
 		     "([S]ig., [E]nc., sym. [C]ipher, [H]ash) ");
@@ -130,9 +154,23 @@ int action_gen_key (const std::string& algspec, const std::string&name,
 		     i != hash_proc::suite().end(); ++i)
 			out (" H\t" << i->first);
 
+		err ("following aliases are available for convenience: ");
+		for (algspectable_t::iterator i = algspectable().begin(),
+		     e = algspectable().end();
+		     i != e; ++i)
+			err (i->first << " = " << i->second);
+
 		return 0;
 	}
 
+	//replace algorithm name on match with alias
+	std::string algspec;
+	if (algspectable().count (p_algspec) )
+		algspec = algspectable() [p_algspec];
+	else
+		algspec = p_algspec;
+
+	//handle symmetric operation
 	if (symmetric.length() )
 		return action_gen_symkey (algspec, symmetric, armor);
 
