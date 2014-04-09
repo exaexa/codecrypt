@@ -38,40 +38,6 @@ static int mceqd_create_keypair (sencode**pub, sencode**priv, prng&rng)
 	return 0;
 }
 
-#if HAVE_CRYPTOPP==1
-
-int algo_mceqd128::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return mceqd_create_keypair<16, 7, 32, 4> (pub, priv, rng);
-}
-
-int algo_mceqd192::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return mceqd_create_keypair<16, 8, 27, 4> (pub, priv, rng);
-}
-
-int algo_mceqd256::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return mceqd_create_keypair<16, 8, 32, 4> (pub, priv, rng);
-}
-
-#endif //HAVE_CRYPTOPP==1
-
-int algo_mceqd128cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return mceqd_create_keypair<16, 7, 32, 4> (pub, priv, rng);
-}
-
-int algo_mceqd192cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return mceqd_create_keypair<16, 8, 27, 4> (pub, priv, rng);
-}
-
-int algo_mceqd256cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return mceqd_create_keypair<16, 8, 32, 4> (pub, priv, rng);
-}
-
 /*
  * Padding. Ha-ha.
  *
@@ -427,174 +393,95 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 }
 
 /*
- * Instances for actual encryption/descryption algorithms
+ * Instances for actual keygen/encryption/descryption algorithms
  */
+
+#define mceqd_create_keypair_func(name,m,T,b,d) \
+int algo_mceqd##name::create_keypair (sencode**pub, sencode**priv, prng&rng) \
+{ \
+	return mceqd_create_keypair<m, T, b, d> (pub, priv, rng); \
+}
+
+#if HAVE_CRYPTOPP==1
+
+mceqd_create_keypair_func (128, 16, 7, 32, 4)
+mceqd_create_keypair_func (192, 16, 8, 27, 4)
+mceqd_create_keypair_func (256, 16, 8, 32, 4)
+
+#endif //HAVE_CRYPTOPP==1
+
+mceqd_create_keypair_func (128cube, 16, 7, 32, 4)
+mceqd_create_keypair_func (192cube, 16, 8, 27, 4)
+mceqd_create_keypair_func (256cube, 16, 8, 32, 4)
 
 #include "arcfour.h"
 
 typedef arcfour<byte, 8, 4096> arcfour_fo_cipher;
+
+#define mceqd_create_encdec_func(name,plainsize,ciphersize,errcount, hash_type,pad_hash_type,scipher,ranksize) \
+int algo_mceqd##name::encrypt (const bvector&plain, bvector&cipher, \
+                               sencode* pubkey, prng&rng) \
+{ \
+	return fo_encrypt \
+	       < mce_qd::pubkey, \
+	       plainsize, ciphersize, errcount, \
+	       hash_type, \
+	       pad_hash_type, \
+	       scipher, \
+	       ranksize > \
+	       (plain, cipher, pubkey, rng); \
+} \
+int algo_mceqd##name::decrypt (const bvector&cipher, bvector&plain, \
+                               sencode* privkey) \
+{ \
+	return fo_decrypt \
+	       < mce_qd::privkey, \
+	       plainsize, ciphersize, errcount, \
+	       hash_type, \
+	       pad_hash_type, \
+	       scipher, \
+	       ranksize > \
+	       (cipher, plain, privkey); \
+}
+
 
 #if HAVE_CRYPTOPP==1
 
 #include "sha_hash.h"
 #include "rmd_hash.h"
 
-int algo_mceqd128::encrypt (const bvector&plain, bvector&cipher,
-                            sencode* pubkey, prng&rng)
-{
-	return fo_encrypt
-	       < mce_qd::pubkey,
-	       2048, 4096, 128,
-	       sha256hash,
-	       rmd128hash,
-	       arcfour_fo_cipher,
-	       816 >
-	       (plain, cipher, pubkey, rng);
-}
+mceqd_create_encdec_func (128, 2048, 4096, 128,
+                          sha256hash, rmd128hash,
+                          arcfour_fo_cipher,
+                          816)
 
-int algo_mceqd192::encrypt (const bvector&plain, bvector&cipher,
-                            sencode* pubkey, prng&rng)
-{
-	return fo_encrypt
-	       < mce_qd::pubkey,
-	       2816, 6912, 256,
-	       sha384hash,
-	       rmd128hash,
-	       arcfour_fo_cipher,
-	       1574 >
-	       (plain, cipher, pubkey, rng);
-}
 
-int algo_mceqd256::encrypt (const bvector&plain, bvector&cipher,
-                            sencode* pubkey, prng&rng)
-{
-	return fo_encrypt
-	       < mce_qd::pubkey,
-	       4096, 8192, 256,
-	       sha512hash,
-	       rmd128hash,
-	       arcfour_fo_cipher,
-	       1638 >
-	       (plain, cipher, pubkey, rng);
-}
+mceqd_create_encdec_func (192, 2816, 6912, 256,
+                          sha384hash, rmd128hash,
+                          arcfour_fo_cipher,
+                          1574)
 
-int algo_mceqd128::decrypt (const bvector&cipher, bvector&plain,
-                            sencode* privkey)
-{
-	return fo_decrypt
-	       < mce_qd::privkey,
-	       2048, 4096, 128,
-	       sha256hash,
-	       rmd128hash,
-	       arcfour_fo_cipher,
-	       816 >
-	       (cipher, plain, privkey);
-}
-
-int algo_mceqd192::decrypt (const bvector&cipher, bvector&plain,
-                            sencode* privkey)
-{
-	return fo_decrypt
-	       < mce_qd::privkey,
-	       2816, 6912, 256,
-	       sha384hash,
-	       rmd128hash,
-	       arcfour_fo_cipher,
-	       1574 >
-	       (cipher, plain, privkey);
-}
-
-int algo_mceqd256::decrypt (const bvector&cipher, bvector&plain,
-                            sencode* privkey)
-{
-	return fo_decrypt
-	       < mce_qd::privkey,
-	       4096, 8192, 256,
-	       sha512hash,
-	       rmd128hash,
-	       arcfour_fo_cipher,
-	       1638 >
-	       (cipher, plain, privkey);
-}
+mceqd_create_encdec_func (256, 4096, 8192, 256,
+                          sha512hash, rmd128hash,
+                          arcfour_fo_cipher,
+                          1638)
 
 #endif //HAVE_CRYPTOPP==1
 
 #include "cube_hash.h"
 
-int algo_mceqd128cube::encrypt (const bvector&plain, bvector&cipher,
-                                sencode* pubkey, prng&rng)
-{
-	return fo_encrypt
-	       < mce_qd::pubkey,
-	       2048, 4096, 128,
-	       cube256hash,
-	       cube128hash,
-	       arcfour_fo_cipher,
-	       816 >
-	       (plain, cipher, pubkey, rng);
-}
+mceqd_create_encdec_func (128cube, 2048, 4096, 128,
+                          cube256hash, cube128hash,
+                          arcfour_fo_cipher,
+                          816)
 
-int algo_mceqd192cube::encrypt (const bvector&plain, bvector&cipher,
-                                sencode* pubkey, prng&rng)
-{
-	return fo_encrypt
-	       < mce_qd::pubkey,
-	       2816, 6912, 256,
-	       cube384hash,
-	       cube128hash,
-	       arcfour_fo_cipher,
-	       1574 >
-	       (plain, cipher, pubkey, rng);
-}
 
-int algo_mceqd256cube::encrypt (const bvector&plain, bvector&cipher,
-                                sencode* pubkey, prng&rng)
-{
-	return fo_encrypt
-	       < mce_qd::pubkey,
-	       4096, 8192, 256,
-	       cube512hash,
-	       cube128hash,
-	       arcfour_fo_cipher,
-	       1638 >
-	       (plain, cipher, pubkey, rng);
-}
+mceqd_create_encdec_func (192cube, 2816, 6912, 256,
+                          cube384hash, cube128hash,
+                          arcfour_fo_cipher,
+                          1574)
 
-int algo_mceqd128cube::decrypt (const bvector&cipher, bvector&plain,
-                                sencode* privkey)
-{
-	return fo_decrypt
-	       < mce_qd::privkey,
-	       2048, 4096, 128,
-	       cube256hash,
-	       cube128hash,
-	       arcfour_fo_cipher,
-	       816 >
-	       (cipher, plain, privkey);
-}
-
-int algo_mceqd192cube::decrypt (const bvector&cipher, bvector&plain,
-                                sencode* privkey)
-{
-	return fo_decrypt
-	       < mce_qd::privkey,
-	       2816, 6912, 256,
-	       cube384hash,
-	       cube128hash,
-	       arcfour_fo_cipher,
-	       1574 >
-	       (cipher, plain, privkey);
-}
-
-int algo_mceqd256cube::decrypt (const bvector&cipher, bvector&plain,
-                                sencode* privkey)
-{
-	return fo_decrypt
-	       < mce_qd::privkey,
-	       4096, 8192, 256,
-	       cube512hash,
-	       cube128hash,
-	       arcfour_fo_cipher,
-	       1638 >
-	       (cipher, plain, privkey);
-}
+mceqd_create_encdec_func (256cube, 4096, 8192, 256,
+                          cube512hash, cube128hash,
+                          arcfour_fo_cipher,
+                          1638)
