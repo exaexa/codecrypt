@@ -178,6 +178,32 @@ static int fmtseq_create_keypair (sencode**pub, sencode**priv, prng&rng)
  * actual instantiations
  */
 
+#define fmtseq_create_funcs(name, h, l, hs, message_hash, tree_hash, generator) \
+int algo_fmtseq##name::sign (const bvector&msg, \
+                             bvector&sig, \
+                             sencode**privkey, \
+                             bool&dirty, \
+                            prng&rng) \
+{ \
+	return fmtseq_generic_sign \
+	       <h, l, hs, message_hash, tree_hash, generator> \
+	       (msg, sig, privkey, dirty, rng); \
+} \
+int algo_fmtseq##name::verify (const bvector&sig, \
+                               const bvector&msg, \
+                               sencode*pubkey) \
+{ \
+	return fmtseq_generic_verify \
+	       <h, l, hs, message_hash, tree_hash> \
+	       (sig, msg, pubkey); \
+} \
+int algo_fmtseq##name::create_keypair (sencode**pub, sencode**priv, prng&rng) \
+{ \
+	return fmtseq_create_keypair<tree_hash, generator, hs, h, l> \
+	       (pub, priv, rng); \
+}
+
+
 #include "chacha.h"
 
 #if HAVE_CRYPTOPP==1
@@ -186,83 +212,10 @@ static int fmtseq_create_keypair (sencode**pub, sencode**priv, prng&rng)
 #include "rmd_hash.h"
 #include "tiger_hash.h"
 
-int algo_fmtseq128::sign (const bvector&msg,
-                          bvector&sig,
-                          sencode**privkey,
-                          bool&dirty,
-                          prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 4, 256, sha256hash, rmd128hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
 
-int algo_fmtseq128::verify (const bvector&sig,
-                            const bvector&msg,
-                            sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 4, 256, sha256hash, rmd128hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq192::sign (const bvector&msg,
-                          bvector&sig,
-                          sencode**privkey,
-                          bool&dirty,
-                          prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 4, 384, sha384hash, tiger192hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
-
-int algo_fmtseq192::verify (const bvector&sig,
-                            const bvector&msg,
-                            sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 4, 384, sha384hash, tiger192hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq256::sign (const bvector&msg,
-                          bvector&sig,
-                          sencode**privkey,
-                          bool&dirty,
-                          prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 4, 512, sha512hash, sha256hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
-
-int algo_fmtseq256::verify (const bvector&sig,
-                            const bvector&msg,
-                            sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 4, 512, sha512hash, sha256hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq128::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<rmd128hash, chacha20, 256, 4, 4>
-	       (pub, priv, rng);
-}
-
-int algo_fmtseq192::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<tiger192hash, chacha20, 384, 4, 4>
-	       (pub, priv, rng);
-}
-
-int algo_fmtseq256::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<sha256hash, chacha20, 512, 4, 4>
-	       (pub, priv, rng);
-}
+fmtseq_create_funcs (128, 4, 4, 256, sha256hash, rmd128hash, chacha20)
+fmtseq_create_funcs (192, 4, 4, 384, sha384hash, tiger192hash, chacha20)
+fmtseq_create_funcs (256, 4, 4, 512, sha512hash, sha256hash, chacha20)
 
 /*
  * h=20 variants for signature count 1048576.
@@ -271,83 +224,9 @@ int algo_fmtseq256::create_keypair (sencode**pub, sencode**priv, prng&rng)
  * space needed, as signature time is not really a concern here.
  */
 
-int algo_fmtseq128h20::sign (const bvector&msg,
-                             bvector&sig,
-                             sencode**privkey,
-                             bool&dirty,
-                             prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 5, 256, sha256hash, rmd128hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
-
-int algo_fmtseq128h20::verify (const bvector&sig,
-                               const bvector&msg,
-                               sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 5, 256, sha256hash, rmd128hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq192h20::sign (const bvector&msg,
-                             bvector&sig,
-                             sencode**privkey,
-                             bool&dirty,
-                             prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 5, 384, sha384hash, tiger192hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
-
-int algo_fmtseq192h20::verify (const bvector&sig,
-                               const bvector&msg,
-                               sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 5, 384, sha384hash, tiger192hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq256h20::sign (const bvector&msg,
-                             bvector&sig,
-                             sencode**privkey,
-                             bool&dirty,
-                             prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 5, 512, sha512hash, sha256hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
-
-int algo_fmtseq256h20::verify (const bvector&sig,
-                               const bvector&msg,
-                               sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 5, 512, sha512hash, sha256hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq128h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<rmd128hash, chacha20, 256, 4, 5>
-	       (pub, priv, rng);
-}
-
-int algo_fmtseq192h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<tiger192hash, chacha20, 384, 4, 5>
-	       (pub, priv, rng);
-}
-
-int algo_fmtseq256h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<sha256hash, chacha20, 512, 4, 5>
-	       (pub, priv, rng);
-}
+fmtseq_create_funcs (128h20, 4, 5, 256, sha256hash, rmd128hash, chacha20)
+fmtseq_create_funcs (192h20, 4, 5, 384, sha384hash, tiger192hash, chacha20)
+fmtseq_create_funcs (256h20, 4, 5, 512, sha512hash, sha256hash, chacha20)
 
 #endif //HAVE_CRYPTOPP==1
 
@@ -357,162 +236,15 @@ int algo_fmtseq256h20::create_keypair (sencode**pub, sencode**priv, prng&rng)
 
 #include "cube_hash.h"
 
-int algo_fmtseq128cube::sign (const bvector&msg,
-                              bvector&sig,
-                              sencode**privkey,
-                              bool&dirty,
-                              prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 4, 256, cube256hash, cube128hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
-
-int algo_fmtseq128cube::verify (const bvector&sig,
-                                const bvector&msg,
-                                sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 4, 256, cube256hash, cube128hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq192cube::sign (const bvector&msg,
-                              bvector&sig,
-                              sencode**privkey,
-                              bool&dirty,
-                              prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 4, 384, cube384hash, cube192hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
-
-int algo_fmtseq192cube::verify (const bvector&sig,
-                                const bvector&msg,
-                                sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 4, 384, cube384hash, cube192hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq256cube::sign (const bvector&msg,
-                              bvector&sig,
-                              sencode**privkey,
-                              bool&dirty,
-                              prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 4, 512, cube512hash, cube256hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
-
-int algo_fmtseq256cube::verify (const bvector&sig,
-                                const bvector&msg,
-                                sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 4, 512, cube512hash, cube256hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq128cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<cube128hash, chacha20, 256, 4, 4>
-	       (pub, priv, rng);
-}
-
-int algo_fmtseq192cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<cube192hash, chacha20, 384, 4, 4>
-	       (pub, priv, rng);
-}
-
-int algo_fmtseq256cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<cube256hash, chacha20, 512, 4, 4>
-	       (pub, priv, rng);
-}
+fmtseq_create_funcs (128cube, 4, 4, 256, cube256hash, cube128hash, chacha20)
+fmtseq_create_funcs (192cube, 4, 4, 384, cube384hash, cube192hash, chacha20)
+fmtseq_create_funcs (256cube, 4, 4, 512, cube512hash, cube256hash, chacha20)
 
 /*
  * h=20 variants with cubehash.
  */
 
-int algo_fmtseq128h20cube::sign (const bvector&msg,
-                                 bvector&sig,
-                                 sencode**privkey,
-                                 bool&dirty,
-                                 prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 5, 256, cube256hash, cube128hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
+fmtseq_create_funcs (128h20cube, 4, 5, 256, cube256hash, cube128hash, chacha20)
+fmtseq_create_funcs (192h20cube, 4, 5, 384, cube384hash, cube192hash, chacha20)
+fmtseq_create_funcs (256h20cube, 4, 5, 512, cube512hash, cube256hash, chacha20)
 
-int algo_fmtseq128h20cube::verify (const bvector&sig,
-                                   const bvector&msg,
-                                   sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 5, 256, cube256hash, cube128hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq192h20cube::sign (const bvector&msg,
-                                 bvector&sig,
-                                 sencode**privkey,
-                                 bool&dirty,
-                                 prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 5, 384, cube384hash, cube192hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
-
-int algo_fmtseq192h20cube::verify (const bvector&sig,
-                                   const bvector&msg,
-                                   sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 5, 384, cube384hash, cube192hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq256h20cube::sign (const bvector&msg,
-                                 bvector&sig,
-                                 sencode**privkey,
-                                 bool&dirty,
-                                 prng&rng)
-{
-	return fmtseq_generic_sign
-	       <4, 5, 512, cube512hash, cube256hash, chacha20>
-	       (msg, sig, privkey, dirty, rng);
-}
-
-int algo_fmtseq256h20cube::verify (const bvector&sig,
-                                   const bvector&msg,
-                                   sencode*pubkey)
-{
-	return fmtseq_generic_verify
-	       <4, 5, 512, cube512hash, cube256hash>
-	       (sig, msg, pubkey);
-}
-
-int algo_fmtseq128h20cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<cube128hash, chacha20, 256, 4, 5>
-	       (pub, priv, rng);
-}
-
-int algo_fmtseq192h20cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<cube192hash, chacha20, 384, 4, 5>
-	       (pub, priv, rng);
-}
-
-int algo_fmtseq256h20cube::create_keypair (sencode**pub, sencode**priv, prng&rng)
-{
-	return fmtseq_create_keypair<cube256hash, chacha20, 512, 4, 5>
-	       (pub, priv, rng);
-}
