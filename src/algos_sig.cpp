@@ -20,7 +20,7 @@
 
 #include "fmtseq.h"
 #include "hash.h"
-#include "arcfour.h"
+#include "chacha.h"
 
 /*
  * DISCUSSION.
@@ -55,7 +55,7 @@
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
-typedef arcfour<byte, 8, 256> padding_generator;
+typedef chacha20 padding_generator;
 
 static void msg_pad (const bvector&in, std::vector<byte>&out, size_t minsize)
 {
