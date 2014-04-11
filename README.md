@@ -29,9 +29,10 @@ There is a complete, UNIXy manual page supplied with the package. You can view i
 Everything is meant to work mostly like GnuPG, but with some good simplicity
 margin. Let's play with random data!
 
+
 	ccr -g help
-	ccr -g fmtseq128-sha --name "John Doe"    # your signature key
-	ccr -g mceqd128 --name "John Doe"     # your encryption key
+	ccr -g sig --name "John Doe"    # your signature key
+	ccr -g enc --name "John Doe"    # your encryption key
 
 	ccr -K  #watch the generated keys
 	ccr -k
@@ -57,18 +58,17 @@ margin. Let's play with random data!
 	ccr -x Unfri
 
 	#create hashfile from a large file
-	ccr -s -S hashfile.ccr < big_data.iso
+	ccr -sS hashfile.ccr < big_data.iso
 
 	#verify the hashfile
 	ccr -vS hashfile.ccr < the_same_big_data.iso
 
-	#create symmetric key and encrypt a large file
-	ccr -g sha256,xsynd -S symkey.ccr
-	ccr -eaS symkey.ccr -R big_data.iso -o big_data_encrypted.iso
+	#create (ascii-armored) symmetric key and encrypt a large file
+	ccr -g sha256,chacha20 -aS symkey.asc
+	ccr -eaS symkey.asc -R big_data.iso -o big_data_encrypted.iso
 
 	#decrypt a large file
-	ccr -daS symkey.ccr <big_data_encrypted.iso >big_data.iso
-
+	ccr -daS symkey.asc <big_data_encrypted.iso >big_data.iso
 
 ## Option reference
 
