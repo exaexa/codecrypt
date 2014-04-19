@@ -184,6 +184,8 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 			hash_proc&hp = **i;
 			hp.init();
 			hp.eat (& (buf[0]), & (buf[4 + bytes_read]) );
+			hp.eat (key);
+			hp.eat (otkey);
 			std::vector<byte> res = hp.finish();
 			for (uint j = 0; j < res.size(); ++j, ++hashpos)
 				buf[hashpos] = res[j];
@@ -313,6 +315,8 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 			hash_proc&hp = **i;
 			hp.init();
 			hp.eat (& (buf[0]), & (buf[4 + bytes_read]) );
+			hp.eat (key);
+			hp.eat (otkey);
 			std::vector<byte> res = hp.finish();
 			for (uint j = 0; j < res.size(); ++j, ++hashpos)
 				if (buf[hashpos] != res[j]) {
