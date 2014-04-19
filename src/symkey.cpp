@@ -94,11 +94,9 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 	 *
 	 * - one-time key part, key.size() bytes
 	 *  (repeat:
-	 * - 4B blocksize little-endian
 	 * - blocksize encrypted bytes
 	 * - sum(hashes's size) blocksize marker+bytes of block hashes
 	 *  )
-	 * - 4B less than blocksize (may be zero!)
 	 * - possibly incomplete last block (may be empty)
 	 * - hashes of last blocksize+block
 	 * - eof
@@ -158,11 +156,11 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 	 */
 
 	std::vector<byte>buf, cipbuf;
-	buf.resize (4 + blocksize + hashes_size);
+	buf.resize (blocksize + hashes_size);
 	cipbuf.resize (buf.size() );
 
 	for (;;) {
-		in.read ( (char*) & (buf[4]), blocksize);
+		in.read ( (char*) & (buf[0]), blocksize);
 		uint bytes_read = in.gcount();
 
 		if (!in && !in.eof() ) {
@@ -170,25 +168,19 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 			return false;
 		}
 
-		//now we got bytes_read of key stuff ready in buf.
-		uint blksizeid = bytes_read;
-		for (uint i = 0; i < 4; ++i) {
-			buf[i] = blksizeid & 0xff;
-			blksizeid >>= 8;
-		}
-
 		//hashup!
-		uint hashpos = 4 + bytes_read;
+		uint hashpos = bytes_read;
 		for (hashes_t::iterator i = hs.begin(), e = hs.end();
 		     i != e; ++i) {
 			hash_proc&hp = **i;
 			hp.init();
-			hp.eat (& (buf[0]), & (buf[4 + bytes_read]) );
+			hp.eat (& (buf[0]), & (buf[bytes_read]) );
 			hp.eat (key);
 			hp.eat (otkey);
 			std::vector<byte> res = hp.finish();
 			for (uint j = 0; j < res.size(); ++j, ++hashpos)
 				buf[hashpos] = res[j];
+			//hashpos gets to the end of block with hashes
 		}
 
 		//encrypt!
@@ -275,14 +267,14 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 	 */
 
 	std::vector<byte> buf, cipbuf;
-	buf.resize (4 + blocksize + hashes_size);
+	buf.resize (blocksize + hashes_size);
 	cipbuf.resize (buf.size() );
 
 	for (;;) {
 		in.read ( (char*) & (buf[0]), buf.size() );
 		uint bytes_read = in.gcount();
 
-		if ( (!in && !in.eof() ) || bytes_read < 4 + hashes_size) {
+		if ( (!in && !in.eof() ) || bytes_read < hashes_size) {
 			err ("symkey: failed reading input");
 			return 1;
 		}
@@ -296,25 +288,15 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 				buf[j] = buf[j] ^ cipbuf[j];
 		}
 
-		//verify the size
-		bytes_read -= (4 + hashes_size);
-
-		uint blksizeid = bytes_read;
-		for (uint i = 0; i < 4; ++i) {
-			if (buf[i] != (blksizeid & 0xff) ) {
-				err ("symkey: mangled input");
-				return 3;
-			}
-			blksizeid >>= 8;
-		}
+		bytes_read -= hashes_size;
 
 		//verify the hashes
-		uint hashpos = 4 + bytes_read;
+		uint hashpos = bytes_read;
 		for (hashes_t::iterator i = hs.begin(), e = hs.end();
 		     i != e; ++i) {
 			hash_proc&hp = **i;
 			hp.init();
-			hp.eat (& (buf[0]), & (buf[4 + bytes_read]) );
+			hp.eat (& (buf[0]), & (buf[bytes_read]) );
 			hp.eat (key);
 			hp.eat (otkey);
 			std::vector<byte> res = hp.finish();
@@ -326,7 +308,7 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 		}
 
 		//now that all is OK, output!
-		out.write ( (char*) & (buf[4]), bytes_read);
+		out.write ( (char*) & (buf[0]), bytes_read);
 
 		//last one
 		if (bytes_read < blocksize) break;
