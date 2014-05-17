@@ -1,6 +1,11 @@
 
 Codecrypt ChangeLog
 
+1.6.1
+
+- simplify padding for symmetric encryption
+- fix possible known-plaintext attack against symmetric encryption padding
+
 1.6
 
 - fix fmtseq short message padding bug (fixed by previous)
