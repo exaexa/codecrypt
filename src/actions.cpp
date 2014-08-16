@@ -1301,19 +1301,59 @@ int action_decrypt_verify (bool armor, bool yes,
  * keyring stuff
  */
 
+static std::string escape_key_name (const std::string&s)
+{
+	std::string r;
+	const char hex[] = "0123456789abcdef";
+	for (size_t i = 0; i < s.length(); ++i)
+		if (s[i] == '\\') r += "\\\\";
+		else if (s[i] < 0x20)
+			switch (s[i]) {
+			case '\a':
+				r += "\\a";
+				break;
+			case '\b':
+				r += "\\b";
+				break;
+			case '\x1b':
+				r += "\\e";
+				break;
+			case '\f':
+				r += "\\f";
+				break;
+			case '\n':
+				r += "\\n";
+				break;
+			case '\r':
+				r += "\\r";
+				break;
+			case '\t':
+				r += "\\t";
+				break;
+			case '\v':
+				r += "\\v";
+				break;
+			default:
+				r += "\\x";
+				r += hex[0xf & (s[i] >> 4)];
+				r += hex[0xf & s[i]];
+			}
+		else r += s[i];
+	return r;
+}
+
 static void output_key (bool fp,
                         const std::string& ident, const std::string&longid,
                         const std::string&alg, const std::string&keyid,
                         const std::string&name)
 {
-
 	if (!fp)
 		out (ident << '\t' << alg << '\t'
 		     << '@' << keyid.substr (0, 22) << "...\t"
-		     << "\"" << name << "\"");
+		     << escape_key_name (name) );
 	else {
 		out ( longid << " with algorithm " << alg
-		      << ", name `" << name << "'");
+		      << ", name `" << escape_key_name (name) << "'");
 
 		std::cout << "  fingerprint ";
 		for (size_t j = 0; j < keyid.length(); ++j) {
@@ -1580,7 +1620,7 @@ int action_rename (bool yes,
 		bool okay = false;
 		ask_for_yes (okay, "This will rename " << kc
 		             << " pubkeys from your keyring to `"
-		             << name << "'. Continue?");
+		             << escape_key_name (name) << "'. Continue?");
 		if (!okay) return 0;
 	}
 
@@ -1837,7 +1877,7 @@ int action_rename_sec (bool yes,
 		bool okay = false;
 		ask_for_yes (okay, "This will rename " << kc
 		             << " secrets from your keyring to `"
-		             << name << "'. Continue?");
+		             << escape_key_name (name) << "'. Continue?");
 		if (!okay) return 0;
 	}
 
