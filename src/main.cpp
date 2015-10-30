@@ -21,7 +21,7 @@
 void print_version()
 {
 	out ("codecrypt " PACKAGE_VERSION);
-	out ("Copyright (C) 2014 Mirek Kratochvil <exa.exa@gmail.com>");
+	out ("Copyright (C) 2015 Mirek Kratochvil <exa.exa@gmail.com>");
 	out ("This is free software; see the source "
 	     "for copying conditions.  There is NO");
 	out ("warranty; not even for MERCHANTABILITY "
