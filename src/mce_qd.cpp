@@ -22,12 +22,26 @@ using namespace mce_qd;
 
 #include "decoding.h"
 #include "qd_utils.h"
+#include "iohelpers.h"
 
 #include <set>
+
+static void print_attack_warning()
+{
+	bool printed = false;
+	if (printed) return;
+	err ("\n***MCEQD SECURITY WARNING***\n\n"
+	     "Security of the QD-McEliece variant was greatly reduced to less than 2^50\n"
+	     "by an algebraic attack! The functions are kept only for compatibility.\n"
+	     "Be sure to use another encryption variant instead.");
+	printed = true;
+}
 
 int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
                       uint m, uint T, uint block_count, uint block_discard)
 {
+	print_attack_warning();
+
 	//convenience
 	gf2m&fld = priv.fld;
 	std::vector<uint>&essence = priv.essence;
@@ -68,8 +82,8 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 			i = 1 << s; //i = 2^s
 
 			Hsig[i] = choose_random (fld.n, rng, used);
-			essence[s] = fld.add (essence[m - 1], fld.inv (Hsig[i]) );
-			used.insert (fld.inv (essence[s]) );
+			essence[s] = fld.add (essence[m - 1], fld.inv (Hsig[i]));
+			used.insert (fld.inv (essence[s]));
 
 			for (j = 1; j < i; ++j) {
 				if (i + j >= n) break;
@@ -79,12 +93,12 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 				                fld.add (
 				                    fld.inv (Hsig[j]),
 				                    essence[m - 1]
-				                ) ) );
+				                )));
 				used.insert (Hsig[i + j]);
 				used.insert (fld.inv
 				             (fld.add
 				              (fld.inv (Hsig[i + j]),
-				               essence[m - 1]) ) );
+				               essence[m - 1])));
 			}
 		}
 
@@ -99,7 +113,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 		for (i = 0; i < t; ++i) {
 			//tmp(x)=x-z=x-(1/h_i)
 			tmp[0] = fld.inv (Hsig[i]);
-			if (used.count (tmp[0]) ) {
+			if (used.count (tmp[0])) {
 				consistent = false;
 				break;
 			}
@@ -115,7 +129,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 			                 fld.inv (Hsig[i]),
 			                 essence[m - 1]);
 
-			if (used.count (support[i]) ) {
+			if (used.count (support[i])) {
 				consistent = false;
 				break;
 			}
@@ -142,7 +156,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 		//permute individual blocks
 		priv.block_perms.resize (block_count);
-		bl.resize (blp.size() );
+		bl.resize (blp.size());
 		for (i = 0; i < block_count; ++i) {
 			priv.block_perms[i] = rng.random (block_size);
 			permutation::permute_dyadic (priv.block_perms[i],
@@ -176,7 +190,7 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 			/* do a modified QD-blockwise gaussian elimination on hblocks.
 			 * If it fails, retry. */
-			if (!qd_to_right_echelon_form (hblocks) ) continue;
+			if (!qd_to_right_echelon_form (hblocks)) continue;
 
 			pub.qd_sigs.resize2 (block_count - fld.m,
 			                     block_size * fld.m, 0);
@@ -201,6 +215,8 @@ int mce_qd::generate (pubkey&pub, privkey&priv, prng&rng,
 
 int privkey::prepare()
 {
+	print_attack_warning();
+
 	uint s, i, j;
 	std::vector<uint> Hsig, support;
 	uint omega;
@@ -216,7 +232,7 @@ int privkey::prepare()
 	for (s = 0; ( (uint) 1 << s) < n; ++s) {
 		i = 1 << s; //i = 2^s
 
-		Hsig[i] = fld.inv (fld.add (essence[s], essence[fld.m - 1]) );
+		Hsig[i] = fld.inv (fld.add (essence[s], essence[fld.m - 1]));
 
 		for (j = 1; j < i; ++j) {
 			if (i + j >= n) break;
@@ -226,7 +242,7 @@ int privkey::prepare()
 			                fld.add (
 			                    fld.inv (Hsig[j]),
 			                    essence[fld.m - 1]
-			                ) ) );
+			                )));
 		}
 	}
 
@@ -241,7 +257,7 @@ int privkey::prepare()
 	tmp.resize (2, 1); //tmp(x)=x+1
 	for (i = 0; i < block_size; ++i) {
 		tmp[0] = fld.inv (Hsig[i]); //tmp(x)=x+1/h_i
-		if (used.count (tmp[0]) )
+		if (used.count (tmp[0]))
 			return 1;
 		used.insert (tmp[0]);
 		g.mult (tmp, fld);
@@ -256,7 +272,7 @@ int privkey::prepare()
 		             (fld.inv (Hsig[i]),
 		              essence[fld.m - 1]);
 		//support consistency check
-		if (used.count (support[i]) )
+		if (used.count (support[i]))
 			return 1;
 		used.insert (support[i]);
 	}
@@ -264,7 +280,7 @@ int privkey::prepare()
 	//choose some omega
 	omega = fld.n;
 	for (i = 0; i < fld.n; ++i)
-		if (!used.count (i) ) {
+		if (!used.count (i)) {
 			omega = i;
 			break;
 		}
@@ -342,6 +358,8 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 
 int pubkey::encrypt (const bvector & in, bvector & out, const bvector&errors)
 {
+	print_attack_warning();
+
 	uint t = 1 << T;
 	bvector p, g, r, cksum;
 	uint i, j;
@@ -352,10 +370,10 @@ int pubkey::encrypt (const bvector & in, bvector & out, const bvector&errors)
 	 */
 
 	//some checks
-	if (!qd_sigs.width() ) return 1;
+	if (!qd_sigs.width()) return 1;
 	if (qd_sigs.height() % t) return 1;
-	if (in.size() != plain_size() ) return 2;
-	if (errors.size() != cipher_size() ) return 2;
+	if (in.size() != plain_size()) return 2;
+	if (errors.size() != cipher_size()) return 2;
 
 	uint blocks = qd_sigs.height() / t;
 	cksum.resize (qd_sigs.height(), 0);
@@ -385,7 +403,7 @@ int pubkey::encrypt (const bvector & in, bvector & out, const bvector&errors)
 
 	//compute ciphertext
 	out = in;
-	out.insert (out.end(), cksum.begin(), cksum.end() );
+	out.insert (out.end(), cksum.begin(), cksum.end());
 	out.add (errors);
 
 	return 0;
@@ -399,7 +417,9 @@ int privkey::decrypt (const bvector & in, bvector & out)
 
 int privkey::decrypt (const bvector & in, bvector & out, bvector & errors)
 {
-	if (in.size() != cipher_size() ) return 2;
+	print_attack_warning();
+
+	if (in.size() != cipher_size()) return 2;
 	polynomial synd;
 	uint i, tmp;
 
@@ -412,9 +432,9 @@ int privkey::decrypt (const bvector & in, bvector & out, bvector & errors)
 	synd.resize (h_size, 0);
 	for (i = 0; i < cipher_size(); ++i) if (in[i]) {
 			tmp = fld.inv_square //g(Li)^{-2}
-			      (g.eval (permuted_support[i], fld) );
+			      (g.eval (permuted_support[i], fld));
 			fld.add_mults (tmp, permuted_support[i],
-			               synd.begin(), synd.end() );
+			               synd.begin(), synd.end());
 		}
 
 	//decoding
@@ -423,23 +443,23 @@ int privkey::decrypt (const bvector & in, bvector & out, bvector & errors)
 
 	bool failed = false;
 	bvector ev;
-	if (!evaluate_error_locator_trace (loc, ev, fld) )
+	if (!evaluate_error_locator_trace (loc, ev, fld))
 		failed = true;
 
 	out = in;
-	out.resize (plain_size() );
+	out.resize (plain_size());
 	errors.clear();
 	errors.resize (cipher_size(), 0);
 	//flip error positions of out.
 	for (i = 0; i < ev.size(); ++i) if (ev[i]) {
 			uint epos = support_pos[fld.inv (i)];
-			if (epos == fld.n || epos >= cipher_size() ) {
+			if (epos == fld.n || epos >= cipher_size()) {
 				//found unexpected/wrong support, die.
 				failed = true;
 				continue;
 			}
 			errors[epos] = 1;
-			if (epos < plain_size() )
+			if (epos < plain_size())
 				out[epos] = !out[epos];
 		}
 
