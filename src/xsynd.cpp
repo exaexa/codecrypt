@@ -46,7 +46,7 @@ static void xsynd_multiply (const uint64_t*A, const uint64_t*X, uint64_t*Y)
 			            >> brot)
 			           |
 			           (A[qcoff + ( (j + wrot + 1) % 16)]
-			            << (64 - brot) )
+			            << (64 - brot))
 			       );
 	}
 }

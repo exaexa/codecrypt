@@ -41,7 +41,7 @@ static void add_zero_checksum (bvector& v)
 
 	uint z = s - v.hamming_weight(); //0's instead of 1's
 
-	v.resize (fmtseq_commitments (s) );
+	v.resize (fmtseq_commitments (s));
 	while (z) {
 		v[s] = z & 1;
 		z >>= 1;
@@ -52,7 +52,7 @@ static void add_zero_checksum (bvector& v)
 static void alloc_exist (privkey&priv)
 {
 	priv.exist.resize (priv.l);
-	uint ts = (1 << (priv.h + 1) ) - 2;
+	uint ts = (1 << (priv.h + 1)) - 2;
 	for (uint i = 0; i < priv.l; ++i)
 		priv.exist[i].resize (ts);
 }
@@ -75,7 +75,7 @@ static void alloc_desired (privkey&priv, hash_func&hf)
 	priv.desired_stack.resize (priv.l - 1);
 	priv.desired_progress.resize (priv.l - 1, 0);
 	for (uint i = 0; i < priv.l - 1; ++i) {
-		priv.desired[i].resize ( (1 << (priv.h + 1) ) - 2);
+		priv.desired[i].resize ( (1 << (priv.h + 1)) - 2);
 		for (uint j = 0; j < priv.desired[i].size(); ++j)
 			priv.desired[i][j].resize (hf.size(), 0);
 	}
@@ -86,14 +86,14 @@ static void store_desired (privkey&priv, uint did,
 {
 	if ( (i.level / priv.h) != did) return; //too below or above
 	uint depth = priv.h - (i.level % priv.h);
-	if (i.pos >= ( (uint) 1 << depth) ) return; //too far right, omg why?!
+	if (i.pos >= ( (uint) 1 << depth)) return;  //too far right, omg why?!
 	priv.desired[did][i.pos + (1 << depth) - 2] = i.item;
 }
 
 static bool check_privkey (privkey&priv, hash_func&hf)
 {
 	size_t i, j;
-	uint ts = (1 << (priv.h + 1) ) - 2;
+	uint ts = (1 << (priv.h + 1)) - 2;
 
 	/*
 	 * check the content of privkey caches to prevent reading/writing
@@ -110,19 +110,19 @@ static bool check_privkey (privkey&priv, hash_func&hf)
 		//exist tree hash sizes must be OK
 		for (j = 0; j < ts; ++j)
 			if (priv.exist[i][j].size()
-			    != hf.size() )
+			    != hf.size())
 				return false;
 	}
 
 	//check desired stuff
-	if (priv.desired_stack.size() < priv.desired.size() ) return false;
-	if (priv.desired_progress.size() < priv.desired.size() ) return false;
+	if (priv.desired_stack.size() < priv.desired.size()) return false;
+	if (priv.desired_progress.size() < priv.desired.size()) return false;
 
 	for (i = 0; i < priv.desired.size(); ++i) {
 		if (priv.desired[i].size() != ts) return false;
 		for (j = 0; j < ts; ++j)
 			if (priv.desired[i][j].size()
-			    != hf.size() )
+			    != hf.size())
 				return false;
 	}
 
@@ -162,7 +162,7 @@ static void update_privkey (privkey&priv, hash_func&hf, streamcipher&generator)
 	 * whole algorithm is kindof complex. Omitted for simplicity.
 	 */
 
-	x.resize (hf.size() );
+	x.resize (hf.size());
 
 	uint d_leaves, d_startpos, d_h;
 	for (i = 0; i < priv.desired.size(); ++i) {
@@ -172,15 +172,15 @@ static void update_privkey (privkey&priv, hash_func&hf, streamcipher&generator)
 			continue; //already done
 
 		//create the leaf
-		d_startpos = (1 + (priv.sigs_used >> d_h) ) << d_h;
+		d_startpos = (1 + (priv.sigs_used >> d_h)) << d_h;
 		uint leafid = d_startpos + priv.desired_progress[i];
 
 		prepare_keygen (generator, priv.SK, leafid);
 		Y.clear();
 		for (j = 0; j < commitments; ++j) {
-			generator.gen (hf.size(), & (x[0]) );
+			generator.gen (hf.size(), & (x[0]));
 			x = hf (x);
-			Y.insert (Y.end(), x.begin(), x.end() );
+			Y.insert (Y.end(), x.begin(), x.end());
 		}
 
 
@@ -188,8 +188,8 @@ static void update_privkey (privkey&priv, hash_func&hf, streamcipher&generator)
 		&stk = priv.desired_stack[i];
 
 		stk.push_back (privkey::tree_stk_item
-		               (0, priv.desired_progress[i], hf (Y) ) );
-		store_desired (priv, i, stk.back() );
+		               (0, priv.desired_progress[i], hf (Y)));
+		store_desired (priv, i, stk.back());
 
 		++priv.desired_progress[i];
 
@@ -202,17 +202,17 @@ static void update_privkey (privkey&priv, hash_func&hf, streamcipher&generator)
 			Y.clear();
 			Y.insert (Y.end(),
 			          (stk.end() - 2)->item.begin(),
-			          (stk.end() - 2)->item.end() );
+			          (stk.end() - 2)->item.end());
 			Y.insert (Y.end(),
 			          (stk.end() - 1)->item.begin(),
-			          (stk.end() - 1)->item.end() );
+			          (stk.end() - 1)->item.end());
 			uint l = stk.back().level + 1;
 			uint p = stk.back().pos / 2;
 			stk.pop_back();
 			stk.pop_back();
 			stk.push_back (privkey::tree_stk_item
-			               (l, p, hf (Y) ) );
-			store_desired (priv, i, stk.back() );
+			               (l, p, hf (Y)));
+			store_desired (priv, i, stk.back());
 		}
 	}
 
@@ -227,11 +227,11 @@ static void update_privkey (privkey&priv, hash_func&hf, streamcipher&generator)
 		uint idx = priv.l - i - 1;
 
 		//ignore unused top levels
-		if (idx >= priv.desired.size() ) continue;
+		if (idx >= priv.desired.size()) continue;
 
 		//if nothing changed, do nothing
-		if (! ( (subtree_changes >> (priv.h * (1 + idx) ) )
-		        & one_subtree_mask) ) continue;
+		if (! ( (subtree_changes >> (priv.h * (1 + idx)))
+		        & one_subtree_mask)) continue;
 
 		//move desired to exist
 		priv.exist[idx] = priv.desired[idx];
@@ -242,9 +242,9 @@ static void update_privkey (privkey&priv, hash_func&hf, streamcipher&generator)
 		//if there aren't more desired subtrees on this level,
 		//strip it off.
 		uint next_subtree_start =
-		    (1 + (next_sigs_used >> ( (1 + idx) * priv.h) ) )
+		    (1 + (next_sigs_used >> ( (1 + idx) * priv.h)))
 		    << ( (1 + idx) * priv.h);
-		if (next_subtree_start >= ( (uint) 1 << (priv.h * priv.l) ) ) {
+		if (next_subtree_start >= ( (uint) 1 << (priv.h * priv.l))) {
 			priv.desired.resize (idx);
 			priv.desired_stack.resize (idx);
 			priv.desired_progress.resize (idx);
@@ -288,23 +288,23 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 	uint commitments = fmtseq_commitments (hs);
 
 	std::vector<byte> x, Y;
-	x.resize (hf.size() );
+	x.resize (hf.size());
 
 	alloc_exist (priv);
 
 	for (i = 0; i < sigs; ++i) {
 		//generate commitments and concat publics into Y
 		Y.clear();
-		Y.reserve (commitments * hf.size() );
+		Y.reserve (commitments * hf.size());
 		prepare_keygen (generator, priv.SK, i);
 		for (j = 0; j < commitments; ++j) {
-			generator.gen (hf.size(), & (x[0]) );
+			generator.gen (hf.size(), & (x[0]));
 			x = hf (x);
-			Y.insert (Y.end(), x.begin(), x.end() );
+			Y.insert (Y.end(), x.begin(), x.end());
 		}
 
-		stk.push_back (privkey::tree_stk_item (0, i, hf (Y) ) );
-		store_exist (priv, stk.back() );
+		stk.push_back (privkey::tree_stk_item (0, i, hf (Y)));
+		store_exist (priv, stk.back());
 
 		//try squashing the stack
 		for (;;) {
@@ -315,17 +315,17 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 			Y.clear();
 			Y.insert (Y.end(),
 			          (stk.end() - 2)->item.begin(),
-			          (stk.end() - 2)->item.end() );
+			          (stk.end() - 2)->item.end());
 			Y.insert (Y.end(),
 			          (stk.end() - 1)->item.begin(),
-			          (stk.end() - 1)->item.end() );
+			          (stk.end() - 1)->item.end());
 			uint l = stk.back().level + 1;
 			uint p = stk.back().pos / 2;
 			stk.pop_back();
 			stk.pop_back();
 			stk.push_back (privkey::tree_stk_item
-			               (l, p, hf (Y) ) );
-			store_exist (priv, stk.back() );
+			               (l, p, hf (Y)));
+			store_exist (priv, stk.back());
 		}
 	}
 
@@ -362,13 +362,13 @@ int fmtseq::generate (pubkey&pub, privkey&priv,
 int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf,
                    streamcipher&generator)
 {
-	if (hash.size() != hash_size() ) return 2;
-	if (!sigs_remaining() ) {
+	if (hash.size() != hash_size()) return 2;
+	if (!sigs_remaining()) {
 		err ("fmtseq notice: no signatures left");
 		return 2;
 	}
 
-	if (!check_privkey (*this, hf) ) {
+	if (!check_privkey (*this, hf)) {
 		err ("fmtseq: mangled privkey");
 		return 3;
 	}
@@ -381,20 +381,20 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf,
 	std::vector<byte> Sig, t;
 	uint i;
 
-	t.resize (hf.size() );
+	t.resize (hf.size());
 
-	Sig.reserve (hf.size() * (commitments + h * l) );
+	Sig.reserve (hf.size() * (commitments + h * l));
 	//first, compute the commitments and push them to the signature
 	prepare_keygen (generator, SK, sigs_used);
 	for (i = 0; i < commitments; ++i) {
 		//generate x_i
-		generator.gen (hf.size(), & (t[0]) );
+		generator.gen (hf.size(), & (t[0]));
 
 		//if it's 0, publish y_i, else publish x_i
 		if (!M2[i]) t = hf (t);
 
 		//append it to signature
-		Sig.insert (Sig.end(), t.begin(), t.end() );
+		Sig.insert (Sig.end(), t.begin(), t.end());
 	}
 
 	//now retrieve the authentication path
@@ -407,7 +407,7 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf,
 		expos = (pos ^ 1) % (1 << exlev);
 		Sig.insert (Sig.end(),
 		            exist[exid][expos + (1 << exlev) - 2].begin(),
-		            exist[exid][expos + (1 << exlev) - 2].end() );
+		            exist[exid][expos + (1 << exlev) - 2].end());
 		pos >>= 1;
 	}
 
@@ -418,7 +418,7 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf,
 	//convert to bits
 	uint sig_no_start = (commitments + h * l) * hf.size() * 8;
 	for (i = 0; i < sig_no_start; ++i)
-		sig[i] = 1 & (Sig[i / 8] >> (i % 8) );
+		sig[i] = 1 & (Sig[i / 8] >> (i % 8));
 
 	//append signature number
 	pos = sigs_used;
@@ -431,10 +431,10 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf,
 	update_privkey (*this, hf, generator);
 
 	//start moaning at around 1% of remaining signatures
-	if (!sigs_remaining() )
+	if (!sigs_remaining())
 		err ("fmtseq notice: no signatures left, "
 		     "you should discard this key");
-	else if (sigs_remaining() <= (uint) (1 << (h * l) ) / 100)
+	else if (sigs_remaining() <= (uint) (1 << (h * l)) / 100)
 		err ("fmtseq notice: only " << sigs_remaining()
 		     << " signatures left, you should certify new keys");
 	else
@@ -447,8 +447,8 @@ int privkey::sign (const bvector& hash, bvector& sig, hash_func& hf,
 int pubkey::verify (const bvector& sig, const bvector& hash, hash_func& hf)
 {
 	uint i, j;
-	if (sig.size() != signature_size (hf) ) return 2;
-	if (hash.size() != hash_size() ) return 2;
+	if (sig.size() != signature_size (hf)) return 2;
+	if (hash.size() != hash_size()) return 2;
 
 	uint commitments = fmtseq_commitments (hs);
 
@@ -470,14 +470,14 @@ int pubkey::verify (const bvector& sig, const bvector& hash, hash_func& hf)
 		Sig[i].resize (hf.size(), 0);
 		for (j = 0; j < hf.size() * 8; ++j)
 			if (sig[j + i * hf.size() * 8])
-				Sig[i][j / 8] |= (1 << (j % 8) );
+				Sig[i][j / 8] |= (1 << (j % 8));
 	}
 
 	Y.clear();
 	for (i = 0; i < commitments; ++i) {
 		if (M2[i]) t = hf (Sig[i]); //convert pk_i to sk_i at 1's
 		else t = Sig[i]; //else it should already be pk_i
-		Y.insert (Y.end(), t.begin(), t.end() ); //append it to Y_i
+		Y.insert (Y.end(), t.begin(), t.end());  //append it to Y_i
 	}
 
 	//create the leaf
@@ -489,11 +489,11 @@ int pubkey::verify (const bvector& sig, const bvector& hash, hash_func& hf)
 		Y = Sig[commitments + i];
 		if ( (sig_no >> i) & 1) {
 			//append path auth from left
-			Y.insert (Y.end(), t.begin(), t.end() );
+			Y.insert (Y.end(), t.begin(), t.end());
 			t = hf (Y);
 		} else {
 			//append from right
-			t.insert (t.end(), Y.begin(), Y.end() );
+			t.insert (t.end(), Y.begin(), Y.end());
 			t = hf (t);
 		}
 

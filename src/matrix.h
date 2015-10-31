@@ -41,7 +41,7 @@ public:
 	}
 
 	uint height() const {
-		if (size() ) return item (0).size();
+		if (size()) return item (0).size();
 		return 0;
 	}
 

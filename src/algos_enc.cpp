@@ -30,7 +30,7 @@ static int mceqd_create_keypair (sencode**pub, sencode**priv, prng&rng)
 	mce_qd::pubkey Pub;
 	mce_qd::privkey Priv;
 
-	if (mce_qd::generate (Pub, Priv, rng, m, T, b, d) )
+	if (mce_qd::generate (Pub, Priv, rng, m, T, b, d))
 		return 1;
 
 	*pub = Pub.serialize();
@@ -121,7 +121,7 @@ static void message_pad (const bvector&in, std::vector<byte>&out,
 	//pad with random bits to whole byte
 	unsigned char rtmp = rng.random (256);
 	for (; i & 0x7; ++i)
-		if (rtmp >> (i & 0x7) )
+		if (rtmp >> (i & 0x7))
 			out[i >> 3] |= 1 << (i & 0x7);
 
 	//append message overflow size
@@ -149,7 +149,7 @@ static bool message_unpad (std::vector<byte> in, bvector&out,
                            hash_func&pad_hash)
 {
 	//check byte padding sizes
-	if (!in.size() ) return false;
+	if (!in.size()) return false;
 
 	//get rid of the byte padding
 	uint padsize_begin, padsize_end;
@@ -158,7 +158,7 @@ static bool message_unpad (std::vector<byte> in, bvector&out,
 	padsize_end = in[in.size() - 1];
 	//check if it really fits
 	//(2 bytes padding + 1 byte min padded msg length)
-	if ( (uint) padsize_begin + (uint) padsize_end + 3 > in.size() )
+	if ( (uint) padsize_begin + (uint) padsize_end + 3 > in.size())
 		return false;
 
 	//get rid of beginning padding
@@ -183,15 +183,15 @@ static bool message_unpad (std::vector<byte> in, bvector&out,
 	if (bit_overflow >= 8) return false;
 
 	//check if there's byte with overflow bits
-	if (bit_overflow && (in_end < 2) ) return false;
+	if (bit_overflow && (in_end < 2)) return false;
 
 	//convert to bvector
-	uint msg_size = ( (in_end - (bit_overflow ? 2 : 1) ) << 3)
+	uint msg_size = ( (in_end - (bit_overflow ? 2 : 1)) << 3)
 	                + bit_overflow;
 	out.clear();
 	out.resize (msg_size);
 	for (uint i = 0; i < msg_size; ++i)
-		out[i] = 1 & (in[i >> 3] >> (i & 0x7) );
+		out[i] = 1 & (in[i >> 3] >> (i & 0x7));
 
 	return true;
 }
@@ -211,13 +211,13 @@ static bool message_unpad (std::vector<byte> in, bvector&out,
  */
 
 template < class pubkey_type,
-         int plainsize,
-         int ciphersize,
-         int errorcount,
-         class hash_type,
-         class pad_hash_type,
-         class scipher,
-         int ranksize >
+           int plainsize,
+           int ciphersize,
+           int errorcount,
+           class hash_type,
+           class pad_hash_type,
+           class scipher,
+           int ranksize >
 static int fo_encrypt (const bvector&plain, bvector&cipher,
                        sencode* pubkey, prng&rng)
 {
@@ -225,7 +225,7 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 
 	//load the key
 	pubkey_type Pub;
-	if (!Pub.unserialize (pubkey) ) return 1;
+	if (!Pub.unserialize (pubkey)) return 1;
 
 	//verify that key parameters match our scheme
 	if (Pub.plain_size() != plainsize) return 2;
@@ -245,7 +245,7 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	//create the base for error vector
 	std::vector<byte> H, M2;
 	M2 = M;
-	M2.insert (M2.end(), K.begin(), K.end() );
+	M2.insert (M2.end(), K.begin(), K.end());
 	hash_type hf;
 	H = hf (M2);
 
@@ -253,7 +253,7 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	bvector ev_rank;
 	ev_rank.resize (ranksize);
 	for (i = 0; i < ranksize; ++i)
-		ev_rank[i] = 1 & (H[ (i >> 3) % H.size()] >> (i & 0x7) );
+		ev_rank[i] = 1 & (H[ (i >> 3) % H.size()] >> (i & 0x7));
 
 	bvector ev;
 	ev_rank.colex_unrank (ev, ciphersize, errorcount);
@@ -261,10 +261,10 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	//prepare plaintext
 	bvector mce_plain;
 	mce_plain.resize (plainsize);
-	for (i = 0; i < plainsize; ++i) mce_plain[i] = 1 & (K[i >> 3] >> (i & 0x7) );
+	for (i = 0; i < plainsize; ++i) mce_plain[i] = 1 & (K[i >> 3] >> (i & 0x7));
 
 	//run McEliece
-	if (Pub.encrypt (mce_plain, cipher, ev) ) return 5;
+	if (Pub.encrypt (mce_plain, cipher, ev)) return 5;
 
 	//encrypt the message part
 	scipher sc;
@@ -276,21 +276,21 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ sc.gen();
 
 	//append the message part to the ciphertext
-	cipher.resize (ciphersize + (M.size() << 3) );
+	cipher.resize (ciphersize + (M.size() << 3));
 	for (i = 0; i < (M.size() << 3); ++i)
-		cipher[ciphersize + i] = 1 & (M[i >> 3] >> (i & 0x7) );
+		cipher[ciphersize + i] = 1 & (M[i >> 3] >> (i & 0x7));
 
 	return 0;
 }
 
 template < class privkey_type,
-         int plainsize,
-         int ciphersize,
-         int errorcount,
-         class hash_type,
-         class pad_hash_type,
-         class scipher,
-         int ranksize >
+           int plainsize,
+           int ciphersize,
+           int errorcount,
+           class hash_type,
+           class pad_hash_type,
+           class scipher,
+           int ranksize >
 static int fo_decrypt (const bvector&cipher, bvector&plain,
                        sencode* privkey)
 {
@@ -298,9 +298,9 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 
 	//load the key
 	privkey_type Priv;
-	if (!Priv.unserialize (privkey) ) return 1;
+	if (!Priv.unserialize (privkey)) return 1;
 
-	if (Priv.prepare() ) return 100;
+	if (Priv.prepare()) return 100;
 
 	//verify that key parameters match the scheme
 	if (Priv.plain_size() != plainsize) return 2;
@@ -371,7 +371,7 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	//compute the hash of K+M
 	std::vector<byte>H, M2;
 	M2 = M;
-	M2.insert (M2.end(), K.begin(), K.end() );
+	M2.insert (M2.end(), K.begin(), K.end());
 	hash_type hf;
 	H = hf (M2);
 
@@ -381,13 +381,13 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	ev_rank.resize (ranksize, 0);
 	for (i = 0; i < ranksize; ++i)
 		if (ev_rank[i] != (1 & (H[ (i >> 3) % H.size()]
-		                        >> (i & 0x7) ) ) )
+		                        >> (i & 0x7))))
 			return 7;
 
 
 	//if the message seems okay, unpad and return it.
 	pad_hash_type phf;
-	if (!message_unpad (M, plain, phf) ) return 8;
+	if (!message_unpad (M, plain, phf)) return 8;
 
 	return 0;
 }

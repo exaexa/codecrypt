@@ -90,7 +90,7 @@ public:
 	static std::string get_keyid (const std::string& pubkey);
 
 	static std::string get_keyid (sencode* pubkey) {
-		return get_keyid (pubkey->encode() );
+		return get_keyid (pubkey->encode());
 	}
 
 	static void clear_keypairs (keypair_storage&);
@@ -103,8 +103,8 @@ public:
 
 	pubkey_entry* get_pubkey (const std::string&keyid) {
 		// "own first", but there should not be collisions.
-		if (pairs.count (keyid) ) return & (pairs[keyid].pub);
-		if (pubs.count (keyid) ) return & (pubs[keyid]);
+		if (pairs.count (keyid)) return & (pairs[keyid].pub);
+		if (pubs.count (keyid)) return & (pubs[keyid]);
 		return NULL;
 	}
 
@@ -113,21 +113,21 @@ public:
 	                   const std::string&alg,
 	                   sencode*key) {
 
-		if (pairs.count (keyid) ) return false;
-		if (pubs.count (keyid) ) return false;
+		if (pairs.count (keyid)) return false;
+		if (pubs.count (keyid)) return false;
 		pubs[keyid] = pubkey_entry (keyid, name, alg, key);
 		return true;
 	}
 
 	void remove_pubkey (const std::string&keyid) {
-		if (pubs.count (keyid) ) {
+		if (pubs.count (keyid)) {
 			sencode_destroy (pubs[keyid].key);
 			pubs.erase (keyid);
 		}
 	}
 
 	keypair_entry* get_keypair (const std::string&keyid) {
-		if (pairs.count (keyid) ) return & (pairs[keyid]);
+		if (pairs.count (keyid)) return & (pairs[keyid]);
 		return NULL;
 	}
 
@@ -136,15 +136,15 @@ public:
 	                    const std::string&alg,
 	                    sencode*pubkey, sencode*privkey) {
 
-		if (pairs.count (keyid) ) return false;
-		if (pubs.count (keyid) ) return false;
+		if (pairs.count (keyid)) return false;
+		if (pubs.count (keyid)) return false;
 		pairs[keyid] = keypair_entry (keyid, name, alg,
 		                              pubkey, privkey);
 		return true;
 	}
 
 	void remove_keypair (const std::string&keyid) {
-		if (pairs.count (keyid) ) {
+		if (pairs.count (keyid)) {
 			sencode_destroy (pairs[keyid].pub.key);
 			sencode_destroy (pairs[keyid].privkey);
 			pairs.erase (keyid);

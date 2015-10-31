@@ -74,7 +74,7 @@ public:
 	int sign (const bvector&, bvector&, hash_func&, streamcipher&);
 
 	uint sigs_remaining() {
-		return (1 << (h * l) ) - sigs_used;
+		return (1 << (h * l)) - sigs_used;
 	}
 
 	uint hash_size () {
@@ -82,7 +82,7 @@ public:
 	}
 
 	uint signature_size (hash_func&hf) {
-		return ( (h * l + fmtseq_commitments (hs) ) * hf.size() * 8)
+		return ( (h * l + fmtseq_commitments (hs)) * hf.size() * 8)
 		       + (h * l);
 	}
 
@@ -103,7 +103,7 @@ public:
 	}
 
 	uint signature_size (hash_func&hf) {
-		return ( (H + fmtseq_commitments (hs) ) * hf.size() * 8) + H;
+		return ( (H + fmtseq_commitments (hs)) * hf.size() * 8) + H;
 	}
 
 	sencode* serialize();

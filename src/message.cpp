@@ -27,9 +27,9 @@ int encrypted_msg::encrypt (const bvector&msg,
 	alg_id = Alg_id;
 
 	algorithm*alg = NULL;
-	if (algs.count (alg_id) ) {
+	if (algs.count (alg_id)) {
 		alg = algs[alg_id];
-		if (!alg->provides_encryption() )
+		if (!alg->provides_encryption())
 			alg = NULL;
 	}
 
@@ -46,9 +46,9 @@ int encrypted_msg::encrypt (const bvector&msg,
 int encrypted_msg::decrypt (bvector& msg, algorithm_suite&algs, keyring& kr)
 {
 	algorithm*alg = NULL;
-	if (algs.count (alg_id) ) {
+	if (algs.count (alg_id)) {
 		alg = algs[alg_id];
-		if (!alg->provides_encryption() )
+		if (!alg->provides_encryption())
 			alg = NULL;
 	}
 
@@ -72,9 +72,9 @@ int signed_msg::sign (const bvector&msg,
 	message = msg;
 
 	algorithm*alg = NULL;
-	if (algs.count (alg_id) ) {
+	if (algs.count (alg_id)) {
 		alg = algs[alg_id];
-		if (!alg->provides_signatures() )
+		if (!alg->provides_signatures())
 			alg = NULL;
 	}
 
@@ -94,7 +94,7 @@ int signed_msg::sign (const bvector&msg,
 
 	if (privkey_dirty) {
 		//we can't output a signature without storing privkey changes!
-		if (!kr.save() ) return 4;
+		if (!kr.save()) return 4;
 	}
 
 	return 0;
@@ -103,9 +103,9 @@ int signed_msg::sign (const bvector&msg,
 int signed_msg::verify (algorithm_suite&algs, keyring&kr)
 {
 	algorithm*alg = NULL;
-	if (algs.count (alg_id) ) {
+	if (algs.count (alg_id)) {
 		alg = algs[alg_id];
-		if (!alg->provides_signatures() )
+		if (!alg->provides_signatures())
 			alg = NULL;
 	}
 

@@ -31,10 +31,10 @@
 #define i16(cmd) for(i=0;i<16;++i) cmd;
 
 template < int I, //initialization rounds
-         int R, //rounds
-         int B, //input block size, less or equal 128
-         int F, //finalization rounds
-         int H > //output hash size in *bytes*, not bits! less or equal 128.
+           int R, //rounds
+           int B, //input block size, less or equal 128
+           int F, //finalization rounds
+           int H > //output hash size in *bytes*, not bits! less or equal 128.
 class cubehash_state
 {
 	uint32_t X[32]; //the state
@@ -45,13 +45,13 @@ class cubehash_state
 		for (; n; --n) {
 			i16 (X[i + 16] += X[i]);
 			i16 (T[i ^ 8] = X[i]);
-			i16 (X[i] = ROT (T[i], 7, 32) );
+			i16 (X[i] = ROT (T[i], 7, 32));
 			i16 (X[i] ^= X[i + 16]);
 			i16 (T[i ^ 2] = X[i + 16]);
 			i16 (X[i + 16] = T[i]);
 			i16 (X[i + 16] += X[i]);
 			i16 (T[i ^ 4] = X[i]);
-			i16 (X[i] = ROT (T[i], 11, 32) );
+			i16 (X[i] = ROT (T[i], 11, 32));
 			i16 (X[i] ^= X[i + 16]);
 			i16 (T[i ^ 1] = X[i + 16]);
 			i16 (X[i + 16] = T[i]);
@@ -87,7 +87,7 @@ public:
 			X[i / 4] ^= * (uint32_t*) &data[i];
 
 		for (; i < B; ++i)
-			X[i / 4] ^= ( (uint32_t) (data[i]) ) << ( (i % 4) * 8);
+			X[i / 4] ^= ( (uint32_t) (data[i])) << ( (i % 4) * 8);
 		rounds (R);
 	}
 
@@ -99,7 +99,7 @@ public:
 			X[i / 4] ^= * (uint32_t*) &data[i];
 
 		for (; i < n; ++i)
-			X[i / 4] ^= ( (uint32_t) (data[i]) ) << ( (i % 4) * 8);
+			X[i / 4] ^= ( (uint32_t) (data[i])) << ( (i % 4) * 8);
 
 		i++;
 		X[i / 2] ^= ( (uint32_t) 0x80) << ( (i % 4) * 8);
@@ -113,7 +113,7 @@ public:
 
 	void get_hash (byte*out) {
 		for (int i = 0; i < H; ++i)
-			out[i] = (X[i / 4] >> ( (i % 4) * 8) ) & 0xff;
+			out[i] = (X[i / 4] >> ( (i % 4) * 8)) & 0xff;
 	}
 };
 

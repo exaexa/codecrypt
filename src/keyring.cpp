@@ -42,7 +42,7 @@ std::string keyring::get_keyid (const std::string&pubkey)
 	std::vector<byte> tmp =
 	    hf (std::vector<byte>
 	        (&pubkey[0],
-	         &pubkey[pubkey.length()]) );
+	         &pubkey[pubkey.length()]));
 
 	r.resize (tmp.size() * 2, ' ');
 	for (size_t i = 0; i < tmp.size(); ++i) {
@@ -125,7 +125,7 @@ bool keyring::parse_keypairs (sencode*keypairs, keypair_storage&pairs)
 	L = dynamic_cast<sencode_list*> (keypairs);
 	if (!L) goto failure;
 
-	if (!L->items.size() ) goto failure;
+	if (!L->items.size()) goto failure;
 	ID = dynamic_cast<sencode_bytes*> (L->items[0]);
 	if (!ID) goto failure;
 	if (ID->b != KEYPAIRS_ID) goto failure;
@@ -144,7 +144,7 @@ bool keyring::parse_keypairs (sencode*keypairs, keypair_storage&pairs)
 		  *privkey = dynamic_cast<sencode_bytes*> (entry->items[2]),
 		   *pubkey = dynamic_cast<sencode_bytes*> (entry->items[3]);
 
-		if (! (ident && alg && privkey && pubkey) ) goto failure;
+		if (! (ident && alg && privkey && pubkey)) goto failure;
 
 		std::string keyid = get_keyid (pubkey->b);
 		sencode *priv, *pub;
@@ -171,7 +171,7 @@ failure:
 sencode* keyring::serialize_keypairs (const keypair_storage&pairs)
 {
 	sencode_list*L = new sencode_list();
-	L->items.push_back (new sencode_bytes (KEYPAIRS_ID) );
+	L->items.push_back (new sencode_bytes (KEYPAIRS_ID));
 
 	for (keypair_storage::const_iterator
 	     i = pairs.begin(), e = pairs.end();
@@ -180,8 +180,8 @@ sencode* keyring::serialize_keypairs (const keypair_storage&pairs)
 		a->items.resize (4);
 		a->items[0] = new sencode_bytes (i->second.pub.name);
 		a->items[1] = new sencode_bytes (i->second.pub.alg);
-		a->items[2] = new sencode_bytes (i->second.privkey->encode() );
-		a->items[3] = new sencode_bytes (i->second.pub.key->encode() );
+		a->items[2] = new sencode_bytes (i->second.privkey->encode());
+		a->items[3] = new sencode_bytes (i->second.pub.key->encode());
 		L->items.push_back (a);
 	}
 
@@ -198,7 +198,7 @@ bool keyring::parse_pubkeys (sencode* pubkeys, pubkey_storage&pubs)
 	L = dynamic_cast<sencode_list*> (pubkeys);
 	if (!L) goto failure;
 
-	if (!L->items.size() ) goto failure;
+	if (!L->items.size()) goto failure;
 	ID = dynamic_cast<sencode_bytes*> (L->items[0]);
 	if (!ID) goto failure;
 	if (ID->b != PUBKEYS_ID) goto failure;
@@ -217,7 +217,7 @@ bool keyring::parse_pubkeys (sencode* pubkeys, pubkey_storage&pubs)
 		 *alg = dynamic_cast<sencode_bytes*> (entry->items[1]),
 		  *pubkey = dynamic_cast<sencode_bytes*> (entry->items[2]);
 
-		if (! (ident && alg && pubkey) ) goto failure;
+		if (! (ident && alg && pubkey)) goto failure;
 
 		std::string keyid = get_keyid (pubkey->b);
 		sencode*key;
@@ -237,7 +237,7 @@ failure:
 sencode* keyring::serialize_pubkeys (const pubkey_storage&pubs)
 {
 	sencode_list*L = new sencode_list();
-	L->items.push_back (new sencode_bytes (PUBKEYS_ID) );
+	L->items.push_back (new sencode_bytes (PUBKEYS_ID));
 
 	for (pubkey_storage::const_iterator
 	     i = pubs.begin(), e = pubs.end();
@@ -246,7 +246,7 @@ sencode* keyring::serialize_pubkeys (const pubkey_storage&pubs)
 		a->items.resize (3);
 		a->items[0] = new sencode_bytes (i->second.name);
 		a->items[1] = new sencode_bytes (i->second.alg);
-		a->items[2] = new sencode_bytes (i->second.key->encode() );
+		a->items[2] = new sencode_bytes (i->second.key->encode());
 		L->items.push_back (a);
 	}
 
@@ -302,7 +302,7 @@ static bool ensure_empty_sencode_file (const std::string&fn,
                                        const std::string&ident)
 {
 	struct stat st;
-	if (stat (fn.c_str(), &st) ) {
+	if (stat (fn.c_str(), &st)) {
 		if (errno != ENOENT)
 			return false;
 
@@ -316,16 +316,16 @@ static bool ensure_empty_sencode_file (const std::string&fn,
 		fd = creat (fn.c_str(), S_IRUSR | S_IWUSR);
 		if (fd < 0) return false;
 		ssize_t res = write (fd, emptyfile.c_str(),
-		                     emptyfile.length() );
-		if (close (fd) ) return false;
-		if ( (size_t) res != emptyfile.length() ) return false;
+		                     emptyfile.length());
+		if (close (fd)) return false;
+		if ( (size_t) res != emptyfile.length()) return false;
 
 	} else {
-		if (!S_ISREG (st.st_mode) )
+		if (!S_ISREG (st.st_mode))
 			return false;
 	}
 
-	if (access (fn.c_str(), R_OK | W_OK) ) return false;
+	if (access (fn.c_str(), R_OK | W_OK)) return false;
 
 	return true;
 }
@@ -334,20 +334,20 @@ static bool prepare_user_dir (const std::string&dir)
 {
 	//try to create the directory, continue if it's already there
 #ifdef WIN32
-	if (mkdir (dir.c_str() ) ) {
+	if (mkdir (dir.c_str())) {
 #else
-	if (mkdir (dir.c_str(), 0777) ) {
+	if (mkdir (dir.c_str(), 0777)) {
 #endif
 		if (errno != EEXIST) return false;
 	}
 
 	//and no matter what, verify it's there
 	struct stat st;
-	if (stat (dir.c_str(), &st) )
+	if (stat (dir.c_str(), &st))
 		return false;
 
 	//and is really a directory.
-	if (!S_ISDIR (st.st_mode) )
+	if (!S_ISDIR (st.st_mode))
 		return false;
 
 	//finally create empty key storages and backups, if not present
@@ -366,10 +366,10 @@ static sencode* file_get_sencode (const std::string&fn,
 {
 	//check whether it is a file first
 	struct stat st;
-	if (stat (fn.c_str(), &st) )
+	if (stat (fn.c_str(), &st))
 		return NULL;
 
-	if (!S_ISREG (st.st_mode) )
+	if (!S_ISREG (st.st_mode))
 		return NULL;
 
 	//not we got the size, prepare buffer space
@@ -388,10 +388,10 @@ static bool file_put_string (const std::string&fn, const std::string&data)
 {
 	std::ofstream out (fn.c_str(), std::ios::out | std::ios::binary);
 	if (!out) return false;
-	out.write (data.c_str(), data.length() );
-	if (!out.good() ) return false;
+	out.write (data.c_str(), data.length());
+	if (!out.good()) return false;
 	out.close();
-	if (!out.good() ) return false;
+	if (!out.good()) return false;
 
 	return true;
 }
@@ -483,7 +483,7 @@ bool keyring::open()
 {
 	//ensure the existence of file structure
 	std::string dir = get_user_dir();
-	if (!prepare_user_dir (dir) ) return false;
+	if (!prepare_user_dir (dir)) return false;
 
 	//create the lock
 	std::string fn = dir + LOCK_FILENAME;
@@ -493,7 +493,7 @@ bool keyring::open()
 #ifdef WIN32
 	//no locking on windows yet
 #else
-	if (flock (lockfd, LOCK_EX) ) {
+	if (flock (lockfd, LOCK_EX)) {
 		::close (lockfd);
 		lockfd = -1;
 		return false;
@@ -543,7 +543,7 @@ bool keyring::close()
 	if (lockfd < 0) return true; //nothing to close
 
 	std::string fn = get_user_dir() + LOCK_FILENAME;
-	unlink (fn.c_str() );
+	unlink (fn.c_str());
 
 #ifdef WIN32
 	//no locking on windows yet

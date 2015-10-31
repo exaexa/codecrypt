@@ -42,7 +42,7 @@ public:
 	}
 
 	inline uint mult (uint a, uint b) {
-		if (! (a && b) ) return 0;
+		if (! (a && b)) return 0;
 		return antilog[ (log[a] + log[b]) % (n - 1)];
 	}
 
@@ -63,12 +63,12 @@ public:
 
 	inline uint inv_square (uint a) {
 		if (!a) return 0;
-		return antilog[ (2 * (n - 1 - log[a]) )
+		return antilog[ (2 * (n - 1 - log[a]))
 		                % (n - 1)];
 	}
 
 	inline uint div (uint a, uint b) {
-		if (! (a && b) ) return 0;
+		if (! (a && b)) return 0;
 		return antilog[ (n - 1 - log[b] + log[a])
 		                % (n - 1)];
 	}

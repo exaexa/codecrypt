@@ -35,7 +35,7 @@ public:
 		I = J = 0;
 		S.resize (Ssize);
 		mask = ~ (inttype) 0;
-		if ( (inttype) (1 << bits) ) mask %= 1 << bits;
+		if ( (inttype) (1 << bits)) mask %= 1 << bits;
 		for (size_t i = 0; i < Ssize; ++i) S[i] = i;
 	}
 
@@ -55,7 +55,7 @@ public:
 			     i <= mask;
 			     ++i, ++keypos) {
 				if (keypos >= end) keypos = begin; //rotate
-				j = (j + S[i] + (*keypos) ) & mask;
+				j = (j + S[i] + (*keypos)) & mask;
 				t = S[j];
 				S[j] = S[i];
 				S[i] = t;
@@ -86,7 +86,7 @@ public:
 
 	void gen (size_t n, std::vector<inttype>&out) {
 		out.resize (n);
-		gen (n, & (out[0]) );
+		gen (n, & (out[0]));
 	}
 
 	size_t key_size() {

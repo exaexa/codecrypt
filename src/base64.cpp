@@ -27,7 +27,7 @@ void base64_encode (const std::string& in, std::string&out, int cols)
 	unsigned int acc = 0;
 	int accbits = 0, idx = 0, idxmax = in.length(), col = 0;
 	out.clear();
-	out.reserve (idxmax + (2 * idxmax / 5) ); //reserve around 140%
+	out.reserve (idxmax + (2 * idxmax / 5));  //reserve around 140%
 	while (idx < idxmax) {
 		if (accbits < 6) {
 			acc = (acc << 8) | (unsigned char) in[idx++];
@@ -37,14 +37,14 @@ void base64_encode (const std::string& in, std::string&out, int cols)
 			accbits -= 6;
 			out.push_back (b64str[ (acc >> accbits) & 0x3f]);
 
-			if (cols && ( (++col) >= cols) ) {
+			if (cols && ( (++col) >= cols)) {
 				out.push_back ('\n');
 				col = 0;
 			}
 		}
 	}
 	if (accbits) {
-		out.push_back (b64str[ (acc << (6 - accbits) ) & 0x3f]);
+		out.push_back (b64str[ (acc << (6 - accbits)) & 0x3f]);
 		if (accbits == 2) out.push_back ('=');
 		if (accbits <= 4) out.push_back ('=');
 	}
@@ -149,7 +149,7 @@ static bool eat_4 (const std::string&in, int&idx, int idxmax, unsigned char*a)
 {
 	for (int i = 0; i < 4; ++i) {
 		eat_white (in, idx, idxmax);
-		if ( (idx < idxmax) && is_b64 (in[idx]) )
+		if ( (idx < idxmax) && is_b64 (in[idx]))
 			a[i] = in[idx];
 		else return false;
 		++idx;
@@ -174,13 +174,13 @@ bool base64_decode (const std::string& in, std::string&out)
 
 	//start parsing
 	unsigned char c[4];
-	while (eat_4 (in, idx, idxmax, c) ) {
+	while (eat_4 (in, idx, idxmax, c)) {
 		for (int i = 0; i < 4; ++i)
 			c[i] = b64d[c[i]]; // '=' gets converted to -1
 
 		//consistency checks
-		if ( (c[0] == -1) || (c[1] == -1) ) return false;
-		if ( (c[2] == -1) && (c[3] != -1) ) return false;
+		if ( (c[0] == -1) || (c[1] == -1)) return false;
+		if ( (c[2] == -1) && (c[3] != -1)) return false;
 
 		tmp = (c[0] << 18) | (c[1] << 12);
 		if (c[2] != -1) tmp |= c[2] << 6;

@@ -133,7 +133,7 @@ bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&mat)
 			l = mat [w - h + i]
 			    [j].hamming_weight();
 			if (l == 0) continue; //zero is just okay :]
-			if (! (l % 2) ) //singular, make it regular by adding the i-th row
+			if (! (l % 2))  //singular, make it regular by adding the i-th row
 				for (k = 0;
 				     k < w;
 				     ++k)
@@ -178,7 +178,7 @@ bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&mat)
 			l = mat[w - i - 1]
 			    [h - j - 1].hamming_weight();
 			if (l == 0) continue; //already zero
-			if (! (l % 2) ) { //nonsingular, fix it by adding diagonal
+			if (! (l % 2)) {  //nonsingular, fix it by adding diagonal
 				for (k = 0; k < w; ++k)
 					mat[k][h - j - 1].add
 					(mat[k][h - i - 1]);
@@ -206,7 +206,7 @@ uint choose_random (uint limit, prng&rng, std::set<uint>&used)
 	if (used.size() >= limit - 1) return 0; //die
 	for (;;) {
 		uint a = 1 + rng.random (limit - 1);
-		if (used.count (a) ) continue;
+		if (used.count (a)) continue;
 		used.insert (a);
 		return a;
 	}

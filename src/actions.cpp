@@ -46,7 +46,7 @@
 
 inline bool open_keyring (keyring&KR)
 {
-	if (!KR.open() ) {
+	if (!KR.open()) {
 		err ("could not open keyring!");
 		return false;
 	}
@@ -62,7 +62,7 @@ int action_gen_symkey (const std::string&algspec,
 	ccr_rng r;
 	r.seed (256);
 
-	if (!sk.create (algspec, r) ) {
+	if (!sk.create (algspec, r)) {
 		err ("error: symkey creation failed");
 		return 1;
 	}
@@ -87,13 +87,13 @@ int action_gen_symkey (const std::string&algspec,
 	}
 
 	sk_out << data;
-	if (!sk_out.good() ) {
+	if (!sk_out.good()) {
 		err ("error: can't write to symkey file");
 		return 1;
 	}
 
 	sk_out.close();
-	if (!sk_out.good() ) {
+	if (!sk_out.good()) {
 		err ("error: couldn't close symkey file");
 		return 1;
 	}
@@ -165,20 +165,20 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 
 	//replace algorithm name on match with alias
 	std::string algspec;
-	if (algspectable().count (p_algspec) )
+	if (algspectable().count (p_algspec))
 		algspec = algspectable() [p_algspec];
 	else
 		algspec = p_algspec;
 
 	//handle symmetric operation
-	if (symmetric.length() )
+	if (symmetric.length())
 		return action_gen_symkey (algspec, symmetric, armor);
 
 	algorithm*alg = NULL;
 	std::string algname;
 	for (algorithm_suite::iterator i = AS.begin(), e = AS.end();
 	     i != e; ++i) {
-		if (algorithm_name_matches (algspec, i->first) ) {
+		if (algorithm_name_matches (algspec, i->first)) {
 			if (!alg) {
 				algname = i->first;
 				alg = i->second;
@@ -195,7 +195,7 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 		return 1;
 	}
 
-	if (!name.length() ) {
+	if (!name.length()) {
 		err ("error: no key name provided");
 		return 1;
 	}
@@ -211,7 +211,7 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 
 	err ("Seeding done, generating the key...");
 
-	if (alg->create_keypair (&pub, &priv, r) ) {
+	if (alg->create_keypair (&pub, &priv, r)) {
 		err ("error: key generator failed");
 		return 1;
 	}
@@ -224,7 +224,7 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 	 * improbable, so apologize nicely in that case.
 	 */
 	if (!KR.store_keypair (keyring::get_keyid (pub),
-	                       name, algname, pub, priv) ) {
+	                       name, algname, pub, priv)) {
 
 		err ("error: new key cannot be saved into the keyring.");
 		err ("notice: produced KeyID @" << keyring::get_keyid (pub)
@@ -235,7 +235,7 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 	}
 	//note that pub&priv sencode data will get destroyed along with keyring
 
-	if (!KR.save() ) {
+	if (!KR.save()) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -260,7 +260,7 @@ int action_sym_encrypt (const std::string&symmetric, bool armor)
 	}
 
 	std::string sk_data;
-	if (!read_all_input (sk_data, sk_in) ) {
+	if (!read_all_input (sk_data, sk_in)) {
 		err ("error: can't read symkey");
 		return 1;
 	}
@@ -269,7 +269,7 @@ int action_sym_encrypt (const std::string&symmetric, bool armor)
 	if (armor) {
 		std::vector<std::string> parts;
 		std::string type;
-		if (!envelope_read (sk_data, 0, type, parts) ) {
+		if (!envelope_read (sk_data, 0, type, parts)) {
 			err ("error: no data envelope found");
 			return 1;
 		}
@@ -279,7 +279,7 @@ int action_sym_encrypt (const std::string&symmetric, bool armor)
 			return 1;
 		}
 
-		if (!base64_decode (parts[0], sk_data) ) {
+		if (!base64_decode (parts[0], sk_data)) {
 			err ("error: malformed data");
 			return 1;
 		}
@@ -292,7 +292,7 @@ int action_sym_encrypt (const std::string&symmetric, bool armor)
 	}
 
 	symkey sk;
-	if (!sk.unserialize (SK) ) {
+	if (!sk.unserialize (SK)) {
 		err ("error: could not parse input structure");
 		return 1;
 	}
@@ -302,7 +302,7 @@ int action_sym_encrypt (const std::string&symmetric, bool armor)
 	ccr_rng r;
 	r.seed (256);
 
-	if (!sk.encrypt (std::cin, std::cout, r) ) {
+	if (!sk.encrypt (std::cin, std::cout, r)) {
 		err ("error: encryption failed");
 		return 1;
 	}
@@ -314,7 +314,7 @@ int action_encrypt (const std::string&recipient, bool armor,
                     const std::string&symmetric,
                     keyring&KR, algorithm_suite&AS)
 {
-	if (symmetric.length() )
+	if (symmetric.length())
 		return action_sym_encrypt (symmetric, armor);
 
 	//first, read plaintext
@@ -329,9 +329,9 @@ int action_encrypt (const std::string&recipient, bool armor,
 	//search both publickeys and keypairs that are valid for encryption
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end(); i != e; ++i) {
-		if (keyspec_matches (recipient, i->second.name, i->first) ) {
-			if (!AS.count (i->second.alg) ) continue;
-			if (!AS[i->second.alg]->provides_encryption() )
+		if (keyspec_matches (recipient, i->second.name, i->first)) {
+			if (!AS.count (i->second.alg)) continue;
+			if (!AS[i->second.alg]->provides_encryption())
 				continue;
 
 			if (recip) {
@@ -343,9 +343,9 @@ int action_encrypt (const std::string&recipient, bool armor,
 
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end(); i != e; ++i) {
-		if (keyspec_matches (recipient, i->second.pub.name, i->first) ) {
-			if (!AS.count (i->second.pub.alg) ) continue;
-			if (!AS[i->second.pub.alg]->provides_encryption() )
+		if (keyspec_matches (recipient, i->second.pub.name, i->first)) {
+			if (!AS.count (i->second.pub.alg)) continue;
+			if (!AS[i->second.pub.alg]->provides_encryption())
 				continue;
 
 			if (recip) {
@@ -368,7 +368,7 @@ int action_encrypt (const std::string&recipient, bool armor,
 	bvector plaintext;
 	plaintext.from_string (data);
 
-	if (msg.encrypt (plaintext, recip->alg, recip->keyid, AS, KR, r) ) {
+	if (msg.encrypt (plaintext, recip->alg, recip->keyid, AS, KR, r)) {
 		err ("error: encryption failed");
 		return 1;
 	}
@@ -401,7 +401,7 @@ int action_sym_decrypt (const std::string&symmetric, bool armor)
 	}
 
 	std::string sk_data;
-	if (!read_all_input (sk_data, sk_in) ) {
+	if (!read_all_input (sk_data, sk_in)) {
 		err ("error: can't read symkey");
 		return 1;
 	}
@@ -410,7 +410,7 @@ int action_sym_decrypt (const std::string&symmetric, bool armor)
 	if (armor) {
 		std::vector<std::string> parts;
 		std::string type;
-		if (!envelope_read (sk_data, 0, type, parts) ) {
+		if (!envelope_read (sk_data, 0, type, parts)) {
 			err ("error: no data envelope found");
 			return 1;
 		}
@@ -420,7 +420,7 @@ int action_sym_decrypt (const std::string&symmetric, bool armor)
 			return 1;
 		}
 
-		if (!base64_decode (parts[0], sk_data) ) {
+		if (!base64_decode (parts[0], sk_data)) {
 			err ("error: malformed data");
 			return 1;
 		}
@@ -433,7 +433,7 @@ int action_sym_decrypt (const std::string&symmetric, bool armor)
 	}
 
 	symkey sk;
-	if (!sk.unserialize (SK) ) {
+	if (!sk.unserialize (SK)) {
 		err ("error: could not parse input structure");
 		return 1;
 	}
@@ -449,7 +449,7 @@ int action_sym_decrypt (const std::string&symmetric, bool armor)
 int action_decrypt (bool armor, const std::string&symmetric,
                     keyring&KR, algorithm_suite&AS)
 {
-	if (symmetric.length() )
+	if (symmetric.length())
 		return action_sym_decrypt (symmetric, armor);
 
 	std::string data;
@@ -458,7 +458,7 @@ int action_decrypt (bool armor, const std::string&symmetric,
 	if (armor) {
 		std::string type;
 		std::vector<std::string> parts;
-		if (!envelope_read (data, 0, type, parts) ) {
+		if (!envelope_read (data, 0, type, parts)) {
 			err ("error: no data envelope found");
 			return 1;
 		}
@@ -467,7 +467,7 @@ int action_decrypt (bool armor, const std::string&symmetric,
 			err ("error: wrong envelope format");
 			return 1;
 		}
-		if (!base64_decode (parts[0], data) ) {
+		if (!base64_decode (parts[0], data)) {
 			err ("error: malformed data");
 			return 1;
 		}
@@ -476,14 +476,14 @@ int action_decrypt (bool armor, const std::string&symmetric,
 	sencode*M = sencode_decode (data);
 	if (!M) {
 		err ("error: could not parse input sencode");
-		if (!armor && envelope_lookalike (data) )
+		if (!armor && envelope_lookalike (data))
 			err ("notice: input looks ascii-armored, "
 			     "try using the armor option");
 		return 1;
 	}
 
 	encrypted_msg msg;
-	if (!msg.unserialize (M) ) {
+	if (!msg.unserialize (M)) {
 		err ("error: could not parse input structure");
 		sencode_destroy (M);
 		return 1;
@@ -503,8 +503,8 @@ int action_decrypt (bool armor, const std::string&symmetric,
 	}
 
 	//and the algorithm
-	if ( (!AS.count (msg.alg_id) )
-	     || (!AS[msg.alg_id]->provides_encryption() ) ) {
+	if ( (!AS.count (msg.alg_id))
+	     || (!AS[msg.alg_id]->provides_encryption())) {
 		err ("error: decryption algorithm unsupported");
 		err ("info: requires algorithm " << msg.alg_id
 		     << " with encryption support");
@@ -514,12 +514,12 @@ int action_decrypt (bool armor, const std::string&symmetric,
 
 	//actual decryption
 	bvector plaintext;
-	if (msg.decrypt (plaintext, AS, KR) ) {
+	if (msg.decrypt (plaintext, AS, KR)) {
 		err ("error: decryption failed");
 		return 1;
 	}
 
-	if (!plaintext.to_string (data) ) {
+	if (!plaintext.to_string (data)) {
 		err ("error: malformed data");
 		return 1;
 	}
@@ -538,7 +538,7 @@ int action_decrypt (bool armor, const std::string&symmetric,
 	M = sencode_decode (data);
 	if (M) {
 		signed_msg m;
-		if (m.unserialize (M) ) {
+		if (m.unserialize (M)) {
 			err ("notice: message content looks signed");
 			err ("hint: try also decrypt+verify operation");
 		}
@@ -554,7 +554,7 @@ int action_decrypt (bool armor, const std::string&symmetric,
 int action_hash_sign (bool armor, const std::string&symmetric)
 {
 	hashfile hf;
-	if (!hf.create (std::cin) ) {
+	if (!hf.create (std::cin)) {
 		err ("error: hashing failed");
 		return 1;
 	}
@@ -581,13 +581,13 @@ int action_hash_sign (bool armor, const std::string&symmetric)
 	}
 
 	hf_out << data;
-	if (!hf_out.good() ) {
+	if (!hf_out.good()) {
 		err ("error: can't write to hashfile");
 		return 1;
 	}
 
 	hf_out.close();
-	if (!hf_out.good() ) {
+	if (!hf_out.good()) {
 		err ("error: couldn't close hashfile");
 		return 1;
 	}
@@ -600,7 +600,7 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
                  keyring&KR, algorithm_suite&AS)
 {
 	//symmetric processing has its own function
-	if (symmetric.length() )
+	if (symmetric.length())
 		return action_hash_sign (armor, symmetric);
 
 	/*
@@ -613,14 +613,14 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 	 *  - clearsign (which is always armored)
 	 */
 
-	if (clearsign && (detach.length() || armor) ) {
+	if (clearsign && (detach.length() || armor)) {
 		err ("error: clearsign cannot be combined "
 		     "with armor or detach-sign");
 		return 1;
 	}
 
 	std::ofstream detf;
-	if (detach.length() ) {
+	if (detach.length()) {
 		detf.open (detach == "-" ? "/dev/stdout" : detach.c_str(),
 		           std::ios::out | std::ios::binary);
 		if (!detf) {
@@ -640,15 +640,15 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end(); i != e; ++i) {
-		if (keyspec_matches (user, i->second.pub.name, i->first) ) {
+		if (keyspec_matches (user, i->second.pub.name, i->first)) {
 			/*
 			 * also match having signature alg availability,
 			 * because it saves time when you only have one locally
 			 * available signature privkey. Also, no need to check
 			 * it again later.
 			 */
-			if (!AS.count (i->second.pub.alg) ) continue;
-			if (!AS[i->second.pub.alg]->provides_signatures() )
+			if (!AS.count (i->second.pub.alg)) continue;
+			if (!AS[i->second.pub.alg]->provides_signatures())
 				continue;
 
 			if (u) {
@@ -671,7 +671,7 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 	bvector message;
 	message.from_string (data);
 
-	if (msg.sign (message, u->pub.alg, u->pub.keyid, AS, KR, r) ) {
+	if (msg.sign (message, u->pub.alg, u->pub.keyid, AS, KR, r)) {
 		err ("error: digital signature failed");
 		return 1;
 	}
@@ -689,9 +689,9 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 		base64_encode (M->encode(), parts[1]);
 		sencode_destroy (M);
 
-		out_bin (envelope_format (ENVELOPE_CLEARSIGN, parts, r) );
+		out_bin (envelope_format (ENVELOPE_CLEARSIGN, parts, r));
 
-	} else if (detach.length() ) {
+	} else if (detach.length()) {
 		msg.message.from_string (MSG_DETACHED);
 		sencode*M = msg.serialize();
 		data = M->encode();
@@ -705,12 +705,12 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 		}
 
 		detf << data;
-		if (!detf.good() ) {
+		if (!detf.good()) {
 			err ("error: could not write detached signature file");
 			return 1;
 		}
 		detf.close();
-		if (!detf.good() ) {
+		if (!detf.good()) {
 			err ("error: could not close detached signature file");
 			return 1;
 		}
@@ -745,7 +745,7 @@ int action_hash_verify (bool armor, const std::string&symmetric)
 	}
 
 	std::string hf_data;
-	if (!read_all_input (hf_data, hf_in) ) {
+	if (!read_all_input (hf_data, hf_in)) {
 		err ("error: can't read hashfile");
 		return 1;
 	}
@@ -754,7 +754,7 @@ int action_hash_verify (bool armor, const std::string&symmetric)
 	if (armor) {
 		std::vector<std::string> parts;
 		std::string type;
-		if (!envelope_read (hf_data, 0, type, parts) ) {
+		if (!envelope_read (hf_data, 0, type, parts)) {
 			err ("error: no data envelope found");
 			return 1;
 		}
@@ -764,7 +764,7 @@ int action_hash_verify (bool armor, const std::string&symmetric)
 			return 1;
 		}
 
-		if (!base64_decode (parts[0], hf_data) ) {
+		if (!base64_decode (parts[0], hf_data)) {
 			err ("error: malformed data");
 			return 1;
 		}
@@ -777,7 +777,7 @@ int action_hash_verify (bool armor, const std::string&symmetric)
 	}
 
 	hashfile hf;
-	if (!hf.unserialize (H) ) {
+	if (!hf.unserialize (H)) {
 		err ("error: could not parse input structure");
 		return 1;
 	}
@@ -795,20 +795,20 @@ int action_verify (bool armor, const std::string&detach,
                    keyring&KR, algorithm_suite&AS)
 {
 	//symmetric processing has its own function
-	if (symmetric.length() )
+	if (symmetric.length())
 		return action_hash_verify (armor, symmetric);
 
 	/*
 	 * check flags validity, open detach if possible
 	 */
-	if (clearsign && (detach.length() || armor) ) {
+	if (clearsign && (detach.length() || armor)) {
 		err ("error: clearsign cannot be combined "
 		     "with armor or detach-sign");
 		return 1;
 	}
 
 	std::ifstream detf;
-	if (detach.length() ) {
+	if (detach.length()) {
 		detf.open (detach == "-" ? "/dev/stdin" : detach.c_str(),
 		           std::ios::in | std::ios::binary);
 		if (!detf) {
@@ -831,7 +831,7 @@ int action_verify (bool armor, const std::string&detach,
 		std::string type;
 		std::vector<std::string> parts;
 
-		if (!envelope_read (data, 0, type, parts) ) {
+		if (!envelope_read (data, 0, type, parts)) {
 			err ("error: no data envelope found");
 			return 1;
 		}
@@ -842,7 +842,7 @@ int action_verify (bool armor, const std::string&detach,
 		}
 
 		std::string sig;
-		if (!base64_decode (parts[1], sig) ) {
+		if (!base64_decode (parts[1], sig)) {
 			err ("error: malformed data");
 			return 1;
 		}
@@ -853,7 +853,7 @@ int action_verify (bool armor, const std::string&detach,
 			return 1;
 		}
 
-		if (!msg.unserialize (M) ) {
+		if (!msg.unserialize (M)) {
 			err ("error: could not parse input structure");
 			sencode_destroy (M);
 			return 1;
@@ -869,10 +869,10 @@ int action_verify (bool armor, const std::string&detach,
 
 		msg.message.from_string (parts[0]);
 
-	} else if (detach.length() ) {
+	} else if (detach.length()) {
 
 		std::string sig;
-		if (!read_all_input (sig, detf) ) {
+		if (!read_all_input (sig, detf)) {
 			err ("error: can't read detached signature file");
 			return 1;
 		}
@@ -882,7 +882,7 @@ int action_verify (bool armor, const std::string&detach,
 		if (armor) {
 			std::vector<std::string> parts;
 			std::string type;
-			if (!envelope_read (sig, 0, type, parts) ) {
+			if (!envelope_read (sig, 0, type, parts)) {
 				err ("error: no data envelope found");
 				return 1;
 			}
@@ -892,7 +892,7 @@ int action_verify (bool armor, const std::string&detach,
 				return 1;
 			}
 
-			if (!base64_decode (parts[0], sig) ) {
+			if (!base64_decode (parts[0], sig)) {
 				err ("error: malformed data");
 				return 1;
 			}
@@ -904,7 +904,7 @@ int action_verify (bool armor, const std::string&detach,
 			return 1;
 		}
 
-		if (!msg.unserialize (M) ) {
+		if (!msg.unserialize (M)) {
 			err ("error: could not parse input structure");
 			sencode_destroy (M);
 			return 1;
@@ -926,7 +926,7 @@ int action_verify (bool armor, const std::string&detach,
 			std::string type;
 			std::vector<std::string> parts;
 
-			if (!envelope_read (data, 0, type, parts) ) {
+			if (!envelope_read (data, 0, type, parts)) {
 				err ("error: no data envelope found");
 				return 1;
 			}
@@ -936,7 +936,7 @@ int action_verify (bool armor, const std::string&detach,
 				return 1;
 			}
 
-			if (!base64_decode (parts[0], data) ) {
+			if (!base64_decode (parts[0], data)) {
 				err ("error: malformed data");
 				return 1;
 			}
@@ -945,13 +945,13 @@ int action_verify (bool armor, const std::string&detach,
 		sencode*M = sencode_decode (data);
 		if (!M) {
 			err ("error: could not parse input sencode");
-			if (!armor && envelope_lookalike (data) )
+			if (!armor && envelope_lookalike (data))
 				err ("notice: input looks ascii-armored, "
 				     "try using the armor option");
 			return 1;
 		}
 
-		if (!msg.unserialize (M) ) {
+		if (!msg.unserialize (M)) {
 			err ("error: could not parse input structure");
 			sencode_destroy (M);
 			return 1;
@@ -985,8 +985,8 @@ int action_verify (bool armor, const std::string&detach,
 		return 2; //missing key flag
 	}
 
-	if ( (!AS.count (msg.alg_id) )
-	     || (!AS[msg.alg_id]->provides_signatures() ) ) {
+	if ( (!AS.count (msg.alg_id))
+	     || (!AS[msg.alg_id]->provides_signatures())) {
 		err ("error: verification algorithm unsupported");
 		err ("info: requires algorithm " << msg.alg_id
 		     << " with signature support");
@@ -1003,7 +1003,7 @@ int action_verify (bool armor, const std::string&detach,
 	err ("  verification status: "
 	     << (r == 0 ?
 	         "GOOD signature ;-)" :
-	         "BAD signature :-(") );
+	         "BAD signature :-("));
 
 	if (r) {
 		if (!yes) {
@@ -1049,9 +1049,9 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end(); i != e; ++i) {
-		if (keyspec_matches (user, i->second.pub.name, i->first) ) {
-			if (!AS.count (i->second.pub.alg) ) continue;
-			if (!AS[i->second.pub.alg]->provides_signatures() )
+		if (keyspec_matches (user, i->second.pub.name, i->first)) {
+			if (!AS.count (i->second.pub.alg)) continue;
+			if (!AS[i->second.pub.alg]->provides_signatures())
 				continue;
 
 			if (u) {
@@ -1071,9 +1071,9 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end(); i != e; ++i) {
-		if (keyspec_matches (recipient, i->second.name, i->first) ) {
-			if (!AS.count (i->second.alg) ) continue;
-			if (!AS[i->second.alg]->provides_encryption() )
+		if (keyspec_matches (recipient, i->second.name, i->first)) {
+			if (!AS.count (i->second.alg)) continue;
+			if (!AS[i->second.alg]->provides_encryption())
 				continue;
 
 			if (recip) {
@@ -1085,9 +1085,9 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end(); i != e; ++i) {
-		if (keyspec_matches (recipient, i->second.pub.name, i->first) ) {
-			if (!AS.count (i->second.pub.alg) ) continue;
-			if (!AS[i->second.pub.alg]->provides_encryption() )
+		if (keyspec_matches (recipient, i->second.pub.name, i->first)) {
+			if (!AS.count (i->second.pub.alg)) continue;
+			if (!AS[i->second.pub.alg]->provides_encryption())
 				continue;
 
 			if (recip) {
@@ -1110,7 +1110,7 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 	bvector bv;
 	bv.from_string (data);
 
-	if (smsg.sign (bv, u->pub.alg, u->pub.keyid, AS, KR, r) ) {
+	if (smsg.sign (bv, u->pub.alg, u->pub.keyid, AS, KR, r)) {
 		err ("error: digital signature failed");
 		return 1;
 	}
@@ -1122,7 +1122,7 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 	//encrypt it
 	encrypted_msg emsg;
 	bv.from_string (data);
-	if (emsg.encrypt (bv, recip->alg, recip->keyid, AS, KR, r) ) {
+	if (emsg.encrypt (bv, recip->alg, recip->keyid, AS, KR, r)) {
 		err ("error: encryption failed");
 		return 1;
 	}
@@ -1152,7 +1152,7 @@ int action_decrypt_verify (bool armor, bool yes,
 	if (armor) {
 		std::string type;
 		std::vector<std::string> parts;
-		if (!envelope_read (data, 0, type, parts) ) {
+		if (!envelope_read (data, 0, type, parts)) {
 			err ("error: no data envelope found");
 			return 1;
 		}
@@ -1161,7 +1161,7 @@ int action_decrypt_verify (bool armor, bool yes,
 			err ("error: wrong envelope format");
 			return 1;
 		}
-		if (!base64_decode (parts[0], data) ) {
+		if (!base64_decode (parts[0], data)) {
 			err ("error: malformed data");
 			return 1;
 		}
@@ -1170,14 +1170,14 @@ int action_decrypt_verify (bool armor, bool yes,
 	sencode*M = sencode_decode (data);
 	if (!M) {
 		err ("error: could not parse input sencode");
-		if (!armor && envelope_lookalike (data) )
+		if (!armor && envelope_lookalike (data))
 			err ("notice: input looks ascii-armored, "
 			     "try using the armor option");
 		return 1;
 	}
 
 	encrypted_msg emsg;
-	if (!emsg.unserialize (M) ) {
+	if (!emsg.unserialize (M)) {
 		err ("error: could not parse input structure");
 		sencode_destroy (M);
 		return 1;
@@ -1196,8 +1196,8 @@ int action_decrypt_verify (bool armor, bool yes,
 		return 2; //missing key flag
 	}
 
-	if ( (!AS.count (emsg.alg_id) )
-	     || (!AS[emsg.alg_id]->provides_encryption() ) ) {
+	if ( (!AS.count (emsg.alg_id))
+	     || (!AS[emsg.alg_id]->provides_encryption())) {
 		err ("error: decryption algorithm unsupported");
 		err ("info: requires algorithm " << emsg.alg_id
 		     << " with encryption support");
@@ -1205,12 +1205,12 @@ int action_decrypt_verify (bool armor, bool yes,
 	}
 
 	bvector bv;
-	if (emsg.decrypt (bv, AS, KR) ) {
+	if (emsg.decrypt (bv, AS, KR)) {
 		err ("error: decryption failed");
 		return 1;
 	}
 
-	if (!bv.to_string (data) ) {
+	if (!bv.to_string (data)) {
 		err ("error: malformed data");
 		return 1;
 	}
@@ -1229,7 +1229,7 @@ int action_decrypt_verify (bool armor, bool yes,
 	}
 
 	signed_msg smsg;
-	if (!smsg.unserialize (M) ) {
+	if (!smsg.unserialize (M)) {
 		err ("error: could not parse input structure");
 		sencode_destroy (M);
 		return 1;
@@ -1258,8 +1258,8 @@ int action_decrypt_verify (bool armor, bool yes,
 		return 2; //missing key flag
 	}
 
-	if ( (!AS.count (smsg.alg_id) )
-	     || (!AS[smsg.alg_id]->provides_signatures() ) ) {
+	if ( (!AS.count (smsg.alg_id))
+	     || (!AS[smsg.alg_id]->provides_signatures())) {
 		err ("error: verification algorithm unsupported");
 		err ("info: requires algorithm " << smsg.alg_id
 		     << " with signature support");
@@ -1276,7 +1276,7 @@ int action_decrypt_verify (bool armor, bool yes,
 	err ("  verification status: "
 	     << (r == 0 ?
 	         "GOOD signature ;-)" :
-	         "BAD signature :-(") );
+	         "BAD signature :-("));
 
 	if (r) {
 		if (!yes) {
@@ -1350,10 +1350,10 @@ static void output_key (bool fp,
 	if (!fp)
 		out (ident << '\t' << alg << '\t'
 		     << '@' << keyid.substr (0, 22) << "...\t"
-		     << escape_key_name (name) );
+		     << escape_key_name (name));
 	else {
-		out ( longid << " with algorithm " << alg
-		      << ", name `" << escape_key_name (name) << "'");
+		out (longid << " with algorithm " << alg
+		     << ", name `" << escape_key_name (name) << "'");
 
 		std::cout << "  fingerprint ";
 		for (size_t j = 0; j < keyid.length(); ++j) {
@@ -1375,7 +1375,7 @@ int action_list (bool nice_fingerprint, const std::string&filter,
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i) {
 
-		if (keyspec_matches (filter, i->second.pub.name, i->first) )
+		if (keyspec_matches (filter, i->second.pub.name, i->first))
 
 			output_key (nice_fingerprint,
 			            "pubkey", "public key in keypair",
@@ -1386,7 +1386,7 @@ int action_list (bool nice_fingerprint, const std::string&filter,
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end();
 	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.name, i->first) )
+		if (keyspec_matches (filter, i->second.name, i->first))
 			output_key (nice_fingerprint,
 			            "pubkey", "public key",
 			            i->second.alg, i->first,
@@ -1406,7 +1406,7 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 	if (armor) {
 		std::string type;
 		std::vector<std::string> parts;
-		if (!envelope_read (data, 0, type, parts) ) {
+		if (!envelope_read (data, 0, type, parts)) {
 			err ("error: no data envelope found");
 			return 1;
 		}
@@ -1416,7 +1416,7 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 			return 1;
 		}
 
-		if (!base64_decode (parts[0], data) ) {
+		if (!base64_decode (parts[0], data)) {
 			err ("error: malformed data");
 			return 1;
 		}
@@ -1425,21 +1425,21 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 	sencode*S = sencode_decode (data);
 	if (!S) {
 		err ("error: could not parse input sencode");
-		if (!armor && envelope_lookalike (data) )
+		if (!armor && envelope_lookalike (data))
 			err ("notice: input looks ascii-armored, "
 			     "try using the armor option");
 		return 1;
 	}
 
 	keyring::pubkey_storage p;
-	if (!keyring::parse_pubkeys (S, p) ) {
+	if (!keyring::parse_pubkeys (S, p)) {
 		err ("error: could not parse input structure");
 		sencode_destroy (S);
 		return 1;
 	}
 	sencode_destroy (S);
 
-	if (!p.size() ) {
+	if (!p.size()) {
 		err ("notice: keyring was empty");
 		return 0;
 	}
@@ -1448,7 +1448,7 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 		for (keyring::pubkey_storage::iterator
 		     i = p.begin(), e = p.end(); i != e; ++i) {
 			if (keyspec_matches (filter, i->second.name,
-			                     i->first) )
+			                     i->first))
 				output_key (fp,
 				            "pubkey", "public key",
 				            i->second.alg, i->first,
@@ -1463,11 +1463,11 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 	int rewrites = 0, privs = 0;
 	for (keyring::pubkey_storage::iterator
 	     i = p.begin(), e = p.end(); i != e; ++i) {
-		if (keyspec_matches (filter, i->second.name, i->first) ) {
-			if (KR.pairs.count (i->first) ) {
+		if (keyspec_matches (filter, i->second.name, i->first)) {
+			if (KR.pairs.count (i->first)) {
 				++privs;
 				++rewrites;
-			} else if (KR.pubs.count (i->first) ) {
+			} else if (KR.pubs.count (i->first)) {
 				++rewrites;
 			}
 		}
@@ -1484,7 +1484,7 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 	//merge into KR. Also prevent keyID collisions
 	for (keyring::pubkey_storage::iterator
 	     i = p.begin(), e = p.end(); i != e; ++i) {
-		if (keyspec_matches (filter, i->second.name, i->first) ) {
+		if (keyspec_matches (filter, i->second.name, i->first)) {
 			KR.remove_pubkey (i->first);
 			KR.remove_keypair (i->first);
 			KR.store_pubkey (i->first,
@@ -1494,7 +1494,7 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 		}
 	}
 
-	if (!KR.save() ) {
+	if (!KR.save()) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1514,9 +1514,9 @@ int action_export (bool armor,
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first)) {
 			s[i->first] = i->second.pub;
-			if (name.length() )
+			if (name.length())
 				s[i->first].name = name;
 		}
 	}
@@ -1524,14 +1524,14 @@ int action_export (bool armor,
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end();
 	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.name, i->first) ) {
+		if (keyspec_matches (filter, i->second.name, i->first)) {
 			s[i->first] = i->second;
-			if (name.length() )
+			if (name.length())
 				s[i->first].name = name;
 		}
 	}
 
-	if (!s.size() ) {
+	if (!s.size()) {
 		err ("error: no such public keys");
 		return 1;
 	}
@@ -1565,7 +1565,7 @@ int action_delete (bool yes, const std::string & filter, keyring & KR)
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end();
 	     i != e; ++i)
-		if (keyspec_matches (filter, i->second.name, i->first) ) {
+		if (keyspec_matches (filter, i->second.name, i->first)) {
 			++kc;
 			todel.push_back (i->first);
 		}
@@ -1585,7 +1585,7 @@ int action_delete (bool yes, const std::string & filter, keyring & KR)
 	     i = todel.begin(), e = todel.end(); i != e; ++i)
 		KR.remove_pubkey (*i);
 
-	if (!KR.save() ) {
+	if (!KR.save()) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1598,7 +1598,7 @@ int action_rename (bool yes,
                    const std::string & filter, const std::string & name,
                    keyring & KR)
 {
-	if (!name.length() ) {
+	if (!name.length()) {
 		err ("error: missing new name specification");
 		return 1;
 	}
@@ -1609,7 +1609,7 @@ int action_rename (bool yes,
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end();
 	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.name, i->first) )
+		if (keyspec_matches (filter, i->second.name, i->first))
 			++kc;
 	}
 	if (!kc) {
@@ -1628,11 +1628,11 @@ int action_rename (bool yes,
 	for (keyring::pubkey_storage::iterator
 	     i = KR.pubs.begin(), e = KR.pubs.end();
 	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.name, i->first) )
+		if (keyspec_matches (filter, i->second.name, i->first))
 			i->second.name = name;
 	}
 
-	if (!KR.save() ) {
+	if (!KR.save()) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1651,7 +1651,7 @@ int action_list_sec (bool nice_fingerprint, const std::string & filter,
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i) {
 
-		if (keyspec_matches (filter, i->second.pub.name, i->first) )
+		if (keyspec_matches (filter, i->second.pub.name, i->first))
 			output_key (nice_fingerprint,
 			            "keypair", "key pair",
 			            i->second.pub.alg, i->first,
@@ -1671,7 +1671,7 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 	if (armor) {
 		std::string type;
 		std::vector<std::string> parts;
-		if (!envelope_read (data, 0, type, parts) ) {
+		if (!envelope_read (data, 0, type, parts)) {
 			err ("error: no data envelope found");
 			return 1;
 		}
@@ -1681,7 +1681,7 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 			return 1;
 		}
 
-		if (!base64_decode (parts[0], data) ) {
+		if (!base64_decode (parts[0], data)) {
 			err ("error: malformed data");
 			return 1;
 		}
@@ -1690,21 +1690,21 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 	sencode*S = sencode_decode (data);
 	if (!S) {
 		err ("error: could not parse input sencode");
-		if (!armor && envelope_lookalike (data) )
+		if (!armor && envelope_lookalike (data))
 			err ("notice: input looks ascii-armored, "
 			     "try using the armor option");
 		return 1;
 	}
 
 	keyring::keypair_storage s;
-	if (!keyring::parse_keypairs (S, s) ) {
+	if (!keyring::parse_keypairs (S, s)) {
 		err ("error: could not parse input structure");
 		sencode_destroy (S);
 		return 1;
 	}
 	sencode_destroy (S);
 
-	if (!s.size() ) {
+	if (!s.size()) {
 		err ("notice: keyring was empty");
 		return 0;
 	}
@@ -1713,7 +1713,7 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 		for (keyring::keypair_storage::iterator
 		     i = s.begin(), e = s.end(); i != e; ++i) {
 			if (keyspec_matches (filter, i->second.pub.name,
-			                     i->first) )
+			                     i->first))
 				output_key (fp,
 				            "keypair", "key pair",
 				            i->second.pub.alg, i->first,
@@ -1729,7 +1729,7 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 	     i = s.begin(), e = s.end(); i != e; ++i) {
 		if (keyspec_matches (filter, i->second.pub.name, i->first)
 		    && (KR.pubs.count (i->first)
-		        || KR.pairs.count (i->first) ) )
+		        || KR.pairs.count (i->first)))
 			++rewrites;
 	}
 
@@ -1743,7 +1743,7 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 	//merge into KR. Also prevent keyID collisions
 	for (keyring::keypair_storage::iterator
 	     i = s.begin(), e = s.end(); i != e; ++i) {
-		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first)) {
 			KR.remove_pubkey (i->first);
 			KR.remove_keypair (i->first);
 			KR.store_keypair (i->first,
@@ -1754,7 +1754,7 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 		}
 	}
 
-	if (!KR.save() ) {
+	if (!KR.save()) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1773,14 +1773,14 @@ int action_export_sec (bool armor, bool yes,
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first)) {
 			s[i->first] = i->second;
-			if (name.length() )
+			if (name.length())
 				s[i->first].pub.name = name;
 		}
 	}
 
-	if (!s.size() ) {
+	if (!s.size()) {
 		err ("error: no such secret");
 		return 1;
 	}
@@ -1821,7 +1821,7 @@ int action_delete_sec (bool yes, const std::string & filter, keyring & KR)
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i)
-		if (keyspec_matches (filter, i->second.pub.name, i->first) ) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first)) {
 			++kc;
 			todel.push_back (i->first);
 		}
@@ -1842,7 +1842,7 @@ int action_delete_sec (bool yes, const std::string & filter, keyring & KR)
 	     i = todel.begin(), e = todel.end(); i != e; ++i)
 		KR.remove_keypair (*i);
 
-	if (!KR.save() ) {
+	if (!KR.save()) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1855,7 +1855,7 @@ int action_rename_sec (bool yes,
                        const std::string & filter, const std::string & name,
                        keyring & KR)
 {
-	if (!name.length() ) {
+	if (!name.length()) {
 		err ("error: missing new name specification");
 		return 1;
 	}
@@ -1866,7 +1866,7 @@ int action_rename_sec (bool yes,
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.pub.name, i->first) )
+		if (keyspec_matches (filter, i->second.pub.name, i->first))
 			++kc;
 	}
 	if (!kc) {
@@ -1885,11 +1885,11 @@ int action_rename_sec (bool yes,
 	for (keyring::keypair_storage::iterator
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i) {
-		if (keyspec_matches (filter, i->second.pub.name, i->first) )
+		if (keyspec_matches (filter, i->second.pub.name, i->first))
 			i->second.pub.name = name;
 	}
 
-	if (!KR.save() ) {
+	if (!KR.save()) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}

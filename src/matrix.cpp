@@ -80,7 +80,7 @@ bool matrix::compute_inversion (matrix&res, bool upper_tri, bool lower_tri)
 	//we are computing with transposed matrices for simpler row ops
 
 	uint s = width();
-	if (s != height() ) return false;
+	if (s != height()) return false;
 	matrix m, r;
 	r.unit (s);
 	this->compute_transpose (m);
@@ -248,7 +248,7 @@ bool matrix::create_goppa_generator (matrix&g, const permutation&p)
 	//generator construction from Barreto's PQC-4 slides p.21
 	p.permute (*this, t);
 	t.get_right_square (sinv);
-	if (!sinv.compute_inversion (s) ) return false; //meant to be retried.
+	if (!sinv.compute_inversion (s)) return false;  //meant to be retried.
 
 	//TODO why multiply and THEN strip?
 	s.mult (t);
@@ -280,7 +280,7 @@ bool matrix::mult_vec_right (const bvector&a, bvector&r)
 	r.clear();
 	r.resize (h, 0);
 	for (uint i = 0; i < w; ++i)
-		if (a[i]) r.add (item (i) );
+		if (a[i]) r.add (item (i));
 	return true;
 }
 

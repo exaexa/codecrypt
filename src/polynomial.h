@@ -45,7 +45,7 @@ public:
 	uint eval (uint, gf2m&) const;
 	uint head() {
 		int t;
-		if ( (t = degree() ) >= 0) return item (t);
+		if ( (t = degree()) >= 0) return item (t);
 		else return 0;
 	}
 	void add (const polynomial&, gf2m&);

@@ -310,13 +310,13 @@ int main (int argc, char**argv)
 
 	int exitval = 0;
 
-	if (input.length() && !redirect_cin (input) ) {
+	if (input.length() && !redirect_cin (input)) {
 		progerr ("could not open input file");
 		exitval = 1;
 		goto exit;
 	}
 
-	if (output.length() && !redirect_cout (output) ) {
+	if (output.length() && !redirect_cout (output)) {
 		progerr ("could not redirect to output file");
 		exitval = 1;
 		goto exit;
@@ -331,7 +331,7 @@ int main (int argc, char**argv)
 		goto exit;
 	}
 
-	if (symmetric.length() ) switch (action) {
+	if (symmetric.length()) switch (action) {
 		case 'd':
 		case 'e':
 		case 'g':
@@ -440,7 +440,7 @@ int main (int argc, char**argv)
 	 */
 
 exit:
-	if (!KR.close() ) {
+	if (!KR.close()) {
 		progerr ("could not close keyring, "
 		         "something weird is going to happen.");
 	}

@@ -61,14 +61,14 @@ int privkey::prepare ()
 
 int pubkey::encrypt (const bvector& in, bvector&out)
 {
-	if (in.size() != plain_size() ) return 1;
+	if (in.size() != plain_size()) return 1;
 	H.mult_vec_right (in, out);
 	return 0;
 }
 
 int privkey::decrypt (const bvector&in, bvector&out)
 {
-	if (in.size() != cipher_size() ) return 2;
+	if (in.size() != cipher_size()) return 2;
 
 	bvector unsc; //unscrambled
 	Sinv.mult_vec_right (in, unsc);
@@ -78,10 +78,10 @@ int privkey::decrypt (const bvector&in, bvector&out)
 	compute_goppa_error_locator (synd, fld, g, sqInv, loc);
 
 	bvector ev;
-	if (!evaluate_error_locator_trace (loc, ev, fld) )
+	if (!evaluate_error_locator_trace (loc, ev, fld))
 		return 1;
 
-	if ( (int) ev.hamming_weight() != g.degree() )
+	if ( (int) ev.hamming_weight() != g.degree())
 		return 1;
 
 	Pinv.permute (ev, out);
@@ -111,7 +111,7 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 		synd_unsc.to_poly (Synd, fld);
 		compute_goppa_error_locator (Synd, fld, g, sqInv, loc);
 
-		if (evaluate_error_locator_trace (loc, e, fld) ) {
+		if (evaluate_error_locator_trace (loc, e, fld)) {
 
 			Pinv.permute (e, out);
 			return 0;
@@ -124,8 +124,8 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 int pubkey::verify (const bvector&in, const bvector&hash, uint delta)
 {
 	bvector tmp;
-	if (!H.mult_vec_right (in, tmp) ) return 2;
-	if (hash.size() != tmp.size() ) return 1;
+	if (!H.mult_vec_right (in, tmp)) return 2;
+	if (hash.size() != tmp.size()) return 1;
 	tmp.add (hash);
 	if (tmp.hamming_weight() > delta) return 1;
 	return 0;

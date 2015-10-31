@@ -42,14 +42,14 @@ bool symkey::create (const std::string&in, prng&rng)
 	uint keysize = 32;
 	std::stringstream ss (in);
 	std::string tok;
-	while (getline (ss, tok, ',') ) {
+	while (getline (ss, tok, ',')) {
 		tok = to_unicase (tok);
 		if (tok == "SHORTBLOCK") blocksize = 1024;
 		else if (tok == "LONGBLOCK") blocksize = 64 * 1024 * 1024;
 		else if (tok == "LONGKEY") keysize = 512; //overkill ;]
-		else if (streamcipher::suite().count (tok) )
+		else if (streamcipher::suite().count (tok))
 			ciphers.insert (tok);
-		else if (hash_proc::suite().count (tok) )
+		else if (hash_proc::suite().count (tok))
 			hashes.insert (tok);
 		else {
 			err ("symkey: unknown token: " << tok);
@@ -63,7 +63,7 @@ bool symkey::create (const std::string&in, prng&rng)
 	     i != e; ++i) {
 
 		instanceof<streamcipher> sc
-		(streamcipher::suite() [*i]->get() );
+		(streamcipher::suite() [*i]->get());
 		sc.collect();
 		if (sc->key_size() > keysize) keysize = sc->key_size();
 	}
@@ -73,7 +73,7 @@ bool symkey::create (const std::string&in, prng&rng)
 	key.resize (keysize);
 	for (uint i = 0; i < keysize; ++i) key[i] = rng.random (256);
 
-	if (!is_valid() ) {
+	if (!is_valid()) {
 		err ("symkey: failed to produce valid symmetric key");
 		err ("symkey: check that at least one hash and cipher is used");
 		return false;
@@ -87,7 +87,7 @@ typedef std::list<instanceof<hash_proc> > hashes_t;
 
 bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 {
-	if (!is_valid() ) return false;
+	if (!is_valid()) return false;
 
 	/*
 	 * structure of symmetrically encrypted file:
@@ -103,7 +103,7 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 	 */
 
 	std::vector<byte> otkey;
-	otkey.resize (key.size() );
+	otkey.resize (key.size());
 	for (uint i = 0; i < otkey.size(); ++i) otkey[i] = rng.random (256);
 
 	/*
@@ -114,11 +114,11 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 	for (std::set<std::string>::iterator
 	     i = ciphers.begin(), e = ciphers.end();
 	     i != e; ++i) {
-		if (!streamcipher::suite().count (*i) ) {
+		if (!streamcipher::suite().count (*i)) {
 			err ("symkey: unsupported cipher: " << *i);
 			return false;
 		}
-		scs.push_back (streamcipher::suite() [*i]->get() );
+		scs.push_back (streamcipher::suite() [*i]->get());
 		scs.back().collect();
 		scs.back()->init();
 		scs.back()->load_key_vector (key);
@@ -135,11 +135,11 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 	for (std::set<std::string>::iterator
 	     i = hashes.begin(), e = hashes.end();
 	     i != e; ++i) {
-		if (!hash_proc::suite().count (*i) ) {
+		if (!hash_proc::suite().count (*i)) {
 			err ("symkey: unsupported hash function: " << *i);
 			return false;
 		}
-		hs.push_back (hash_proc::suite() [*i]->get() );
+		hs.push_back (hash_proc::suite() [*i]->get());
 		hs.back().collect();
 
 		hashes_size += hs.back()->size();
@@ -149,7 +149,7 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 	 * output the onetime key
 	 */
 
-	out.write ( (char*) & (otkey[0]), otkey.size() );
+	out.write ( (char*) & (otkey[0]), otkey.size());
 
 	/*
 	 * process the blocks
@@ -157,13 +157,13 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 
 	std::vector<byte>buf, cipbuf;
 	buf.resize (blocksize + hashes_size);
-	cipbuf.resize (buf.size() );
+	cipbuf.resize (buf.size());
 
 	for (;;) {
 		in.read ( (char*) & (buf[0]), blocksize);
 		uint bytes_read = in.gcount();
 
-		if (!in && !in.eof() ) {
+		if (!in && !in.eof()) {
 			err ("symkey: failed reading input");
 			return false;
 		}
@@ -174,7 +174,7 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 		     i != e; ++i) {
 			hash_proc&hp = **i;
 			hp.init();
-			hp.eat (& (buf[0]), & (buf[bytes_read]) );
+			hp.eat (& (buf[0]), & (buf[bytes_read]));
 			hp.eat (key);
 			hp.eat (otkey);
 			std::vector<byte> res = hp.finish();
@@ -187,7 +187,7 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 		for (scs_t::iterator i = scs.begin(), e = scs.end();
 		     i != e; ++i) {
 			streamcipher&sc = **i;
-			sc.gen (hashpos, & (cipbuf[0]) );
+			sc.gen (hashpos, & (cipbuf[0]));
 			for (uint j = 0; j < hashpos; ++j)
 				buf[j] = buf[j] ^ cipbuf[j];
 		}
@@ -208,16 +208,16 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 
 int symkey::decrypt (std::istream&in, std::ostream&out)
 {
-	if (!is_valid() ) return 1;
+	if (!is_valid()) return 1;
 
 	std::vector<byte> otkey;
-	otkey.resize (key.size() );
+	otkey.resize (key.size());
 
 	/*
 	 * read otkey
 	 */
 
-	in.read ( (char*) & (otkey[0]), otkey.size() );
+	in.read ( (char*) & (otkey[0]), otkey.size());
 	if (in.gcount() != (std::streamsize) otkey.size() || !in) {
 		err ("symkey: failed reading input");
 		return 1;
@@ -231,11 +231,11 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 	for (std::set<std::string>::iterator
 	     i = ciphers.begin(), e = ciphers.end();
 	     i != e; ++i) {
-		if (!streamcipher::suite().count (*i) ) {
+		if (!streamcipher::suite().count (*i)) {
 			err ("symkey: unsupported cipher: " << *i);
 			return 1;
 		}
-		scs.push_back (streamcipher::suite() [*i]->get() );
+		scs.push_back (streamcipher::suite() [*i]->get());
 		scs.back().collect();
 		scs.back()->init();
 		scs.back()->load_key_vector (key);
@@ -252,11 +252,11 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 	for (std::set<std::string>::iterator
 	     i = hashes.begin(), e = hashes.end();
 	     i != e; ++i) {
-		if (!hash_proc::suite().count (*i) ) {
+		if (!hash_proc::suite().count (*i)) {
 			err ("symkey: unsupported hash function: " << *i);
 			return 1;
 		}
-		hs.push_back (hash_proc::suite() [*i]->get() );
+		hs.push_back (hash_proc::suite() [*i]->get());
 		hs.back().collect();
 
 		hashes_size += hs.back()->size();
@@ -268,13 +268,13 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 
 	std::vector<byte> buf, cipbuf;
 	buf.resize (blocksize + hashes_size);
-	cipbuf.resize (buf.size() );
+	cipbuf.resize (buf.size());
 
 	for (;;) {
-		in.read ( (char*) & (buf[0]), buf.size() );
+		in.read ( (char*) & (buf[0]), buf.size());
 		uint bytes_read = in.gcount();
 
-		if ( (!in && !in.eof() ) || bytes_read < hashes_size) {
+		if ( (!in && !in.eof()) || bytes_read < hashes_size) {
 			err ("symkey: failed reading input");
 			return 1;
 		}
@@ -283,7 +283,7 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 		for (scs_t::iterator i = scs.begin(), e = scs.end();
 		     i != e; ++i) {
 			streamcipher&sc = **i;
-			sc.gen (bytes_read, & (cipbuf[0]) );
+			sc.gen (bytes_read, & (cipbuf[0]));
 			for (uint j = 0; j < bytes_read; ++j)
 				buf[j] = buf[j] ^ cipbuf[j];
 		}
@@ -296,7 +296,7 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 		     i != e; ++i) {
 			hash_proc&hp = **i;
 			hp.init();
-			hp.eat (& (buf[0]), & (buf[bytes_read]) );
+			hp.eat (& (buf[0]), & (buf[bytes_read]));
 			hp.eat (key);
 			hp.eat (otkey);
 			std::vector<byte> res = hp.finish();
@@ -315,7 +315,7 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 	}
 
 	//did we read whole input?
-	if (!in.eof() ) {
+	if (!in.eof()) {
 		err ("symkey: failed reading input");
 		return 1;
 	}

@@ -33,9 +33,9 @@ inline static bool acceptable_char (char c)
 
 static bool acceptable_id (const std::string&a)
 {
-	if (!a.length() ) return false;
+	if (!a.length()) return false;
 	for (size_t i = 0; i < a.length(); ++i)
-		if (!acceptable_char (a[i]) ) return false;
+		if (!acceptable_char (a[i])) return false;
 	return true;
 }
 
@@ -107,7 +107,7 @@ size_t envelope_read (const std::string&data, size_t offset,
 		term = data.substr (eotype + 1, eoterm - eotype - 1);
 
 		//verify that type&term are only of acceptable characters
-		if (!acceptable_id (type) || !acceptable_id (term) )
+		if (!acceptable_id (type) || !acceptable_id (term))
 			continue;
 
 		offset = eoterm + begin_suffix.length();
@@ -131,14 +131,14 @@ size_t envelope_read (const std::string&data, size_t offset,
 				break;
 			}
 
-			if ( cut_pos != data.npos && cut_pos < end_pos) {
+			if (cut_pos != data.npos && cut_pos < end_pos) {
 				//there is cut
 				out_parts.push_back
-				(data.substr (offset, cut_pos - offset) );
+				(data.substr (offset, cut_pos - offset));
 			} else {
 				//no cut, it's till the end
 				out_parts.push_back
-				(data.substr (offset, end_pos - offset) );
+				(data.substr (offset, end_pos - offset));
 			}
 
 			if (cut_pos == data.npos) {
@@ -191,8 +191,8 @@ std::string envelope_format (const std::string&type,
 		bool good = true;
 		std::vector<std::string>::const_iterator i, e;
 		for (i = parts.begin(), e = parts.end(); i != e; ++i) {
-			if ( i->find (cut_sep) != i->npos ||
-			     i->find (end_sep) != i->npos) {
+			if (i->find (cut_sep) != i->npos ||
+			    i->find (end_sep) != i->npos) {
 				good = false;
 				break;
 			}

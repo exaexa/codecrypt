@@ -26,9 +26,9 @@ bool algorithm_name_matches (const std::string& search,
                              const std::string&name)
 {
 
-	if (search.length() > name.length() ) return false;
+	if (search.length() > name.length()) return false;
 	for (size_t i = 0; i < search.length(); ++i)
-		if (tolower (search[i]) != tolower (name[i]) ) return false;
+		if (tolower (search[i]) != tolower (name[i])) return false;
 	return true;
 }
 
@@ -43,11 +43,11 @@ bool keyspec_matches (const std::string&search,
                       const std::string&name,
                       const std::string&keyid)
 {
-	if (!search.length() ) return true;
+	if (!search.length()) return true;
 	if (search[0] == '@') { //match for keyID
 		if (search.length() > keyid.length() + 1) return false;
 		for (size_t i = 1; i < search.length(); ++i)
-			if (tolower (search[i] != tolower (keyid[i - 1]) ) )
+			if (tolower (search[i] != tolower (keyid[i - 1])))
 				return false;
 		return true;
 	}

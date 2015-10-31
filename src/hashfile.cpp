@@ -97,8 +97,8 @@ bool hashfile::create (istream&in)
 			for (hashmap::iterator i = hm.begin(), e = hm.end();
 			     i != e; ++i)
 				i->second->eat (buf);
-		else if (in.eof() ) {
-			buf.resize (in.gcount() );
+		else if (in.eof()) {
+			buf.resize (in.gcount());
 			for (hashmap::iterator i = hm.begin(), e = hm.end();
 			     i != e; ++i) {
 				i->second->eat (buf);
@@ -115,13 +115,13 @@ int hashfile::verify (istream&in)
 	fill_hashmap (hm_all);
 
 	for (hashes_t::iterator i = hashes.begin(), e = hashes.end(); i != e; ++i)
-		if (hm_all.count (i->first) ) {
+		if (hm_all.count (i->first)) {
 			hm[i->first] = hm_all[i->first];
 			hm_all[i->first].forget();
 		}
 
 
-	if (hm.empty() ) {
+	if (hm.empty()) {
 		err ("notice: no verifiable hash found in hashfile");
 		return 2;
 	}
@@ -138,8 +138,8 @@ int hashfile::verify (istream&in)
 			for (hashmap::iterator i = hm.begin(), e = hm.end();
 			     i != e; ++i)
 				i->second->eat (buf);
-		else if (in.eof() ) {
-			buf.resize (in.gcount() );
+		else if (in.eof()) {
+			buf.resize (in.gcount());
 			for (hashmap::iterator i = hm.begin(), e = hm.end();
 			     i != e; ++i) {
 				i->second->eat (buf);
@@ -151,12 +151,12 @@ int hashfile::verify (istream&in)
 	int ok = 0, failed = 0;
 	for (hashes_t::iterator i = hashes.begin(), e = hashes.end();
 	     i != e; ++i) {
-		if (!hm.count (i->first) ) {
+		if (!hm.count (i->first)) {
 			err ("hash verification: :-/ "
 			     << i->first << " not supported");
 			continue;
 		}
-		if (i->second == hm[i->first]->finish() ) {
+		if (i->second == hm[i->first]->finish()) {
 			++ok;
 			err ("hash verification: ;-) "
 			     << i->first << " is GOOD");

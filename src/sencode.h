@@ -65,7 +65,7 @@ class sencode_bytes: public sencode
 public:
 	std::string b;
 	sencode_bytes (const std::string&s) : b (s) {}
-	sencode_bytes (const std::vector<byte>&a) : b (a.begin(), a.end() ) {}
+	sencode_bytes (const std::vector<byte>&a) : b (a.begin(), a.end()) {}
 
 	virtual std::string encode();
 };

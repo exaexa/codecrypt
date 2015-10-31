@@ -36,8 +36,8 @@ uint gf2p_mod (uint a, uint p)
 {
 	if (!p) return 0;
 	int t, degp = gf2p_degree (p);
-	while ( (t = gf2p_degree (a) ) >= degp) {
-		a ^= (p << (t - degp) );
+	while ( (t = gf2p_degree (a)) >= degp) {
+		a ^= (p << (t - degp));
 	}
 	return a;
 }
@@ -98,7 +98,7 @@ bool gf2m::create (uint M)
 	 */
 	for (uint t = (1 << m) + 1, e = 1 << (m + 1); t < e; t += 2) {
 
-		if (!is_irreducible_gf2_poly (t) ) continue;
+		if (!is_irreducible_gf2_poly (t)) continue;
 
 		//try to prepare log and antilog tables
 		log.resize (n, 0);

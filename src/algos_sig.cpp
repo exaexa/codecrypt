@@ -83,7 +83,7 @@ static void msg_pad (const bvector&in, std::vector<byte>&out, size_t minsize)
  */
 
 template < int h, int l, int hs,
-         class message_hash, class tree_hash, class generator >
+           class message_hash, class tree_hash, class generator >
 static int fmtseq_generic_sign (const bvector&msg,
                                 bvector&sig,
                                 sencode**privkey,
@@ -92,11 +92,11 @@ static int fmtseq_generic_sign (const bvector&msg,
 {
 	//load the key
 	fmtseq::privkey Priv;
-	if (!Priv.unserialize (*privkey) ) return 1;
+	if (!Priv.unserialize (*privkey)) return 1;
 
 	//check parameters
 	if ( (Priv.h != h) || (Priv.l != l)
-	     || (Priv.hs != hs) ) return 2;
+	     || (Priv.hs != hs)) return 2;
 
 	//prepare the message and hash it
 	std::vector<byte> M, H;
@@ -107,12 +107,12 @@ static int fmtseq_generic_sign (const bvector&msg,
 	//convert to bvector
 	bvector hash;
 	hash.resize (hs, 0);
-	for (uint i = 0; i < hs; ++i) hash[i] = 1 & (H[i >> 3] >> (i & 0x7) );
+	for (uint i = 0; i < hs; ++i) hash[i] = 1 & (H[i >> 3] >> (i & 0x7));
 
 	//make a signature
 	tree_hash hf;
 	generator g;
-	if (Priv.sign (hash, sig, hf, g) ) return 3;
+	if (Priv.sign (hash, sig, hf, g)) return 3;
 
 	//if it went okay, refresh the privkey
 	sencode* new_pk = Priv.serialize();
@@ -132,10 +132,10 @@ static int fmtseq_generic_verify (const bvector&sig,
 {
 	//load the key
 	fmtseq::pubkey Pub;
-	if (!Pub.unserialize (pubkey) ) return 1;
+	if (!Pub.unserialize (pubkey)) return 1;
 
 	//check parameters
-	if ( (Pub.H != h * l) || (Pub.hs != hs) ) return 2;
+	if ( (Pub.H != h * l) || (Pub.hs != hs)) return 2;
 
 	//prepare the message and hash it
 	std::vector<byte> M, H;
@@ -146,11 +146,11 @@ static int fmtseq_generic_verify (const bvector&sig,
 	//convert to bvector
 	bvector hash;
 	hash.resize (hs, 0);
-	for (uint i = 0; i < hs; ++i) hash[i] = 1 & (H[i >> 3] >> (i & 0x7) );
+	for (uint i = 0; i < hs; ++i) hash[i] = 1 & (H[i >> 3] >> (i & 0x7));
 
 	//check the signature
 	tree_hash hf;
-	if (Pub.verify (sig, hash, hf) ) return 3;
+	if (Pub.verify (sig, hash, hf)) return 3;
 
 	//otherwise the sig is okay!
 	return 0;
@@ -165,7 +165,7 @@ static int fmtseq_create_keypair (sencode**pub, sencode**priv, prng&rng)
 	treehash hf;
 	generator g;
 
-	if (fmtseq::generate (Pub, Priv, rng, hf, g, hs, h, l) )
+	if (fmtseq::generate (Pub, Priv, rng, hf, g, hs, h, l))
 		return 1;
 
 	*pub = Pub.serialize();

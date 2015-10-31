@@ -35,10 +35,10 @@ public:
 
 	std::vector<byte> operator() (const std::vector<byte>&a) {
 		std::vector<byte> r;
-		r.resize (size() );
+		r.resize (size());
 		shatype().CalculateDigest (& (r[0]),
 		                           & (a[0]),
-		                           a.size() );
+		                           a.size());
 		return r;
 	}
 };
@@ -66,8 +66,8 @@ public:
 
 	std::vector<byte> finish() {
 		std::vector<byte> r;
-		r.resize (size() );
-		state.Final (& (r[0]) );
+		r.resize (size());
+		state.Final (& (r[0]));
 		return r;
 	}
 };

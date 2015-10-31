@@ -35,7 +35,7 @@ int mce::generate (pubkey&pub, privkey&priv, prng&rng, uint m, uint t)
 
 	matrix generator;
 	for (;;) if (priv.h.create_goppa_generator
-		             (generator, priv.hperm, rng) ) break;
+		             (generator, priv.hperm, rng)) break;
 
 	//scramble matrix
 	matrix S;
@@ -72,8 +72,8 @@ int pubkey::encrypt (const bvector& in, bvector&out, prng&rng)
 
 int pubkey::encrypt (const bvector&in, bvector&out, const bvector&errors)
 {
-	if (in.size() != plain_size() ) return 2;
-	if (errors.size() != cipher_size() ) return 2;
+	if (in.size() != plain_size()) return 2;
+	if (errors.size() != cipher_size()) return 2;
 	G.mult_vecT_left (in, out);
 	out.add (errors);
 	return 0;
@@ -87,7 +87,7 @@ int privkey::decrypt (const bvector&in, bvector&out)
 
 int privkey::decrypt (const bvector&in, bvector&out, bvector&errors)
 {
-	if (in.size() != cipher_size() ) return 2;
+	if (in.size() != cipher_size()) return 2;
 
 	//remove the P permutation
 	bvector not_permuted;
@@ -104,7 +104,7 @@ int privkey::decrypt (const bvector&in, bvector&out, bvector&errors)
 	compute_goppa_error_locator (synd, fld, g, sqInv, loc);
 
 	bvector ev;
-	if (!evaluate_error_locator_trace (loc, ev, fld) )
+	if (!evaluate_error_locator_trace (loc, ev, fld))
 		return 1; //if decoding somehow failed, fail as well.
 
 	//correct the errors
@@ -115,7 +115,7 @@ int privkey::decrypt (const bvector&in, bvector&out, bvector&errors)
 	hperm.permute (ev, errors);
 
 	//get rid of redundancy bits
-	not_permuted.resize (plain_size() );
+	not_permuted.resize (plain_size());
 
 	//unscramble the result
 	Sinv.mult_vecT_left (not_permuted, out);
@@ -166,14 +166,14 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 		synd.to_poly (Synd, fld);
 		compute_goppa_error_locator (Synd, fld, g, sqInv, loc);
 
-		if (evaluate_error_locator_trace (loc, e2, fld) ) {
+		if (evaluate_error_locator_trace (loc, e2, fld)) {
 
 			//recreate the decodable codeword
 			p.add (e);
 			p.add (e2);
 
 			hperm.permute (p, e2); //back to systematic
-			e2.resize (signature_size() ); //strip to message
+			e2.resize (signature_size());  //strip to message
 			Sinv.mult_vecT_left (e2, out); //signature
 			return 0;
 		}
@@ -191,9 +191,9 @@ int privkey::sign (const bvector&in, bvector&out, uint delta, uint attempts, prn
 int pubkey::verify (const bvector&in, const bvector&hash, uint delta)
 {
 	bvector tmp;
-	if (!G.mult_vecT_left (in, tmp) ) return 2; //wrong size of input
-	if (hash.size() != tmp.size() ) return 1; //wrong size of hash, not a sig.
+	if (!G.mult_vecT_left (in, tmp)) return 2;  //wrong size of input
+	if (hash.size() != tmp.size()) return 1;  //wrong size of hash, not a sig.
 	tmp.add (hash);
-	if (tmp.hamming_weight() > (t + delta) ) return 1; //not a signature
+	if (tmp.hamming_weight() > (t + delta)) return 1;  //not a signature
 	return 0; //sig OK
 }

@@ -29,35 +29,35 @@ uint bvector::hamming_weight()
 
 void bvector::add (const bvector&a)
 {
-	if (a.size() > size() ) resize (a.size(), 0);
+	if (a.size() > size()) resize (a.size(), 0);
 	for (uint i = 0; i < a.size(); ++i)
 		item (i) = item (i) ^ a[i];
 }
 
 void bvector::add_range (const bvector&a, uint b, uint e)
 {
-	if (e > size() ) resize (e, 0);
+	if (e > size()) resize (e, 0);
 	for (uint i = b; i < e; ++i)
 		item (i) = item (i) ^ a[i];
 }
 
 void bvector::add_offset (const bvector&a, uint offset)
 {
-	if (offset + a.size() > size() ) resize (offset + a.size(), 0);
+	if (offset + a.size() > size()) resize (offset + a.size(), 0);
 	for (uint i = 0; i < a.size(); ++i)
 		item (offset + i) = item (offset + i) ^ a[i];
 }
 
 void bvector::set_block (const bvector&a, uint offset)
 {
-	if (offset + a.size() > size() ) resize (offset + a.size(), 0);
+	if (offset + a.size() > size()) resize (offset + a.size(), 0);
 	for (uint i = 0; i < a.size(); ++i)
 		item (offset + i) = a[i];
 }
 
 void bvector::get_block (uint offset, uint bs, bvector&out) const
 {
-	if (offset + bs > size() ) return;
+	if (offset + bs > size()) return;
 	out.resize (bs);
 	for (uint i = 0; i < bs; ++i) out[i] = item (offset + i);
 }
@@ -66,14 +66,14 @@ bool bvector::operator* (const bvector&a)
 {
 	bool r = 0;
 	uint s = size(), i;
-	if (s > a.size() ) s = a.size();
+	if (s > a.size()) s = a.size();
 	for (i = 0; i < s; ++i) r ^= (item (i) &a[i]);
 	return r;
 }
 
 bool bvector::zero() const
 {
-	for (uint i = 0; i < size(); ++i) if (item (i) ) return false;
+	for (uint i = 0; i < size(); ++i) if (item (i)) return false;
 	return true;
 }
 
@@ -83,7 +83,7 @@ void bvector::to_poly (polynomial&r, gf2m&fld) const
 	if (size() % fld.m) return; //impossible
 	r.resize (size() / fld.m, 0);
 	for (uint i = 0; i < size(); ++i)
-		if (item (i) ) r[i / fld.m] |= (1 << (i % fld.m) );
+		if (item (i)) r[i / fld.m] |= (1 << (i % fld.m));
 }
 
 void bvector::from_poly (const polynomial&r, gf2m&fld)
@@ -91,7 +91,7 @@ void bvector::from_poly (const polynomial&r, gf2m&fld)
 	clear();
 	resize (r.size() *fld.m, 0);
 	for (uint i = 0; i < size(); ++i)
-		item (i) = (r[i / fld.m] >> (i % fld.m) ) & 1;
+		item (i) = (r[i / fld.m] >> (i % fld.m)) & 1;
 }
 
 void bvector::to_poly_cotrace (polynomial&r, gf2m&fld) const
@@ -101,7 +101,7 @@ void bvector::to_poly_cotrace (polynomial&r, gf2m&fld) const
 	uint s = size() / fld.m;
 	r.resize (s, 0);
 	for (uint i = 0; i < size(); ++i)
-		if (item (i) ) r[i % s] |= (1 << (i / s) );
+		if (item (i)) r[i % s] |= (1 << (i / s));
 }
 
 void bvector::from_poly_cotrace (const polynomial&r, gf2m&fld)
@@ -110,7 +110,7 @@ void bvector::from_poly_cotrace (const polynomial&r, gf2m&fld)
 	uint s = r.size();
 	resize (s * fld.m, 0);
 	for (uint i = 0; i < size(); ++i)
-		item (i) = (r[i % s] >> (i / s) ) & 1;
+		item (i) = (r[i % s] >> (i / s)) & 1;
 }
 
 bool bvector::to_string (std::string& out) const
@@ -121,7 +121,7 @@ bool bvector::to_string (std::string& out) const
 	out.resize (size() >> 3, 0);
 
 	for (uint i = 0; i < size(); ++i)
-		if (item (i) ) out[i >> 3] |= (1 << (i & 0x7) );
+		if (item (i)) out[i >> 3] |= (1 << (i & 0x7));
 
 	return true;
 }
@@ -132,7 +132,7 @@ void bvector::from_string (const std::string&in)
 	resize (in.length() << 3);
 
 	for (uint i = 0; i < size(); ++i)
-		item (i) = (in[i >> 3] >> (i & 0x7) ) & 1;
+		item (i) = (in[i >> 3] >> (i & 0x7)) & 1;
 }
 
 /*
@@ -204,7 +204,7 @@ static void combination_number (mpz_t& r, uint n, uint k)
 static void bvector_to_mpz (const bvector&v, mpz_t&r)
 {
 	mpz_set_ui (r, 0);
-	mpz_realloc2 (r, v.size() );
+	mpz_realloc2 (r, v.size());
 	for (uint i = 0; i < v.size(); ++i)
 		if (v[i])
 			mpz_setbit (r, i);
@@ -213,7 +213,7 @@ static void bvector_to_mpz (const bvector&v, mpz_t&r)
 
 static void mpz_to_bvector (mpz_t&x, bvector&r)
 {
-	r.resize (mpz_sizeinbase (x, 2) );
+	r.resize (mpz_sizeinbase (x, 2));
 	for (uint i = 0; i < r.size(); ++i)
 		r[i] = mpz_tstbit (x, i);
 }
@@ -227,14 +227,14 @@ void bvector::colex_rank (bvector&r) const
 
 	uint n = 0, k = 1;
 
-	while (item (n) ) ++n, ++k; //skip the "zeroes" on the beginning
+	while (item (n)) ++n, ++k;  //skip the "zeroes" on the beginning
 
 	++n; //now n=k=1, comb=1
 
 	//non-zero positions
 	for (; n < size(); ++n) {
 
-		if (item (n) ) {
+		if (item (n)) {
 			//add combination number to result
 			mpz_swap (t, res);
 			mpz_add (res, t, comb);
@@ -246,7 +246,7 @@ void bvector::colex_rank (bvector&r) const
 		mpz_swap (t, comb);
 		mpz_fdiv_q_ui (comb, t, n - k + 1);
 
-		if (item (n) ) {
+		if (item (n)) {
 			//increase k in comb
 			mpz_swap (t, comb);
 			mpz_mul_ui (comb, t, n + 1 - k); //n has changed!

@@ -46,7 +46,7 @@ public:
 	virtual ~hash_proc() {}
 
 	void eat (const std::vector<byte>&a) {
-		return eat (& (a[0]), & (a[a.size()]) );
+		return eat (& (a[0]), & (a[a.size()]));
 	}
 
 	typedef std::map<std::string, factoryof<hash_proc>*> suite_t;

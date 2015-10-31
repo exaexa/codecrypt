@@ -53,9 +53,9 @@ bool read_all_input (output_seq&data, std::istream&input = std::cin)
 		input.read (buf, readall_bufsize);
 		if (input) data.insert (data.end(), buf,
 			                        buf + readall_bufsize);
-		else if (input.eof() ) {
+		else if (input.eof()) {
 			data.insert (data.end(), buf,
-			             buf + input.gcount() );
+			             buf + input.gcount());
 			return true;
 		} else return false;
 	}

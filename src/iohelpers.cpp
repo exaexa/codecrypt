@@ -22,8 +22,8 @@ bool redirect_cin (const std::string& fn)
 {
 	static std::ifstream alt_cin;
 	alt_cin.open (fn.c_str(), std::ios::in | std::ios::binary);
-	if (alt_cin.fail() ) return false;
-	std::cin.rdbuf (alt_cin.rdbuf() );
+	if (alt_cin.fail()) return false;
+	std::cin.rdbuf (alt_cin.rdbuf());
 	return true;
 }
 
@@ -31,8 +31,8 @@ bool redirect_cout (const std::string& fn)
 {
 	static std::ofstream alt_cout;
 	alt_cout.open (fn.c_str(), std::ios::out | std::ios::binary);
-	if (alt_cout.fail() ) return false;
-	std::cout.rdbuf (alt_cout.rdbuf() );
+	if (alt_cout.fail()) return false;
+	std::cout.rdbuf (alt_cout.rdbuf());
 	return true;
 }
 

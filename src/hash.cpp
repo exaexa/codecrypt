@@ -33,7 +33,7 @@ hash_proc::suite_t& hash_proc::suite()
 	static factoryof<hash_proc,type> type##_var; \
 	s[to_unicase(name)]=&type##_var;
 
-	if (s.empty() ) {
+	if (s.empty()) {
 		do_hash ("CUBE512", cube512proc);
 #if HAVE_CRYPTOPP==1
 		do_hash ("RIPEMD128", rmd128proc);

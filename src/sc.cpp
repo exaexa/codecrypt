@@ -33,7 +33,7 @@ streamcipher::suite_t& streamcipher::suite()
 	static factoryof<streamcipher,type> type##_var; \
 	s[to_unicase(name)]=&type##_var;
 
-	if (s.empty() ) {
+	if (s.empty()) {
 		do_cipher ("ARCFOUR", arcfour_t);
 		do_cipher ("CHACHA20", chacha20);
 		do_cipher ("XSYND", xsynd);

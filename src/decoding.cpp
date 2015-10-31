@@ -23,7 +23,7 @@ void compute_goppa_error_locator (polynomial&syndrome, gf2m&fld,
                                   std::vector<polynomial>& sqInv,
                                   polynomial&out)
 {
-	if (syndrome.zero() ) {
+	if (syndrome.zero()) {
 		//ensure no roots
 		out.resize (1);
 		out[0] = 1;
@@ -52,7 +52,7 @@ void compute_goppa_error_locator (polynomial&syndrome, gf2m&fld,
 void compute_alternant_error_locator (polynomial&syndrome, gf2m&fld,
                                       uint t, polynomial&out)
 {
-	if (syndrome.zero() ) {
+	if (syndrome.zero()) {
 		//ensure no roots
 		out.resize (1);
 		out[0] = 1;
@@ -139,22 +139,22 @@ bool evaluate_error_locator_trace (polynomial&sigma, bvector&ev, gf2m&fld)
 
 	std::set<std::pair<uint, polynomial> > stk; //"stack"
 
-	stk.insert (make_pair (0, sigma) );
+	stk.insert (make_pair (0, sigma));
 
 	bool failed = false;
 
-	while (!stk.empty() ) {
+	while (!stk.empty()) {
 
 		uint i = stk.begin()->first;
 		polynomial cur = stk.begin()->second;
 
-		stk.erase (stk.begin() );
+		stk.erase (stk.begin());
 
 		int deg = cur.degree();
 
 		if (deg <= 0) continue;
 		if (deg == 1) { //found a linear factor
-			ev[fld.mult (cur[0], fld.inv (cur[1]) ) ] = 1;
+			ev[fld.mult (cur[0], fld.inv (cur[1])) ] = 1;
 			continue;
 		}
 
@@ -163,7 +163,7 @@ bool evaluate_error_locator_trace (polynomial&sigma, bvector&ev, gf2m&fld)
 			continue;
 		}
 
-		if (trace[i].zero() ) {
+		if (trace[i].zero()) {
 			//compute the trace if it isn't cached
 			uint a = fld.exp (i);
 			for (uint j = 0; j < fld.m; ++j) {
@@ -177,8 +177,8 @@ bool evaluate_error_locator_trace (polynomial&sigma, bvector&ev, gf2m&fld)
 		polynomial q, r;
 		cur.divmod (t, q, r, fld);
 
-		stk.insert (make_pair (i + 1, t) );
-		stk.insert (make_pair (i + 1, q) );
+		stk.insert (make_pair (i + 1, t));
+		stk.insert (make_pair (i + 1, q));
 	}
 
 	return !failed;

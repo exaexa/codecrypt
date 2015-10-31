@@ -45,12 +45,12 @@ public:
 	}
 
 	template<class A, class R> void permute (const A&a, R&r) const {
-		r.resize (a.size() );
+		r.resize (a.size());
 		for (uint i = 0; i < size(); ++i) r[item (i) ] = a[i];
 	}
 
 	template<class A, class R> void permute_inv (const A&a, R&r) const {
-		r.resize (a.size() );
+		r.resize (a.size());
 		for (uint i = 0; i < size(); ++i) r[i] = a[item (i)];
 	}
 
@@ -67,9 +67,9 @@ public:
 			s >>= 1;
 		}
 
-		if (sig >= a.size() ) return false;
+		if (sig >= a.size()) return false;
 
-		r.resize (a.size() );
+		r.resize (a.size());
 
 		uint i, t, x;
 		for (i = 0; i < a.size(); ++i) {
@@ -78,7 +78,7 @@ public:
 			//flip the correct bit in signature
 			t = i + 1;
 			x = 1;
-			while (! (t & 1) ) {
+			while (! (t & 1)) {
 				t >>= 1;
 				x <<= 1;
 			}

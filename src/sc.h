@@ -48,7 +48,7 @@ public:
 	}
 
 	void load_key_vector (const std::vector<byte>&K) {
-		load_key (& (K[0]), & (K[K.size()]) );
+		load_key (& (K[0]), & (K[K.size()]));
 	}
 
 	typedef std::map<std::string, factoryof<streamcipher>*> suite_t;

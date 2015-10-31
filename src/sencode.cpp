@@ -53,7 +53,7 @@ static void parse_int (const std::string&str, int&pos, int len,
 	for (;;) {
 		if (pos >= len) goto fail; //not terminated
 		else if (str[pos] == 'e') break; //done good
-		else if ( (str[pos] >= '0') and (str[pos] <= '9') ) //integer
+		else if ( (str[pos] >= '0') and (str[pos] <= '9'))  //integer
 			res = (10 * res) + (unsigned int) (str[pos] - '0');
 		else goto fail; //something weird!
 		++pos;
@@ -93,7 +93,7 @@ static void parse_string (const std::string&str, int&pos, int len,
 	for (;;) {
 		if (pos >= len) goto fail;
 		else if (str[pos] == ':') break; //got it
-		else if ( (str[pos] >= '0') and (str[pos] <= '9') ) //integer
+		else if ( (str[pos] >= '0') and (str[pos] <= '9'))  //integer
 			bytes = (10 * bytes) + (int) (str[pos] - '0');
 		else goto fail; //weird!
 		++pos;
@@ -132,18 +132,18 @@ sencode* sencode_decode (const std::string& str)
 			unsigned int res;
 			parse_int (str, pos, len, res);
 			if (pos < 0) break;
-			stk.push_back (new sencode_int (res) );
+			stk.push_back (new sencode_int (res));
 
-		} else if ( (str[pos] >= '0') && (str[pos] <= '9') ) {
+		} else if ( (str[pos] >= '0') && (str[pos] <= '9')) {
 			//parse a bytestring
 			std::string res;
 			parse_string (str, pos, len, res);
 			if (pos < 0) break;
-			stk.push_back (new sencode_bytes (res) );
+			stk.push_back (new sencode_bytes (res));
 		}
 
 		/* if there's nothing on the stack now, it's an error. */
-		if (stk.empty() ) break;
+		if (stk.empty()) break;
 
 		/* reduce stack. (return positively if it would
 		 * get empty and there's nothing more to parse.) */

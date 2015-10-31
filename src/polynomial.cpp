@@ -24,7 +24,7 @@
 int polynomial::degree() const
 {
 	int r;
-	for (r = ( (int) size() ) - 1; r >= 0; --r) if (item (r) ) break;
+	for (r = ( (int) size()) - 1; r >= 0; --r) if (item (r)) break;
 	return r;
 }
 
@@ -35,7 +35,7 @@ void polynomial::strip()
 
 bool polynomial::zero() const
 {
-	for (uint i = 0; i < size(); ++i) if (item (i) ) return false;
+	for (uint i = 0; i < size(); ++i) if (item (i)) return false;
 	return true;
 }
 
@@ -48,16 +48,16 @@ bool polynomial::one() const
 void polynomial::add (const polynomial&f, gf2m&fld)
 {
 	int df = f.degree();
-	if (df > degree() ) resize (df + 1);
+	if (df > degree()) resize (df + 1);
 	for (int i = 0; i <= df; ++i) item (i) = fld.add (item (i), f[i]);
 }
 
 void polynomial::add_mult (const polynomial&f, uint mult, gf2m&fld)
 {
 	int df = f.degree();
-	if (df > degree() ) resize (df + 1);
+	if (df > degree()) resize (df + 1);
 	for (int i = 0; i <= df; ++i)
-		item (i) = fld.add (item (i), fld.mult (mult, f[i]) );
+		item (i) = fld.add (item (i), fld.mult (mult, f[i]));
 }
 
 void polynomial::mod (const polynomial&f, gf2m&fld)
@@ -71,13 +71,13 @@ void polynomial::mod (const polynomial&f, gf2m&fld)
 	uint hi = fld.inv (f[df]);
 	// while there's place to substract, reduce by x^(d-df)-multiply of f
 	for (d = degree(); d >= df; --d)
-		if (item (d) ) {
+		if (item (d)) {
 			uint t = fld.mult (item (d), hi);
 
 			for (int i = 0; i <= df; ++i)
 				item (i + d - df)
 				    = fld.add (item (i + d - df),
-				               fld.mult (t, f[i]) );
+				               fld.mult (t, f[i]));
 		}
 	strip();
 }
@@ -90,14 +90,14 @@ void polynomial::mult (const polynomial&b, gf2m&fld)
 	db = b.degree();
 
 	clear();
-	if ( (da < 0) || (db < 0) ) //multiply by zero, not much to do.
+	if ( (da < 0) || (db < 0))  //multiply by zero, not much to do.
 		return;
 
 	resize (da + db + 1, 0);
 	for (i = 0; i <= da; ++i)
 		if (a[i]) for (j = 0; j <= db; ++j)
 				item (i + j) = fld.add (item (i + j),
-				                        fld.mult (a[i], b[j]) );
+				                        fld.mult (a[i], b[j]));
 }
 
 polynomial polynomial::gcd (polynomial b, gf2m&fld)
@@ -107,9 +107,9 @@ polynomial polynomial::gcd (polynomial b, gf2m&fld)
 	//eukleides
 	if (a.degree() < 0) return b;
 	for (;;) {
-		if (b.zero() ) return a;
+		if (b.zero()) return a;
 		a.mod (b, fld);
-		if (a.zero() ) return b;
+		if (a.zero()) return b;
 		b.mod (a, fld);
 	}
 	//unreachable
@@ -152,8 +152,8 @@ void polynomial::generate_random_irreducible (uint s, gf2m&fld, prng& rng)
 	resize (s + 1);
 	item (s) = 1; //degree s
 	for (uint i = 0; i < s; ++i) item (i) = rng.random (fld.n);
-	while (!is_irreducible (fld) )
-		item (rng.random (s) ) = rng.random (fld.n);
+	while (!is_irreducible (fld))
+		item (rng.random (s)) = rng.random (fld.n);
 }
 
 bool polynomial::compute_square_root_matrix (std::vector<polynomial>&r,
@@ -234,7 +234,7 @@ uint polynomial::eval (uint x, gf2m&fld) const
 	uint r = 0;
 	//horner
 	for (int i = degree(); i >= 0; --i)
-		r = fld.add (item (i), fld.mult (r, x) );
+		r = fld.add (item (i), fld.mult (r, x));
 	return r;
 }
 
@@ -259,7 +259,7 @@ void polynomial::make_monic (gf2m&fld)
 {
 	int d = degree();
 	if (d < 0) return;
-	uint m = fld.inv (item (d) );
+	uint m = fld.inv (item (d));
 	for (int i = 0; i <= d; ++i) item (i) = fld.mult (item (i), m);
 }
 
@@ -284,14 +284,14 @@ void polynomial::sqrt (std::vector<polynomial>& sqInv, gf2m&fld)
 
 	for (uint i = 0; i < s; ++i) {
 		for (uint j = 0; j < s; ++j) {
-			if (j >= a.size() ) break;
-			if (i >= sqInv[j].size() ) continue;
-			item (i) = fld.add (item (i), fld.mult (sqInv[j][i], a[j]) );
+			if (j >= a.size()) break;
+			if (i >= sqInv[j].size()) continue;
+			item (i) = fld.add (item (i), fld.mult (sqInv[j][i], a[j]));
 		}
 	}
 	strip();
 	for (uint i = 0; i < size(); ++i)
-		item (i) = fld.sq_root (item (i) );
+		item (i) = fld.sq_root (item (i));
 }
 
 void polynomial::div (polynomial&p, polynomial&m, gf2m&fld)
@@ -339,12 +339,12 @@ void polynomial::divmod (polynomial&d, polynomial&res, polynomial&rem, gf2m&fld)
 	rem = *this;
 	res.clear();
 	int t;
-	while ( (t = rem.degree() ) >= degd) {
+	while ( (t = rem.degree()) >= degd) {
 		int rp = t - degd;
 		if ( (int) res.size() < rp + 1) res.resize (rp + 1, 0);
 		res[rp] = fld.mult (headInv, rem[t]);
 		for (int i = 0; i <= degd; ++i)
-			rem[i + rp] = fld.add (rem[i + rp], fld.mult (res[rp], d[i]) );
+			rem[i + rp] = fld.add (rem[i + rp], fld.mult (res[rp], d[i]));
 	}
 	rem.strip();
 }
@@ -377,8 +377,8 @@ void polynomial::ext_euclid (polynomial&a_out, polynomial&b_out,
 
 		A.swap (a);
 		B.swap (b);
-		while ( (j = A.degree() - a.degree() ) >= 0) {
-			h = fld.div (A.head(), a.head() );
+		while ( (j = A.degree() - a.degree()) >= 0) {
+			h = fld.div (A.head(), a.head());
 			tmp = a;
 			tmp.shift (j);
 			A.add_mult (tmp, h, fld);
