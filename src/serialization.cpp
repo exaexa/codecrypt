@@ -23,9 +23,8 @@
 #include "gf2m.h"
 #include "polynomial.h"
 #include "permutation.h"
-#include "mce.h"
-#include "nd.h"
 #include "mce_qd.h"
+#include "mce_qcmdpc.h"
 #include "fmtseq.h"
 #include "message.h"
 #include "hashfile.h"
@@ -66,8 +65,12 @@ sencode* bvector::serialize()
 	uint ss = (size() + 7) / 8;
 	std::string bytes;
 	bytes.resize (ss, '\0');
-	for (uint i = 0; i < size(); ++i)
-		if (item (i)) bytes[i / 8] |= 1 << (i % 8);
+	//the padding of each vector is zero, we can stuff the bytes right in. Just make it sure here:
+	fix_padding();
+
+	for (size_t i = 0; i < size(); i += 8)
+		bytes[i >> 3] = (_data[i >> 6] >> ( ( (i >> 3) & 7) << 3)) & 0xff;
+
 	sencode_list*l = new sencode_list;
 	l->items.push_back (new sencode_int (size()));
 	l->items.push_back (new sencode_bytes (bytes));
@@ -84,15 +87,14 @@ bool bvector::unserialize (sencode* s)
 	if (bytes->b.size() != ( (size->i + 7) / 8)) return false;
 	clear();
 	resize (size->i, 0);
-	for (i = 0; i < size->i; ++i)
-		if ( (bytes->b[i / 8] >> (i % 8)) & 1)
-			item (i) = 1;
+	for (i = 0; i < _size; i += 8)
+		_data[i >> 6] |= ( (uint64_t) (unsigned char) bytes->b[i >> 3]) << ( ( (i >> 3) & 7) << 3);
 
 	/*
 	 * the important part. verify that padding is always zero, because
 	 * sencode serialization must be bijective
 	 */
-	for (; i < 8 * bytes->b.size(); ++i)
+	for (i = _size; i < 8 * bytes->b.size(); ++i)
 		if ( (bytes->b[i / 8] >> (i % 8)) & 1)
 			return false;
 
@@ -367,6 +369,67 @@ bool fmtseq::privkey::tree_stk_item::unserialize (sencode*s)
 	return true;
 
 }
+
+sencode* mce_qcmdpc::pubkey::serialize()
+{
+	sencode_list*l = new sencode_list;
+	l->items.resize (3);
+	l->items[0] = new sencode_bytes (PUBKEY_IDENT "QCMDPC-MCE");
+	l->items[1] = new sencode_int (t);
+	l->items[2] = G.serialize();
+	return l;
+}
+
+bool mce_qcmdpc::pubkey::unserialize (sencode* s)
+{
+	sencode_list*CAST_LIST (s, l);
+	if (l->items.size() != 3) return false;
+
+	sencode_bytes*CAST_BYTES (l->items[0], ident);
+	if (ident->b.compare (PUBKEY_IDENT "QCMDPC-MCE")) return false;
+
+	sencode_int*CAST_INT (l->items[1], p);
+	t = p->i;
+
+	if (!G.unserialize (l->items[2])) return false;
+
+	return true;
+}
+
+sencode* mce_qcmdpc::privkey::serialize()
+{
+	sencode_list*l = new sencode_list;
+	l->items.resize (5);
+	l->items[0] = new sencode_bytes (PRIVKEY_IDENT "QCMDPC-MCE");
+	l->items[1] = new sencode_int (t);
+	l->items[2] = new sencode_int (rounds);
+	l->items[3] = new sencode_int (delta);
+	l->items[4] = H.serialize();
+	return l;
+}
+
+bool mce_qcmdpc::privkey::unserialize (sencode*s)
+{
+	sencode_list*CAST_LIST (s, l);
+	if (l->items.size() != 5) return false;
+
+	sencode_bytes*CAST_BYTES (l->items[0], ident);
+	if (ident->b.compare (PRIVKEY_IDENT "QCMDPC-MCE")) return false;
+
+	sencode_int*CAST_INT (l->items[1], p);
+	t = p->i;
+
+	CAST_INT (l->items[2], p);
+	rounds = p->i;
+
+	CAST_INT (l->items[3], p);
+	delta = p->i;
+
+	if (!H.unserialize (l->items[4])) return false;
+
+	return true;
+}
+
 
 sencode* fmtseq::privkey::serialize()
 {

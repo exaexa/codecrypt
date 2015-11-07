@@ -19,6 +19,18 @@
 #include "algos_enc.h"
 
 #include "mce_qd.h"
+#include "mce_qcmdpc.h"
+#include "arcfour.h"
+#include "chacha.h"
+#include "xsynd.h"
+
+#if HAVE_CRYPTOPP==1
+#include "sha_hash.h"
+#include "rmd_hash.h"
+#endif
+#include "cube_hash.h"
+
+typedef arcfour<byte, 8, 4096> arcfour_fo_cipher;
 
 /*
  * keygen
@@ -31,6 +43,20 @@ static int mceqd_create_keypair (sencode**pub, sencode**priv, prng&rng)
 	mce_qd::privkey Priv;
 
 	if (mce_qd::generate (Pub, Priv, rng, m, T, b, d))
+		return 1;
+
+	*pub = Pub.serialize();
+	*priv = Priv.serialize();
+	return 0;
+}
+
+template<int bs, int bc, int wi, int t, int rounds, int delta>
+static int mceqcmdpc_create_keypair (sencode**pub, sencode**priv, prng&rng)
+{
+	mce_qcmdpc::pubkey Pub;
+	mce_qcmdpc::privkey Priv;
+
+	if (mce_qcmdpc::generate (Pub, Priv, rng, bs, bc, wi, t, rounds, delta))
 		return 1;
 
 	*pub = Pub.serialize();
@@ -393,7 +419,80 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 }
 
 /*
- * Instances for actual keygen/encryption/descryption algorithms
+ * Instances for MCE-QCMDPC algorithms
+ */
+
+#define mceqcmdpc_create_keypair_func(name,bs,bc,wi,t,rnd,delta) \
+int algo_mceqcmdpc##name::create_keypair (sencode**pub, sencode**priv, prng&rng) \
+{ \
+	return mceqcmdpc_create_keypair<bs,bc,wi,t,rnd,delta> (pub, priv, rng); \
+}
+
+#if HAVE_CRYPTOPP==1
+
+mceqcmdpc_create_keypair_func (128, 9857, 2, 71, 134, 60, 7)
+mceqcmdpc_create_keypair_func (256, 32771, 2, 137, 264, 60, 7)
+mceqcmdpc_create_keypair_func (128cha, 9857, 2, 71, 134, 60, 7)
+mceqcmdpc_create_keypair_func (256cha, 32771, 2, 137, 264, 60, 7)
+mceqcmdpc_create_keypair_func (128xs, 9857, 2, 71, 134, 60, 7)
+mceqcmdpc_create_keypair_func (256xs, 32771, 2, 137, 264, 60, 7)
+
+#endif //HAVE_CRYPTOPP==1
+
+mceqcmdpc_create_keypair_func (128cube, 9857, 2, 71, 134, 60, 7)
+mceqcmdpc_create_keypair_func (256cube, 32771, 2, 137, 264, 60, 7)
+mceqcmdpc_create_keypair_func (128cubecha, 9857, 2, 71, 134, 60, 7)
+mceqcmdpc_create_keypair_func (256cubecha, 32771, 2, 137, 264, 60, 7)
+mceqcmdpc_create_keypair_func (128cubexs, 9857, 2, 71, 134, 60, 7)
+mceqcmdpc_create_keypair_func (256cubexs, 32771, 2, 137, 264, 60, 7)
+
+#define mceqcmdpc_create_encdec_func(name,bs,bc,errcount,hash_type,pad_hash_type,scipher,ranksize) \
+int algo_mceqcmdpc##name::encrypt (const bvector&plain, bvector&cipher, \
+                               sencode* pubkey, prng&rng) \
+{ \
+	return fo_encrypt \
+	       < mce_qcmdpc::pubkey, \
+	       bs*(bc-1), bs*bc, errcount, \
+	       hash_type, \
+	       pad_hash_type, \
+	       scipher, \
+	       ranksize > \
+	       (plain, cipher, pubkey, rng); \
+} \
+int algo_mceqcmdpc##name::decrypt (const bvector&cipher, bvector&plain, \
+                               sencode* privkey) \
+{ \
+	return fo_decrypt \
+	       < mce_qcmdpc::privkey, \
+	       bs*(bc-1), bs*bc, errcount, \
+	       hash_type, \
+	       pad_hash_type, \
+	       scipher, \
+	       ranksize > \
+	       (cipher, plain, privkey); \
+}
+
+
+#if HAVE_CRYPTOPP==1
+
+mceqcmdpc_create_encdec_func (128, 9857, 2, 134, sha256hash, rmd128hash, arcfour_fo_cipher, 1152)
+mceqcmdpc_create_encdec_func (256, 32771, 2, 264, sha512hash, sha256hash, arcfour_fo_cipher, 2475)
+mceqcmdpc_create_encdec_func (128cha, 9857, 2, 134, sha256hash, rmd128hash, chacha20, 1152)
+mceqcmdpc_create_encdec_func (256cha, 32771, 2, 264, sha512hash, sha256hash, chacha20, 2475)
+mceqcmdpc_create_encdec_func (128xs, 9857, 2, 134, sha256hash, rmd128hash, xsynd, 1152)
+mceqcmdpc_create_encdec_func (256xs, 32771, 2, 264, sha512hash, sha256hash, xsynd, 2475)
+
+#endif //HAVE_CRYPTOPP==1
+
+mceqcmdpc_create_encdec_func (128cube, 9857, 2, 134, cube256hash, cube128hash, arcfour_fo_cipher, 1152)
+mceqcmdpc_create_encdec_func (256cube, 32771, 2, 264, cube512hash, cube256hash, arcfour_fo_cipher, 2475)
+mceqcmdpc_create_encdec_func (128cubecha, 9857, 2, 134, cube256hash, cube128hash, chacha20, 1152)
+mceqcmdpc_create_encdec_func (256cubecha, 32771, 2, 264, cube512hash, cube256hash, chacha20, 2475)
+mceqcmdpc_create_encdec_func (128cubexs, 9857, 2, 134, cube256hash, cube128hash, xsynd, 1152)
+mceqcmdpc_create_encdec_func (256cubexs, 32771, 2, 264, cube512hash, cube256hash, xsynd, 2475)
+
+/*
+ * Instances for MCE-QD algorithms
  */
 
 #define mceqd_create_keypair_func(name,m,T,b,d) \
@@ -426,12 +525,6 @@ mceqd_create_keypair_func (128cubexs, 16, 7, 32, 4)
 mceqd_create_keypair_func (192cubexs, 16, 8, 27, 4)
 mceqd_create_keypair_func (256cubexs, 16, 8, 32, 4)
 
-#include "arcfour.h"
-#include "chacha.h"
-#include "xsynd.h"
-
-typedef arcfour<byte, 8, 4096> arcfour_fo_cipher;
-
 #define mceqd_create_encdec_func(name,plainsize,ciphersize,errcount, hash_type,pad_hash_type,scipher,ranksize) \
 int algo_mceqd##name::encrypt (const bvector&plain, bvector&cipher, \
                                sencode* pubkey, prng&rng) \
@@ -461,9 +554,6 @@ int algo_mceqd##name::decrypt (const bvector&cipher, bvector&plain, \
 
 #if HAVE_CRYPTOPP==1
 
-#include "sha_hash.h"
-#include "rmd_hash.h"
-
 mceqd_create_encdec_func (128, 2048, 4096, 128, sha256hash, rmd128hash, arcfour_fo_cipher, 816)
 mceqd_create_encdec_func (192, 2816, 6912, 256, sha384hash, rmd128hash, arcfour_fo_cipher, 1574)
 mceqd_create_encdec_func (256, 4096, 8192, 256, sha512hash, rmd128hash, arcfour_fo_cipher, 1638)
@@ -475,8 +565,6 @@ mceqd_create_encdec_func (192xs, 2816, 6912, 256, sha384hash, rmd128hash, xsynd,
 mceqd_create_encdec_func (256xs, 4096, 8192, 256, sha512hash, rmd128hash, xsynd, 1638)
 
 #endif //HAVE_CRYPTOPP==1
-
-#include "cube_hash.h"
 
 mceqd_create_encdec_func (128cube, 2048, 4096, 128, cube256hash, cube128hash, arcfour_fo_cipher, 816)
 mceqd_create_encdec_func (192cube, 2816, 6912, 256, cube384hash, cube128hash, arcfour_fo_cipher, 1574)

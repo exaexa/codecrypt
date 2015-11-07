@@ -35,6 +35,14 @@ void fill_algorithm_suite (algorithm_suite&s)
 	do_alg (algo_mceqd128xs);
 	do_alg (algo_mceqd192xs);
 	do_alg (algo_mceqd256xs);
+
+	do_alg (algo_mceqcmdpc128);
+	do_alg (algo_mceqcmdpc256);
+	do_alg (algo_mceqcmdpc128cha);
+	do_alg (algo_mceqcmdpc256cha);
+	do_alg (algo_mceqcmdpc128xs);
+	do_alg (algo_mceqcmdpc256xs);
+
 	do_alg (algo_fmtseq128);
 	do_alg (algo_fmtseq192);
 	do_alg (algo_fmtseq256);
@@ -52,6 +60,14 @@ void fill_algorithm_suite (algorithm_suite&s)
 	do_alg (algo_mceqd128cubexs);
 	do_alg (algo_mceqd192cubexs);
 	do_alg (algo_mceqd256cubexs);
+
+	do_alg (algo_mceqcmdpc128cube);
+	do_alg (algo_mceqcmdpc256cube);
+	do_alg (algo_mceqcmdpc128cubecha);
+	do_alg (algo_mceqcmdpc256cubecha);
+	do_alg (algo_mceqcmdpc128cubexs);
+	do_alg (algo_mceqcmdpc256cubexs);
+
 	do_alg (algo_fmtseq128cube);
 	do_alg (algo_fmtseq192cube);
 	do_alg (algo_fmtseq256cube);

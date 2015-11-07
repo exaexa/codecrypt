@@ -21,8 +21,8 @@
 
 #include "algorithm.h"
 
-#define mceqd_alg_class(name,alg_id) \
-class algo_mceqd##name : public algorithm \
+#define mce_alg_class(name,alg_id) \
+class algo_mce##name : public algorithm \
 { \
 public: \
 	bool provides_signatures() { \
@@ -47,15 +47,22 @@ public: \
  * SHA-based variants
  */
 
-mceqd_alg_class (128, "MCEQD128FO-SHA256-ARCFOUR");
-mceqd_alg_class (192, "MCEQD192FO-SHA384-ARCFOUR");
-mceqd_alg_class (256, "MCEQD256FO-SHA512-ARCFOUR");
-mceqd_alg_class (128cha, "MCEQD128FO-SHA256-CHACHA20");
-mceqd_alg_class (192cha, "MCEQD192FO-SHA384-CHACHA20");
-mceqd_alg_class (256cha, "MCEQD256FO-SHA512-CHACHA20");
-mceqd_alg_class (128xs, "MCEQD128FO-SHA256-XSYND");
-mceqd_alg_class (192xs, "MCEQD192FO-SHA384-XSYND");
-mceqd_alg_class (256xs, "MCEQD256FO-SHA512-XSYND");
+mce_alg_class (qd128, "MCEQD128FO-SHA256-ARCFOUR");
+mce_alg_class (qd192, "MCEQD192FO-SHA384-ARCFOUR");
+mce_alg_class (qd256, "MCEQD256FO-SHA512-ARCFOUR");
+mce_alg_class (qd128cha, "MCEQD128FO-SHA256-CHACHA20");
+mce_alg_class (qd192cha, "MCEQD192FO-SHA384-CHACHA20");
+mce_alg_class (qd256cha, "MCEQD256FO-SHA512-CHACHA20");
+mce_alg_class (qd128xs, "MCEQD128FO-SHA256-XSYND");
+mce_alg_class (qd192xs, "MCEQD192FO-SHA384-XSYND");
+mce_alg_class (qd256xs, "MCEQD256FO-SHA512-XSYND");
+
+mce_alg_class (qcmdpc128, "MCEQCMDPC128FO-SHA256-ARCFOUR");
+mce_alg_class (qcmdpc256, "MCEQCMDPC256FO-SHA512-ARCFOUR");
+mce_alg_class (qcmdpc128cha, "MCEQCMDPC128FO-SHA256-CHACHA20");
+mce_alg_class (qcmdpc256cha, "MCEQCMDPC256FO-SHA512-CHACHA20");
+mce_alg_class (qcmdpc128xs, "MCEQCMDPC128FO-SHA256-XSYND");
+mce_alg_class (qcmdpc256xs, "MCEQCMDPC256FO-SHA512-XSYND");
 
 #endif //HAVE_CRYPTOPP==1
 
@@ -63,15 +70,21 @@ mceqd_alg_class (256xs, "MCEQD256FO-SHA512-XSYND");
  * Cubehash-based variants
  */
 
-mceqd_alg_class (128cube, "MCEQD128FO-CUBE256-ARCFOUR");
-mceqd_alg_class (192cube, "MCEQD192FO-CUBE384-ARCFOUR");
-mceqd_alg_class (256cube, "MCEQD256FO-CUBE512-ARCFOUR");
-mceqd_alg_class (128cubecha, "MCEQD128FO-CUBE256-CHACHA20");
-mceqd_alg_class (192cubecha, "MCEQD192FO-CUBE384-CHACHA20");
-mceqd_alg_class (256cubecha, "MCEQD256FO-CUBE512-CHACHA20");
-mceqd_alg_class (128cubexs, "MCEQD128FO-CUBE256-XSYND");
-mceqd_alg_class (192cubexs, "MCEQD192FO-CUBE384-XSYND");
-mceqd_alg_class (256cubexs, "MCEQD256FO-CUBE512-XSYND");
+mce_alg_class (qd128cube, "MCEQD128FO-CUBE256-ARCFOUR");
+mce_alg_class (qd192cube, "MCEQD192FO-CUBE384-ARCFOUR");
+mce_alg_class (qd256cube, "MCEQD256FO-CUBE512-ARCFOUR");
+mce_alg_class (qd128cubecha, "MCEQD128FO-CUBE256-CHACHA20");
+mce_alg_class (qd192cubecha, "MCEQD192FO-CUBE384-CHACHA20");
+mce_alg_class (qd256cubecha, "MCEQD256FO-CUBE512-CHACHA20");
+mce_alg_class (qd128cubexs, "MCEQD128FO-CUBE256-XSYND");
+mce_alg_class (qd192cubexs, "MCEQD192FO-CUBE384-XSYND");
+mce_alg_class (qd256cubexs, "MCEQD256FO-CUBE512-XSYND");
 
+mce_alg_class (qcmdpc128cube, "MCEQCMDPC128FO-CUBE256-ARCFOUR");
+mce_alg_class (qcmdpc256cube, "MCEQCMDPC256FO-CUBE512-ARCFOUR");
+mce_alg_class (qcmdpc128cubecha, "MCEQCMDPC128FO-CUBE256-CHACHA20");
+mce_alg_class (qcmdpc256cubecha, "MCEQCMDPC256FO-CUBE512-CHACHA20");
+mce_alg_class (qcmdpc128cubexs, "MCEQCMDPC128FO-CUBE256-XSYND");
+mce_alg_class (qcmdpc256cubexs, "MCEQCMDPC256FO-CUBE512-XSYND");
 #endif
 
