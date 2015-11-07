@@ -62,14 +62,10 @@ static bool unserialize_uint_vector (std::vector<uint>*v, sencode*s)
 
 sencode* bvector::serialize()
 {
-	uint ss = (size() + 7) / 8;
 	std::string bytes;
-	bytes.resize (ss, '\0');
 	//the padding of each vector is zero, we can stuff the bytes right in. Just make it sure here:
 	fix_padding();
-
-	for (size_t i = 0; i < size(); i += 8)
-		bytes[i >> 3] = (_data[i >> 6] >> ( ( (i >> 3) & 7) << 3)) & 0xff;
+	to_string (bytes);
 
 	sencode_list*l = new sencode_list;
 	l->items.push_back (new sencode_int (size()));
@@ -85,18 +81,16 @@ bool bvector::unserialize (sencode* s)
 	sencode_int*CAST_INT (l->items[0], size);
 	sencode_bytes*CAST_BYTES (l->items[1], bytes);
 	if (bytes->b.size() != ( (size->i + 7) / 8)) return false;
-	clear();
-	resize (size->i, 0);
-	for (i = 0; i < _size; i += 8)
-		_data[i >> 6] |= ( (uint64_t) (unsigned char) bytes->b[i >> 3]) << ( ( (i >> 3) & 7) << 3);
 
 	/*
 	 * the important part. verify that padding is always zero, because
 	 * sencode serialization must be bijective
 	 */
-	for (i = _size; i < 8 * bytes->b.size(); ++i)
+	for (i = size->i; i < 8 * bytes->b.size(); ++i)
 		if ( (bytes->b[i / 8] >> (i % 8)) & 1)
 			return false;
+
+	from_string (bytes->b, size->i);
 
 	return true;
 }

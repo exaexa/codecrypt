@@ -57,16 +57,12 @@
 
 typedef chacha20 padding_generator;
 
-static void msg_pad (const bvector&in, std::vector<byte>&out, size_t minsize)
+static void msg_pad (const bvector&in, std::vector<byte>&out, size_t tgt_size)
 {
 	uint i;
 
-	out.clear();
-	out.resize ( ( (in.size() - 1) >> 3) + 1, 0);
-	for (i = 0; i < in.size(); ++i)
-		if (in[i]) out[i >> 3] |= 1 << (i & 0x7);
-
-	if (out.size() >= minsize) return;
+	in.to_bytes (out);
+	if (out.size() >= tgt_size) return;
 
 	padding_generator g;
 	g.init ();
@@ -74,8 +70,8 @@ static void msg_pad (const bvector&in, std::vector<byte>&out, size_t minsize)
 	g.load_key_vector (out);
 
 	i = out.size();
-	out.resize (minsize);
-	for (; i < minsize; ++i) out[i] = g.gen();
+	out.resize (tgt_size);
+	for (; i < tgt_size; ++i) out[i] = g.gen();
 }
 
 /*
@@ -106,8 +102,7 @@ static int fmtseq_generic_sign (const bvector&msg,
 
 	//convert to bvector
 	bvector hash;
-	hash.resize (hs, 0);
-	for (uint i = 0; i < hs; ++i) hash[i] = 1 & (H[i >> 3] >> (i & 0x7));
+	hash.from_bytes (H);
 
 	//make a signature
 	tree_hash hf;
@@ -145,8 +140,7 @@ static int fmtseq_generic_verify (const bvector&sig,
 
 	//convert to bvector
 	bvector hash;
-	hash.resize (hs, 0);
-	for (uint i = 0; i < hs; ++i) hash[i] = 1 & (H[i >> 3] >> (i & 0x7));
+	hash.from_bytes (H);
 
 	//check the signature
 	tree_hash hf;

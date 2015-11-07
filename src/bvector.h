@@ -197,8 +197,17 @@ public:
 	void colex_rank (bvector&) const;
 	bool colex_unrank (bvector&, uint n, uint k) const;
 
-	bool to_string (std::string&) const;
-	void from_string (const std::string&);
+	void to_string (std::string&) const;
+	void to_bytes (std::vector<byte>&) const;
+
+	bool to_string_check (std::string&s) const {
+		if (size() & 7) return false;
+		to_string (s);
+		return true;
+	}
+
+	void from_string (const std::string&, size_t bits = 0);
+	void from_bytes (const std::vector<byte>&, size_t bits = 0);
 
 	sencode* serialize();
 	bool unserialize (sencode*);

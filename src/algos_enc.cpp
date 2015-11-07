@@ -133,20 +133,15 @@ static void msg_pad_length (const std::vector<byte>& msg,
 static void message_pad (const bvector&in, std::vector<byte>&out,
                          prng&rng, hash_func&pad_hash)
 {
-	out.clear();
+	in.to_bytes (out);
 
 	//make space for the bit stage
-	if (in.size() == 0) out.resize (1, 0);
-	else out.resize ( ( (in.size() - 1) >> 3) + 2, 0);
-
-	//copy message bits
-	uint i;
-	for (i = 0; i < in.size(); ++i)
-		if (in[i]) out[i >> 3] |= 1 << (i & 0x7);
+	out.resize (out.size() + 1, 0);
 
 	//pad with random bits to whole byte
 	unsigned char rtmp = rng.random (256);
-	for (; i & 0x7; ++i)
+	uint i;
+	for (i = in.size(); i & 0x7; ++i)
 		if (rtmp >> (i & 0x7))
 			out[i >> 3] |= 1 << (i & 0x7);
 
@@ -214,10 +209,7 @@ static bool message_unpad (std::vector<byte> in, bvector&out,
 	//convert to bvector
 	uint msg_size = ( (in_end - (bit_overflow ? 2 : 1)) << 3)
 	                + bit_overflow;
-	out.clear();
-	out.resize (msg_size);
-	for (uint i = 0; i < msg_size; ++i)
-		out[i] = 1 & (in[i >> 3] >> (i & 0x7));
+	out.from_bytes (in, msg_size);
 
 	return true;
 }
@@ -275,7 +267,7 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	hash_type hf;
 	H = hf (M2);
 
-	//prepare the error vector
+	//prepare the error vector (rotate the hash so we don't need ultralong hash functions)
 	bvector ev_rank;
 	ev_rank.resize (ranksize);
 	for (i = 0; i < ranksize; ++i)
@@ -286,8 +278,8 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 
 	//prepare plaintext
 	bvector mce_plain;
-	mce_plain.resize (plainsize);
-	for (i = 0; i < plainsize; ++i) mce_plain[i] = 1 & (K[i >> 3] >> (i & 0x7));
+	mce_plain.from_bytes (K);
+	mce_plain.resize (plainsize, 0); //pad with 0's to exact size
 
 	//run McEliece
 	if (Pub.encrypt (mce_plain, cipher, ev)) return 5;
@@ -301,11 +293,10 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	//encrypt
 	for (i = 0; i < M.size(); ++i) M[i] = M[i] ^ sc.gen();
 
-	//append the message part to the ciphertext
-	cipher.resize (ciphersize + (M.size() << 3));
-	for (i = 0; i < (M.size() << 3); ++i)
-		cipher[ciphersize + i] = 1 & (M[i >> 3] >> (i & 0x7));
-
+	//append the message part to the key block.
+	bvector Mb;
+	Mb.from_bytes (M);
+	cipher.append (Mb);
 	return 0;
 }
 
@@ -375,13 +366,14 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 
 	//convert stuff to byte vectors
 	std::vector<byte> K, M;
-	K.resize (plainsize >> 3, 0);
-	for (i = 0; i < plainsize; ++i)
-		if (mce_plain[i]) K[i >> 3] |= 1 << (i & 0x7);
 
-	M.resize (msize >> 3, 0);
-	for (i = 0; i < msize; ++i)
-		if (cipher[ciphersize + i]) M[i >> 3] |= 1 << (i & 0x7);
+	bvector Kb;
+	mce_plain.get_block (0, plainsize, Kb);
+	Kb.to_bytes (K);
+
+	bvector Mb;
+	cipher.get_block (ciphersize, msize, Mb);
+	Mb.to_bytes (M);
 
 	//prepare symmetric cipher
 	scipher sc;
@@ -403,7 +395,7 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	bvector ev_rank;
 	ev.colex_rank (ev_rank);
 	ev_rank.resize (ranksize, 0);
-	for (i = 0; i < ranksize; ++i)
+	for (i = 0; i < ranksize; ++i) //cyclic hash repetition again
 		if (ev_rank[i] != (1 & (H[ (i >> 3) % H.size()]
 		                        >> (i & 0x7))))
 			return 7;

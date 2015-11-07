@@ -519,7 +519,7 @@ int action_decrypt (bool armor, const std::string&symmetric,
 		return 1;
 	}
 
-	if (!plaintext.to_string (data)) {
+	if (!plaintext.to_string_check (data)) {
 		err ("error: malformed data");
 		return 1;
 	}
@@ -862,7 +862,8 @@ int action_verify (bool armor, const std::string&detach,
 		sencode_destroy (M);
 
 		std::string tmp;
-		if (!msg.message.to_string (tmp) || tmp != MSG_CLEARTEXT) {
+		if (!msg.message.to_string_check (tmp)
+		    || tmp != MSG_CLEARTEXT) {
 			err ("error: malformed cleartext signature");
 			return 1;
 		}
@@ -913,7 +914,8 @@ int action_verify (bool armor, const std::string&detach,
 		sencode_destroy (M);
 
 		std::string tmp;
-		if (!msg.message.to_string (tmp) || tmp != MSG_DETACHED) {
+		if (!msg.message.to_string_check (tmp)
+		    || tmp != MSG_DETACHED) {
 			err ("error: malformed detached signature");
 			return 1;
 		}
@@ -1210,7 +1212,7 @@ int action_decrypt_verify (bool armor, bool yes,
 		return 1;
 	}
 
-	if (!bv.to_string (data)) {
+	if (!bv.to_string_check (data)) {
 		err ("error: malformed data");
 		return 1;
 	}

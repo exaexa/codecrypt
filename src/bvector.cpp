@@ -199,6 +199,7 @@ void bvector::get_block (size_t offset, size_t bs, bvector&out) const
 
 uint bvector::and_hamming_weight (const bvector&a) const
 {
+	/* sizes must match */
 	uint r = 0;
 	size_t s = _data.size();
 	if (s > a._data.size()) s = a._data.size();
@@ -222,26 +223,48 @@ void bvector::from_poly_cotrace (const polynomial&r, gf2m&fld)
 		item (i) = (r[i % s] >> (i / s)) & 1;
 }
 
-bool bvector::to_string (std::string& out) const
+void bvector::to_bytes (std::vector<byte>& out) const
 {
-	if (size() & 0x7) return false;
+	out.resize ( (size() + 7) >> 3, 0);
 
-	out.clear();
-	out.resize (size() >> 3, 0);
-
-	for (size_t i = 0; i < size(); ++i)
-		if (item (i)) out[i >> 3] |= (1 << (i & 0x7));
-
-	return true;
+	for (size_t i = 0; i < size(); i += 8)
+		out[i >> 3] = (_data[i >> 6]
+		               >> ( ( (i >> 3) & 7) << 3)) & 0xff;
 }
 
-void bvector::from_string (const std::string&in)
+void bvector::to_string (std::string& out) const
 {
-	clear();
-	resize (in.length() << 3);
+	out.resize ( (size() + 7) >> 3, '\0');
 
-	for (size_t i = 0; i < size(); ++i)
-		item (i) = (in[i >> 3] >> (i & 0x7)) & 1;
+	for (size_t i = 0; i < size(); i += 8)
+		out[i >> 3] = (_data[i >> 6]
+		               >> ( ( (i >> 3) & 7) << 3)) & 0xff;
+}
+
+void bvector::from_string (const std::string&in, size_t bits)
+{
+	if (bits) resize (bits);
+	else resize (in.length() << 3);
+	fill_zeros();
+
+	for (size_t i = 0; i < size(); i += 8)
+		_data[i >> 6] |=
+		    ( (uint64_t) (unsigned char) in[i >> 3])
+		    << ( ( (i >> 3) & 7) << 3);
+	fix_padding();
+}
+
+void bvector::from_bytes (const std::vector<byte>&in, size_t bits)
+{
+	if (bits) resize (bits);
+	else resize (in.size() << 3);
+	fill_zeros();
+
+	for (size_t i = 0; i < size(); i += 8)
+		_data[i >> 6] |=
+		    ( (uint64_t) (unsigned char) in[i >> 3])
+		    << ( ( (i >> 3) & 7) << 3);
+	fix_padding();
 }
 
 /*
