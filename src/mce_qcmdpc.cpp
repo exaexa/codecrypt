@@ -153,9 +153,6 @@ int privkey::decrypt (const bvector & in, bvector & out)
 
 #include <vector>
 
-#include "iohelpers.h"
-#include "ios.h"
-
 int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 {
 	uint i;
@@ -212,7 +209,6 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 
 	errors = in_orig;
 	errors.add (in); //get the difference
-	out (errors);
 	out = in;
 	out.resize (plain_size());
 
