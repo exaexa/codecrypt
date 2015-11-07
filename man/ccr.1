@@ -1,4 +1,4 @@
-.TH CCR 1 2014-04-08 "ccr" "Codecrypt"
+.TH CCR 1 2015-11-07 "ccr" "Codecrypt"
 .SH NAME
 .B ccr
 \- The post-quantum cryptography encryption and signing tool
@@ -250,34 +250,61 @@ security") around 2^xxx, HASH1 is used as a message digest algorithm, and HASH2
 is used for construction of Merkle tree.
 
 McEliece-based encryption schemes are formed from McEliece trapdoor running on
-quasi-dyadic Goppa codes with Fujisaki-Okamoto encryption padding. Algorithm
-name MCEQDxxxFO-HASH-CIPHER means that the trapdoor is designed to provide
-attack complexity around 2^xxx, and HASH and CIPHER are the hash and symmetric
-cipher functions that are used in Fujisaki-Okamoto padding scheme.
+quasi-dyadic Goppa codes (the MCEQD- algorithms) and on quasi-cyclis
+medium-density parity-check (QCMDPC- ones) with Fujisaki-Okamoto encryption
+padding for CCA2. Algorithm name MCEQDxxxFO-HASH-CIPHER means that the trapdoor
+is designed to provide attack complexity around 2^xxx, and HASH and CIPHER are
+the hash and symmetric cipher functions that are used in Fujisaki-Okamoto
+padding scheme.
 
-As of June 2013, users are advised to deploy the 2^128-secure variants of the
+As of November 2015, users are advised to deploy the 2^128-secure variants of the
 algorithms -- running 2^128 operations would require around 10^22 years of CPU
 time (of a pretty fast CPU), which is considered more than sufficient for any
 reasonable setup and using stronger algorithms seems just completely
-unnecessary. Note that using stronger algorithm variants does not come with any
-serious performance drawback.
+unnecessary.
+
+Note that using stronger algorithm variants does not come with any serious
+performance drawback and protects the user from non-fatal attacks that decrease
+the security of the scheme only by a small amount -- compare getting an attack
+speedup of 2^20 on a scheme with 2^80 bit security (which is fatal) with
+getting the same speedup on a scheme with 2^128 security (where the resulting
+2^108 is still strong).
 
 For comparison, 2^128 security level is very roughly equivalent to that of
 classical RSA with 3072bit modulus (which is, accordingly to the best results
 available in June 2013 for general public, reported to provide roughly 2^112
 attack complexity).
 
-All algorithms are believed to be intractable by quantum computers, except for
-the generic case of Grover search which (in a very idealized case and very
-roughly) halves the bit security (although the attack remains exponential).
-Users who are aware of large quantum computers being built are advised to use
-2^192 or 2^256 bit security keys.
+For another comparison, a very good idea about the insane amount of energy that
+is actually needed for brute-forcing 2^256 operations can be obtained from
+wikipedia, which estimates the size of whole observable universe (!) to around
+2^270 atoms.
+
+All algorithms are believed to be resistant to quantum-computer-specific
+attacks, except for the generic case of Grover search which (in a very
+idealized case and very roughly) halves the bit security (although the attack
+remains exponential).  Users who are aware of large quantum computers being
+built are advised to use 2^192 or 2^256 bit security keys.
 
 .SH WARNINGS AND CAVEATS
 
+.SS General advice
+
 Codecrypt does not do much to prevent damage from mistakes of the user. Be
 especially careful when managing your keyring, be aware that some operations
-can rename or delete more keys at once.
+can rename or delete more keys at once. Used cryptography is relatively new,
+therefore be sure to verify current state of cryptanalysis before you put your
+data at risk.
+
+.SS Current state of cryptanalysis
+
+In a fashion similar to aforementioned `new cryptography', the original
+algebraic variant of quasi-dyadic McEliece that is still in codecrypt (MCEQD*
+algorithms, kept for compatibility purposes) has been broken by an algebraic
+attack. Security is greatly reduced. Use the QC-MDPC variant which dodges
+similar attacks.
+
+.SS Large files
 
 Codecrypt is not very good for working directly with large files. Because of
 the message format and code clarity, whole input files and messages are usually
@@ -287,6 +314,8 @@ internal simplicity, therefore the fix is probably not going to happen. You can
 easily workaround the whole problem using symmetric ciphers (for encryption of
 large files) or hashfiles (for signatures of large files). See the
 \fB\-\-symmetric\fR option.
+
+.SS FMTSeq signatures
 
 FMTSeq signatures are constructed from one-time signature scheme, for this
 reason the private key changes after each signature, basically by increasing
@@ -306,6 +335,8 @@ FMTSeq can only produce a limited amount of signatures (but still a pretty
 large number). When the remaining signature count starts to get low, Codecrypt
 will print warning messages. In that case, users are advised to generate and
 certify new keys.
+
+.SS Working with keys
 
 Try to always use the "-n" option before you actually import keys -- blind
 import of keys can bring serious inconsistencies into your key naming scheme.
@@ -333,6 +364,11 @@ on empty vector instead of `out'.
 Q: I want to sign/encrypt a large file but it took all my RAM and takes ages!
 
 A: Use \fB--symmetric\fR option. See the `CAVEATS' section for more details.
+
+Q: How much `broken' is the original quasi-dyadic McEliece?
+
+A: The private key of proposed dyadic variant by Misoczki and Barreto can be
+derived from the public key with standard computer equipment.
 
 .SH EXAMPLE
 Following commands roughly demonstrate command line usage of \fBccr\fR:
