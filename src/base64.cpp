@@ -167,7 +167,7 @@ bool base64_decode (const std::string& in, std::string&out)
 		b64d_init = true;
 	}
 
-	int idx = 0, idxmax = in.length(), tmp;
+	int idx = 0, idxmax = in.length();
 
 	out.clear();
 	out.reserve (3 * in.length() / 4);
@@ -182,7 +182,7 @@ bool base64_decode (const std::string& in, std::string&out)
 		if ( (c[0] == -1) || (c[1] == -1)) return false;
 		if ( (c[2] == -1) && (c[3] != -1)) return false;
 
-		tmp = (c[0] << 18) | (c[1] << 12);
+		int tmp = (c[0] << 18) | (c[1] << 12);
 		if (c[2] != -1) tmp |= c[2] << 6;
 		if (c[3] != -1) tmp |= c[3];
 

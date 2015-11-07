@@ -28,7 +28,7 @@ using namespace mce_qd;
 
 static void print_attack_warning()
 {
-	bool printed = false;
+	static bool printed = false;
 	if (printed) return;
 	err ("\n***MCEQD SECURITY WARNING***\n\n"
 	     "Security of the QD-McEliece variant was greatly reduced to less than 2^50\n"
@@ -403,7 +403,7 @@ int pubkey::encrypt (const bvector & in, bvector & out, const bvector&errors)
 
 	//compute ciphertext
 	out = in;
-	out.insert (out.end(), cksum.begin(), cksum.end());
+	out.append (cksum);
 	out.add (errors);
 
 	return 0;

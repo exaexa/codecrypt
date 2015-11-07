@@ -34,10 +34,8 @@
  * compact Quasi-dyadic McEliece
  * according to Misoczki, Barreto, Compact McEliece Keys from Goppa Codes.
  *
- * Good security, extremely good speed with extremely reduced key size.
- * Recommended for encryption, but NEEDS some plaintext conversion -- either
- * Fujisaki-Okamoto or Kobara-Imai are known to work good. Without the
- * conversion, the encryption itself is extremely weak.
+ * Needs plaintext conversion. Unfortunately broken by an algebraic attack, do
+ * not use this.
  */
 namespace mce_qd
 {

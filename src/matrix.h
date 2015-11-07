@@ -54,25 +54,16 @@ public:
 	void unit (uint);
 
 	void compute_transpose (matrix&);
-	bool mult_vecT_left (const bvector&, bvector&);
-	bool mult_vec_right (const bvector&, bvector&);
 	bool compute_inversion (matrix&,
 	                        bool upper_tri = false,
 	                        bool lower_tri = false);
 
 	bool set_block (uint, uint, const matrix&);
-	bool add_block (uint, uint, const matrix&);
-	bool set_block_from (uint, uint, const matrix&);
-	bool add_block_from (uint, uint, const matrix&);
 
-	bool get_left_square (matrix&);
-	bool strip_left_square (matrix&);
 	bool get_right_square (matrix&);
 	bool strip_right_square (matrix&);
 	void extend_left_compact (matrix&);
 
-	void generate_random_invertible (uint, prng&);
-	void generate_random_with_inversion (uint, matrix&, prng&);
 	bool create_goppa_generator (matrix&, permutation&, prng&);
 	bool create_goppa_generator (matrix&, const permutation&);
 

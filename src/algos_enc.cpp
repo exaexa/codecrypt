@@ -336,9 +336,7 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	//get the McE part
 	if (cipher.size() < ciphersize) return 5;
 	bvector mce_cipher, mce_plain, ev;
-	mce_cipher.insert (mce_cipher.end(),
-	                   cipher.begin(),
-	                   cipher.begin() + ciphersize);
+	cipher.get_block (0, ciphersize, mce_cipher);
 
 	//get and check the message size for later
 	uint msize = cipher.size() - ciphersize;
@@ -409,7 +407,6 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 		if (ev_rank[i] != (1 & (H[ (i >> 3) % H.size()]
 		                        >> (i & 0x7))))
 			return 7;
-
 
 	//if the message seems okay, unpad and return it.
 	pad_hash_type phf;

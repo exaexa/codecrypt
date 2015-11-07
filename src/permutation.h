@@ -54,8 +54,6 @@ public:
 		for (uint i = 0; i < size(); ++i) r[i] = a[item (i)];
 	}
 
-	void permute_rows (const matrix&, matrix&) const;
-
 	//work-alike for dyadic permutations.
 	template<class A, class R> static bool permute_dyadic
 	(uint sig, const A&a, R&r) {

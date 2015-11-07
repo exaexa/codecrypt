@@ -44,10 +44,9 @@ uint gf2p_mod (uint a, uint p)
 
 uint gf2p_gcd (uint a, uint b)
 {
-	uint c;
 	if (!a) return b;
 	while (b) {
-		c = gf2p_mod (a, b);
+		uint c = gf2p_mod (a, b);
 		a = b;
 		b = c;
 	}

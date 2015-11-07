@@ -43,10 +43,3 @@ void permutation::generate_random (uint size, prng&rng)
 		}
 	}
 }
-
-void permutation::permute_rows (const matrix&a, matrix&r) const
-{
-	r.resize (a.size());
-	for (uint i = 0; i < a.size(); ++i) permute (a[i], r[i]);
-}
-

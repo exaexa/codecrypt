@@ -56,17 +56,10 @@ public:
 	void divmod (polynomial&, polynomial&, polynomial&, gf2m&);
 	void square (gf2m&);
 	void inv (polynomial&, gf2m&);
-	void make_monic (gf2m&);
 
 	void sqrt (std::vector<polynomial>&, gf2m&);
 	polynomial gcd (polynomial, gf2m&);
 	void ext_euclid (polynomial&, polynomial&, polynomial&, gf2m&, int);
-
-	bool is_irreducible (gf2m&) const;
-	void generate_random_irreducible (uint s, gf2m&, prng&);
-
-	bool compute_square_root_matrix (std::vector<polynomial>&, gf2m&);
-	void compute_goppa_check_matrix (matrix&, gf2m&);
 
 	sencode* serialize();
 	bool unserialize (sencode*);

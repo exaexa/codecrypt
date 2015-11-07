@@ -171,116 +171,6 @@ bool polynomial::unserialize (sencode* s)
 #define PUBKEY_IDENT "CCR-PUBLIC-KEY-"
 #define PRIVKEY_IDENT "CCR-PRIVATE-KEY-"
 
-sencode* mce::privkey::serialize()
-{
-	sencode_list*l = new sencode_list;
-	l->items.resize (6);
-	l->items[0] = new sencode_bytes (PRIVKEY_IDENT "MCE");
-	l->items[1] = fld.serialize();
-	l->items[2] = g.serialize();
-	l->items[3] = hperm.serialize();
-	l->items[4] = Pinv.serialize();
-	l->items[5] = Sinv.serialize();
-	return l;
-}
-
-bool mce::privkey::unserialize (sencode* s)
-{
-	sencode_list*CAST_LIST (s, l);
-	if (l->items.size() != 6) return false;
-
-	sencode_bytes*CAST_BYTES (l->items[0], ident);
-	if (ident->b.compare (PRIVKEY_IDENT "MCE")) return false;
-
-	if (! (fld.unserialize (l->items[1]) &&
-	       g.unserialize (l->items[2]) &&
-	       hperm.unserialize (l->items[3]) &&
-	       Pinv.unserialize (l->items[4]) &&
-	       Sinv.unserialize (l->items[5]))) return false;
-
-	return true;
-}
-
-sencode* mce::pubkey::serialize()
-{
-	sencode_list*l = new sencode_list;
-	l->items.resize (3);
-	l->items[0] = new sencode_bytes (PUBKEY_IDENT "MCE");
-	l->items[1] = new sencode_int (t);
-	l->items[2] = G.serialize();
-	return l;
-}
-
-bool mce::pubkey::unserialize (sencode* s)
-{
-	sencode_list*CAST_LIST (s, l);
-	if (l->items.size() != 3) return false;
-
-	sencode_bytes*CAST_BYTES (l->items[0], ident);
-	if (ident->b.compare (PUBKEY_IDENT "MCE")) return false;
-
-	sencode_int*CAST_INT (l->items[0], p);
-	t = p->i;
-
-	if (!G.unserialize (l->items[1])) return false;
-
-	return true;
-}
-
-sencode* nd::privkey::serialize()
-{
-	sencode_list*l = new sencode_list;
-	l->items.resize (5);
-	l->items[0] = new sencode_bytes (PRIVKEY_IDENT "ND");
-	l->items[1] = fld.serialize();
-	l->items[2] = g.serialize();
-	l->items[3] = Pinv.serialize();
-	l->items[4] = Sinv.serialize();
-	return l;
-}
-
-bool nd::privkey::unserialize (sencode* s)
-{
-	sencode_list*CAST_LIST (s, l);
-	if (l->items.size() != 5) return false;
-
-	sencode_bytes*CAST_BYTES (l->items[0], ident);
-	if (ident->b.compare (PRIVKEY_IDENT "ND")) return false;
-
-	if (! (fld.unserialize (l->items[1]) &&
-	       g.unserialize (l->items[2]) &&
-	       Pinv.unserialize (l->items[3]) &&
-	       Sinv.unserialize (l->items[4]))) return false;
-
-	return true;
-}
-
-sencode* nd::pubkey::serialize()
-{
-	sencode_list*l = new sencode_list;
-	l->items.resize (3);
-	l->items[0] = new sencode_bytes (PRIVKEY_IDENT "ND");
-	l->items[1] = new sencode_int (t);
-	l->items[2] = H.serialize();
-	return l;
-}
-
-bool nd::pubkey::unserialize (sencode* s)
-{
-	sencode_list*CAST_LIST (s, l);
-	if (l->items.size() != 3) return false;
-
-	sencode_bytes*CAST_BYTES (l->items[0], ident);
-	if (ident->b.compare (PRIVKEY_IDENT "ND")) return false;
-
-	sencode_int*CAST_INT (l->items[1], p);
-	t = p->i;
-
-	if (!H.unserialize (l->items[2])) return false;
-
-	return true;
-}
-
 sencode* mce_qd::privkey::serialize()
 {
 	sencode_list*l = new sencode_list;
@@ -325,7 +215,7 @@ sencode* mce_qd::pubkey::serialize()
 	return l;
 }
 
-bool mce_qd::pubkey::unserialize (sencode* s)
+bool mce_qd::pubkey::unserialize (sencode*s)
 {
 	sencode_list*CAST_LIST (s, l);
 	if (l->items.size() != 3) return false;

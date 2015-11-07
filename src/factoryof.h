@@ -48,6 +48,7 @@ public:
 	instanceof (const instanceof&x) : ptr (x.ptr), deletable (false) {}
 	instanceof () {
 		deletable = false;
+		ptr = 0;
 	}
 
 	void collect() {

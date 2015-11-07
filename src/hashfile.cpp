@@ -34,6 +34,11 @@ class size64proc : public hash_proc
 {
 	uint64_t s;
 
+public:
+	size64proc() {
+		init();
+	}
+
 	uint size() {
 		return 8;
 	}

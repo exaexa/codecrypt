@@ -29,8 +29,8 @@ class keyring
 	int lockfd;
 public:
 	struct pubkey_entry {
+		std::string keyid, name, alg;
 		sencode *key;
-		std::string name, alg, keyid;
 
 		pubkey_entry() {
 			key = NULL;
@@ -39,17 +39,16 @@ public:
 		pubkey_entry (const std::string& KID,
 		              const std::string& N,
 		              const std::string& A,
-		              sencode*K) {
-			key = K;
-			name = N;
-			alg = A;
-			keyid = KID;
-		}
+		              sencode*K) :
+			keyid (KID),
+			name (N),
+			alg (A),
+			key (K) {}
 	};
 
 	struct keypair_entry {
-		sencode *privkey;
 		pubkey_entry pub;
+		sencode *privkey;
 
 		keypair_entry() {
 			privkey = NULL;
@@ -60,9 +59,7 @@ public:
 		               const std::string& A,
 		               sencode*PubK,
 		               sencode*PrivK)
-			: pub (KID, N, A, PubK) {
-			privkey = PrivK;
-		}
+			: pub (KID, N, A, PubK), privkey (PrivK) {}
 	};
 
 	typedef std::map<std::string, pubkey_entry> pubkey_storage;

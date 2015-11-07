@@ -129,77 +129,6 @@ bool matrix::compute_inversion (matrix&res, bool upper_tri, bool lower_tri)
 	return true;
 }
 
-void matrix::generate_random_invertible (uint size, prng & rng)
-{
-	matrix lt, ut;
-	uint i, j;
-	// random lower triangular
-	lt.resize (size);
-	for (i = 0; i < size; ++i) {
-		lt[i].resize (size);
-		lt[i][i] = 1;
-		for (j = i + 1; j < size; ++j) lt[i][j] = rng.random (2);
-	}
-	// random upper triangular
-	ut.resize (size);
-	for (i = 0; i < size; ++i) {
-		ut[i].resize (size);
-		ut[i][i] = 1;
-		for (j = 0; j < i; ++j) ut[i][j] = rng.random (2);
-	}
-	lt.mult (ut);
-	// permute
-	permutation p;
-	p.generate_random (size, rng);
-	p.permute (lt, *this);
-}
-
-void matrix::generate_random_with_inversion (uint size, matrix&inversion, prng&rng)
-{
-	matrix lt, ut;
-	uint i, j;
-	// random lower triangular
-	lt.resize (size);
-	for (i = 0; i < size; ++i) {
-		lt[i].resize (size);
-		lt[i][i] = 1;
-		for (j = i + 1; j < size; ++j) lt[i][j] = rng.random (2);
-	}
-	// random upper triangular
-	ut.resize (size);
-	for (i = 0; i < size; ++i) {
-		ut[i].resize (size);
-		ut[i][i] = 1;
-		for (j = 0; j < i; ++j) ut[i][j] = rng.random (2);
-	}
-	*this = lt;
-	this->mult (ut);
-	ut.compute_inversion (inversion, true, false);
-	lt.compute_inversion (ut, false, true);
-	inversion.mult (ut);
-}
-
-
-bool matrix::get_left_square (matrix&r)
-{
-	uint h = height();
-	if (width() < h) return false;
-	r.clear();
-	r.resize (h);
-	for (uint i = 0; i < h; ++i) r[i] = item (i);
-	return true;
-}
-
-bool matrix::strip_left_square (matrix&r)
-{
-	uint h = height(), w = width();
-	if (w < h) return false;
-	r.clear();
-	r.resize (w - h);
-	for (uint i = 0; i < w - h; ++i) r[i] = item (h + i);
-	return true;
-}
-
 bool matrix::get_right_square (matrix&r)
 {
 	uint h = height(), w = width();
@@ -258,32 +187,6 @@ bool matrix::create_goppa_generator (matrix&g, const permutation&p)
 	return true;
 }
 
-bool matrix::mult_vecT_left (const bvector&a, bvector&r)
-{
-	uint w = width(), h = height();
-	if (a.size() != h) return false;
-	r.clear();
-	r.resize (w, 0);
-	for (uint i = 0; i < w; ++i) {
-		bool t = 0;
-		for (uint j = 0; j < h; ++j)
-			t ^= item (i) [j] & a[j];
-		r[i] = t;
-	}
-	return true;
-}
-
-bool matrix::mult_vec_right (const bvector&a, bvector&r)
-{
-	uint w = width(), h = height();
-	if (a.size() != w) return false;
-	r.clear();
-	r.resize (h, 0);
-	for (uint i = 0; i < w; ++i)
-		if (a[i]) r.add (item (i));
-	return true;
-}
-
 bool matrix::set_block (uint x, uint y, const matrix&b)
 {
 	uint h = b.height(), w = b.width();
@@ -291,48 +194,5 @@ bool matrix::set_block (uint x, uint y, const matrix&b)
 	if (height() < y + h) return false;
 	for (uint i = 0; i < w; ++i)
 		for (uint j = 0; j < h; ++j) item (x + i, y + j) = b.item (i, j);
-	return true;
-}
-
-bool matrix::add_block (uint x, uint y, const matrix&b)
-{
-	uint h = b.height(), w = b.width();
-	if (width() < x + w) return false;
-	if (height() < y + h) return false;
-	for (uint i = 0; i < w; ++i)
-		for (uint j = 0; j < h; ++j)
-			item (x + i, y + j) =
-			    item (x + i, y + j)
-			    ^ b.item (i, j);
-	return true;
-}
-
-bool matrix::set_block_from (uint x, uint y, const matrix&b)
-{
-	uint h = b.height(),
-	     w = b.width(),
-	     mh = height(),
-	     mw = width();
-	if (mw > x + w) return false;
-	if (mh > y + h) return false;
-	for (uint i = 0; i < mw; ++i)
-		for (uint j = 0; j < mh; ++j)
-			item (i, j) = b.item (x + i, y + j);
-	return true;
-}
-
-bool matrix::add_block_from (uint x, uint y, const matrix&b)
-{
-	uint h = b.height(),
-	     w = b.width(),
-	     mh = height(),
-	     mw = width();
-	if (mw > x + w) return false;
-	if (mh > y + h) return false;
-	for (uint i = 0; i < mw; ++i)
-		for (uint j = 0; j < mh; ++j)
-			item (i, j) =
-			    item (i, j)
-			    ^ b.item (x + i, y + j);
 	return true;
 }
