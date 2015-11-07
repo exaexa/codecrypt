@@ -21,37 +21,177 @@
 
 #include <vector>
 #include <string>
+
+#include <stdint.h>
+
 #include "types.h"
-#include "vector_item.h"
 #include "sencode.h"
+#include "vector_item.h"
 
 /*
- * vector over GF(2). We rely on STL's vector<bool> == bit_vector
- * specialization for space efficiency.
+ * vector over GF(2), in some cases usuable also as a polynomial over GF(2).
  *
- * TODO. This is great, but some operations (ESPECIALLY add()) could be done
- * blockwise for O(cpu_word_size) speedup. Investigate/implement that. haha.
+ * Blocks of 64bit integers for kinda-efficiency.
  */
+
 class polynomial;
 class gf2m;
-class bvector : public std::vector<bool>
+class bvector
 {
+public:
+	/*
+	 * types
+	 */
+
+	struct const_reference {
+		const bvector&bv;
+		size_t offset;
+
+		const_reference (const bvector&BV, size_t O) : bv (BV), offset (O) {}
+
+		inline operator bool() const {
+			return bv.get (offset);
+		}
+	};
+
+	struct reference {
+		bvector&bv;
+		size_t offset;
+
+		reference (bvector&BV, size_t O) : bv (BV), offset (O) {}
+
+		inline operator bool() const {
+			return bv.get (offset);
+		}
+
+		inline reference& operator= (const reference&a) {
+			bv.set (offset, (bool) a);
+			return *this;
+		}
+
+		inline reference& operator= (bool val) {
+			bv.set (offset, val);
+			return *this;
+		}
+	};
+
+	typedef size_t size_type;
+
+private:
+	/*
+	 * invariants:
+	 * unused data are filled with zeros
+	 * _data.size() == datasize(_size)
+	 */
+
+	std::vector<uint64_t> _data;
+	size_t _size;
+
+	static inline size_t blockof (size_t s) {
+		return s >> 6;
+	}
+
+	static inline size_t blockpos (size_t s) {
+		return s & 0x3f;
+	}
+
+	static inline size_t datasize (size_t s) {
+		if (s & 0x3f) return 1 + (s >> 6);
+		return s >> 6;
+	}
+
+	void fix_padding();
+
 protected:
 	_ccr_declare_vector_item
 public:
+	bvector() {
+		_size = 0;
+	}
+
+	bvector (const bvector&a) : _data (a._data) {
+		_size = a._size;
+	}
+
+	inline size_t size() const {
+		return _size;
+	}
+
+	inline void clear() {
+		_size = 0;
+		_data.clear();
+	}
+
+	inline void swap (bvector&a) {
+		size_t s = _size;
+		_size = a._size;
+		a._size = s;
+
+		_data.swap (a._data);
+	}
+
+	void resize (size_t size, bool def = false);
+
+	inline void reserve (size_t size) {
+		_data.reserve (datasize (size));
+	}
+
+	inline void fill_ones (size_t from = 0) {
+		fill_ones (from, _size);
+	}
+
+	void fill_ones (size_t from, size_t to);
+
+	inline void fill_zeros (size_t from = 0) {
+		fill_zeros (from, _size);
+	}
+
+	void fill_zeros (size_t from, size_t to);
+
+	inline bool get (size_t i) const {
+		return (_data[blockof (i)] >> blockpos (i)) & 1;
+	}
+
+	inline void set (size_t i, bool val) {
+		if (val) set (i);
+		else unset (i);
+	}
+
+	inline void set (size_t i) {
+		_data[blockof (i)] |= ( (uint64_t) 1) << blockpos (i);
+	}
+
+	inline void unset (size_t i) {
+		_data[blockof (i)] &= ~ ( ( (uint64_t) 1) << blockpos (i));
+	}
+
+	inline const_reference operator[] (size_t pos) const {
+		return const_reference (*this, pos);
+	}
+
+	inline reference operator[] (size_t pos) {
+		return reference (*this, pos);
+	}
+
 	uint hamming_weight();
+	void append (const bvector&);
 	void add (const bvector&);
-	void add_range (const bvector&, uint, uint);
-	void add_offset (const bvector&, uint);
-	void set_block (const bvector&, uint);
-	void get_block (uint, uint, bvector&) const;
-	bool operator* (const bvector&); //dot product
+	void add_offset (const bvector&, size_t offset_from, size_t offset_to, size_t cnt = 0);
+
+	void add_offset (const bvector&, size_t offset_to);
+	void add_range (const bvector&, size_t, size_t);
+	void rot_add (const bvector&, size_t);
+	void set_block (const bvector&, size_t);
+	void get_block (size_t, size_t, bvector&) const;
+	uint and_hamming_weight (const bvector&) const;
+
+	inline bool operator* (const bvector&a) const {
+		//dot product
+		return and_hamming_weight (a) & 1;
+	}
+
 	bool zero() const;
 
-	void to_poly (polynomial&, gf2m&) const;
-	void from_poly (const polynomial&, gf2m&);
-
-	void to_poly_cotrace (polynomial&, gf2m&) const;
 	void from_poly_cotrace (const polynomial&, gf2m&);
 
 	void colex_rank (bvector&) const;

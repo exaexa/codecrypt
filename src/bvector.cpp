@@ -20,96 +20,205 @@
 #include "gf2m.h"
 #include "polynomial.h"
 
+const uint64_t ones = 0xFfffFfffFfffFfffull;
+
+void bvector::fix_padding()
+{
+	if (blockpos (_size))
+		_data[blockof (_size)] &= ~ (ones << blockpos (_size));
+}
+
+void bvector::resize (size_t newsize, bool def)
+{
+	if (newsize <= _size) {
+		_size = newsize;
+		_data.resize (datasize (_size));
+		fix_padding();
+	} else {
+		_data.resize (datasize (newsize), 0);
+		if (def) fill_ones (_size, newsize);
+		else fill_zeros (_size, newsize);
+		_size = newsize;
+	}
+}
+
+void bvector::fill_ones (size_t from, size_t to)
+{
+	for (size_t i = (from >> 6) + 1; i < (to >> 6); ++i) _data[i] = ones;
+	if (blockof (from) < blockof (to)) {
+		_data[blockof (from)] |= (ones << blockpos (from));
+		if (blockpos (to))
+			_data[blockof (to)] |=
+			    (ones >> (64 - blockpos (to)));
+	} else if (blockpos (to)) {
+		_data[blockof (to)] |= (ones << blockpos (from))
+		                       & (ones >> (64 - blockpos (to)));
+	}
+}
+
+void bvector::fill_zeros (size_t from, size_t to)
+{
+	for (size_t i = (from >> 6) + 1; i < (to >> 6); ++i) _data[i] = 0;
+	if (blockof (from) < blockof (to)) {
+		_data[blockof (from)] &= ~ (ones << blockpos (from));
+		if (blockpos (to))
+			_data[blockof (to)] &=
+			    ~ (ones >> (64 - blockpos (to)));
+	} else if (blockpos (to)) {
+		_data[blockof (to)] &= ~ ( (ones << blockpos (from))
+		                           & (ones >> (64 - blockpos (to))));
+	}
+}
+
+void bvector::append (const bvector&a)
+{
+	add_offset (a, _size);
+}
+
+void bvector::add_offset (const bvector&a, size_t offset_from, size_t offset_to, size_t cnt)
+{
+	if (!cnt) cnt = a._size; //default param
+
+	while (cnt) {
+		uint64_t mask = ones;
+		if (cnt < 64) mask >>= (64 - cnt);
+
+		if (!blockpos (offset_from)) {
+			if (!blockpos (offset_to)) {
+				_data[blockof (offset_to)] =
+				    _data[blockof (offset_to)]
+				    ^ (mask & a._data[blockof (offset_from)]);
+				offset_from += 64;
+				offset_to += 64;
+				if (cnt < 64) return;
+				cnt -= 64;
+			} else {
+				//offset_from is aligned, process
+				_data[blockof (offset_to)]
+				    = _data[blockof (offset_to)]
+				      ^ ( (mask & a._data[blockof (offset_from)])
+				          << blockpos (offset_to));
+				size_t move = 64 - blockpos (offset_to);
+				if (cnt < move) return;
+				cnt -= move;
+				offset_from += move;
+				offset_to += move;
+			}
+		} else {
+			if (!blockpos (offset_to)) {
+				//only offset_to is aligned
+				_data[blockof (offset_to)] = _data[blockof (offset_to)]
+				                             ^ (mask & (a._data[blockof (offset_from)]
+				                                        >> blockpos (offset_from)));
+				size_t move = 64 - blockpos (offset_from);
+				if (cnt < move) return;
+				cnt -= move;
+				offset_from += move;
+				offset_to += move;
+			} else {
+				//nothing is aligned, realign by tiny steps
+				//TODO choose whether to realign by offset_from or to
+				item (offset_to) = item (offset_to) ^a.item (offset_from);
+				--cnt;
+				++offset_from;
+				++offset_to;
+			}
+		}
+	}
+}
+
+void bvector::add_offset (const bvector&a, size_t offset_to)
+{
+	if (offset_to + a._size > _size) resize (offset_to + a._size, 0);
+	add_offset (a, 0, offset_to, a._size);
+}
+
+static uint uint64weight (uint64_t x)
+{
+	/*
+	 * const-time uint64_t hamming weight, taken from wikipedia. <3
+	 */
+
+	static const uint64_t
+	m1  = 0x5555555555555555,
+	m2  = 0x3333333333333333,
+	m4  = 0x0f0f0f0f0f0f0f0f,
+	h01 = 0x0101010101010101;
+
+	x -= (x >> 1) & m1;
+	x = (x & m2) + ( (x >> 2) & m2);
+	x = (x + (x >> 4)) & m4;
+	return (x * h01) >> 56;
+}
+
 uint bvector::hamming_weight()
 {
 	uint r = 0;
-	for (uint i = 0; i < size(); ++i) if ( (*this) [i]) ++r;
+	for (size_t i = 0; i < _data.size(); ++i) r += uint64weight (_data[i]);
 	return r;
 }
 
 void bvector::add (const bvector&a)
 {
-	if (a.size() > size()) resize (a.size(), 0);
-	for (uint i = 0; i < a.size(); ++i)
-		item (i) = item (i) ^ a[i];
+	if (a._size > _size) resize (a._size, 0);
+	add_offset (a, 0, 0, a._size);
 }
 
-void bvector::add_range (const bvector&a, uint b, uint e)
+void bvector::add_range (const bvector&a, size_t b, size_t e)
 {
 	if (e > size()) resize (e, 0);
-	for (uint i = b; i < e; ++i)
-		item (i) = item (i) ^ a[i];
+	add_offset (a, b, b, e - b);
 }
 
-void bvector::add_offset (const bvector&a, uint offset)
+void bvector::rot_add (const bvector&a, size_t rot)
+{
+	size_t as = a._size;
+	if (_size < as) resize (as, 0);
+	rot = rot % as;
+	if (!rot) add (a);
+	else {
+		add_offset (a, 0, rot, as - rot); //...123456
+		add_offset (a, as - rot, 0, rot); //789123456
+	}
+}
+
+void bvector::set_block (const bvector&a, size_t offset)
 {
 	if (offset + a.size() > size()) resize (offset + a.size(), 0);
-	for (uint i = 0; i < a.size(); ++i)
-		item (offset + i) = item (offset + i) ^ a[i];
+	fill_zeros (offset, offset + a.size());
+	add_offset (a, 0, offset, a.size());
 }
 
-void bvector::set_block (const bvector&a, uint offset)
-{
-	if (offset + a.size() > size()) resize (offset + a.size(), 0);
-	for (uint i = 0; i < a.size(); ++i)
-		item (offset + i) = a[i];
-}
-
-void bvector::get_block (uint offset, uint bs, bvector&out) const
+void bvector::get_block (size_t offset, size_t bs, bvector&out) const
 {
 	if (offset + bs > size()) return;
 	out.resize (bs);
-	for (uint i = 0; i < bs; ++i) out[i] = item (offset + i);
+	out.fill_zeros();
+	out.add_offset (*this, offset, 0, bs);
 }
 
-bool bvector::operator* (const bvector&a)
+uint bvector::and_hamming_weight (const bvector&a) const
 {
-	bool r = 0;
-	uint s = size(), i;
-	if (s > a.size()) s = a.size();
-	for (i = 0; i < s; ++i) r ^= (item (i) &a[i]);
+	uint r = 0;
+	size_t s = _data.size();
+	if (s > a._data.size()) s = a._data.size();
+	for (size_t i = 0; i < s; ++i) r += uint64weight (_data[i] & a._data[i]);
 	return r;
 }
 
 bool bvector::zero() const
 {
-	for (uint i = 0; i < size(); ++i) if (item (i)) return false;
+	//zero padding assures we don't need to care about last bits
+	for (size_t i = 0; i < _data.size(); ++i) if (_data[i]) return false;
 	return true;
-}
-
-void bvector::to_poly (polynomial&r, gf2m&fld) const
-{
-	r.clear();
-	if (size() % fld.m) return; //impossible
-	r.resize (size() / fld.m, 0);
-	for (uint i = 0; i < size(); ++i)
-		if (item (i)) r[i / fld.m] |= (1 << (i % fld.m));
-}
-
-void bvector::from_poly (const polynomial&r, gf2m&fld)
-{
-	clear();
-	resize (r.size() *fld.m, 0);
-	for (uint i = 0; i < size(); ++i)
-		item (i) = (r[i / fld.m] >> (i % fld.m)) & 1;
-}
-
-void bvector::to_poly_cotrace (polynomial&r, gf2m&fld) const
-{
-	r.clear();
-	if (size() % fld.m) return; //impossible
-	uint s = size() / fld.m;
-	r.resize (s, 0);
-	for (uint i = 0; i < size(); ++i)
-		if (item (i)) r[i % s] |= (1 << (i / s));
 }
 
 void bvector::from_poly_cotrace (const polynomial&r, gf2m&fld)
 {
 	clear();
-	uint s = r.size();
+	size_t s = r.size();
 	resize (s * fld.m, 0);
-	for (uint i = 0; i < size(); ++i)
+	for (size_t i = 0; i < size(); ++i)
 		item (i) = (r[i % s] >> (i / s)) & 1;
 }
 
@@ -120,7 +229,7 @@ bool bvector::to_string (std::string& out) const
 	out.clear();
 	out.resize (size() >> 3, 0);
 
-	for (uint i = 0; i < size(); ++i)
+	for (size_t i = 0; i < size(); ++i)
 		if (item (i)) out[i >> 3] |= (1 << (i & 0x7));
 
 	return true;
@@ -131,7 +240,7 @@ void bvector::from_string (const std::string&in)
 	clear();
 	resize (in.length() << 3);
 
-	for (uint i = 0; i < size(); ++i)
+	for (size_t i = 0; i < size(); ++i)
 		item (i) = (in[i >> 3] >> (i & 0x7)) & 1;
 }
 
