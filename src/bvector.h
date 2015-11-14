@@ -100,11 +100,11 @@ private:
 		return s >> 6;
 	}
 
-	void fix_padding();
 
 protected:
 	_ccr_declare_vector_item
 public:
+	void fix_padding();
 	bvector() {
 		_size = 0;
 	}
@@ -176,13 +176,15 @@ public:
 	uint hamming_weight();
 	void append (const bvector&);
 	void add (const bvector&);
-	void add_offset (const bvector&, size_t offset_from, size_t offset_to, size_t cnt = 0);
+	void add_offset (const bvector&,
+	                 size_t offset_from, size_t offset_to,
+	                 size_t cnt = 0);
 
 	void add_offset (const bvector&, size_t offset_to);
 	void add_range (const bvector&, size_t, size_t);
 	void rot_add (const bvector&, size_t);
 	void set_block (const bvector&, size_t);
-	void get_block (size_t, size_t, bvector&) const;
+	void get_block (size_t start, size_t cnt, bvector&) const;
 	uint and_hamming_weight (const bvector&) const;
 
 	inline bool operator* (const bvector&a) const {
@@ -191,6 +193,11 @@ public:
 	}
 
 	bool zero() const;
+	bool one() const;
+
+	int degree();
+	void poly_strip();
+	bvector ext_gcd (const bvector&b, bvector&s, bvector&t);
 
 	void from_poly_cotrace (const polynomial&, gf2m&);
 

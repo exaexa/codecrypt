@@ -18,78 +18,99 @@
 
 #include "mce_qcmdpc.h"
 
-#include "gf2m.h"
-#include "polynomial.h"
+#include "fft.h"
+#include <cmath>
 
 using namespace mce_qcmdpc;
+using namespace std;
+
+#include "iohelpers.h"
+#include "ios.h"
 
 int mce_qcmdpc::generate (pubkey&pub, privkey&priv, prng&rng,
                           uint block_size, uint block_count, uint wi,
                           uint t, uint rounds, uint delta)
 {
 	uint i, j;
-	priv.H.resize (block_count);
 
 	if (wi > block_size / 2) return 1; //safety
 
+	priv.H.resize (block_count);
+	pub.G.resize (block_count - 1);
+
 	/*
-	 * Trick. Cyclomatic matrix of size n is invertible if a
-	 * polynomial that's made up from its first row is coprime to
-	 * (x^n-1), the polynomial inversion and matrix inversion are
-	 * then isomorphic.
+	 * Cyclic matrices are diagonalizable by FFT so this stuff gets pretty
+	 * fast. Otherwise they behave like simple polynomials over GF(2) mod
+	 * (1+x^n).
 	 */
-	gf2m gf;
-	gf.create (1); //binary
-	polynomial xmm1; //x^m-1
-	xmm1.resize (block_size + 1, 0);
-	xmm1[0] = 1;
-	xmm1[block_size] = 1;
-	polynomial last_inv_H;
+
+	vector<dcx> H_last_inv;
+
 	for (;;) {
 		//retry generating the rightmost block until it is invertible
-		polynomial g;
-		g.resize (block_size, 0);
+		bvector Hb;
+		Hb.resize (block_size, 0);
 		for (i = 0; i < wi; ++i)
 			for (uint pos = rng.random (block_size);
-			     g[pos] ? 1 : (g[pos] = 1, 0);
+			     Hb[pos] ? 1 : (Hb[pos] = 1, 0);
 			     pos = rng.random (block_size));
 
-		//try if it is coprime to (x^n-1)
-		polynomial gcd = g.gcd (xmm1, gf);
-		if (!gcd.one()) continue; //it isn't.
+		bvector xnm1, Hb_inv, tmp;
+		xnm1.resize (block_size + 1, 0);
+		xnm1[0] = 1;
+		xnm1[block_size] = 1; //poly (x^n-1) in gf(2)
 
-		//if it is, save it to matrix (in "reverse" order for columns)
-		priv.H[block_count - 1].resize (block_size, 0);
-		for (i = 0; i < block_size && i < g.size(); ++i)
-			priv.H[block_count - 1][i] = g[ (-i) % block_size];
+		/*
+		 * TODO This is quadratic, speed it up.
+		 *
+		 * No one actually cares about keygen speed yet, but this can
+		 * be done in O(n*log(n)) using Schönhage-Strassen algorithm.
+		 * If speed is required (e.g. for SPF in some ssl replacement,
+		 * *wink* *wink*), use libNTL's GF2X.
+		 *
+		 * NTL one uses simpler Karatsuba with ~O(n^1.58) which should
+		 * (according to wikipedia) be faster for sizes under 32k bits
+		 * because of constant factors involved.
+		 */
+		bvector rem = Hb.ext_gcd (xnm1, Hb_inv, tmp);
+		if (!rem.one()) continue; //not invertible, retry
+		if (Hb_inv.size() > block_size) continue; //totally weird.
+		Hb_inv.resize (block_size, 0); //pad polynomial with zeros
 
-		//invert it, save for later and succeed.
-		g.inv (xmm1, gf);
-		last_inv_H = g;
-		break;
+		//if it is, save it to matrix
+		priv.H[block_count - 1] = Hb;
+
+		//precompute the fft of the inverted last block
+		fft (Hb_inv, H_last_inv);
+
+		break; //success
 	}
 
 	//generate the rests of matrix blocks, fill the G right away.
-	pub.G.resize (block_count - 1);
 	for (i = 0; i < block_count - 1; ++i) {
-		polynomial hi;
-		hi.resize (block_size, 0);
+		bvector Hb;
+		Hb.resize (block_size, 0);
 
 		//generate the polynomial corresponding to the first row
 		for (j = 0; j < wi; ++j)
 			for (uint pos = rng.random (block_size);
-			     hi[pos] ? 1 : (hi[pos] = 1, 0);
+			     Hb[pos] ? 1 : (Hb[pos] = 1, 0);
 			     pos = rng.random (block_size));
+
 		//save it to H
-		priv.H[i].resize (block_size);
-		for (j = 0; j < block_size; ++j) priv.H[i][j] = hi[ (-j) % block_size];
+		priv.H[i] = Hb;
 
 		//compute inv(H[last])*H[i]
-		hi.mult (last_inv_H, gf);
-		hi.mod (xmm1, gf);
+		vector<dcx> H;
+		fft (Hb, H);
+		for (j = 0; j < block_size; ++j)
+			H[j] *= H_last_inv[j];
+		fft (H, Hb);
+
 		//save it to G
-		pub.G[i].resize (block_size);
-		for (j = 0; j < block_size; ++j) pub.G[i][j] = hi[j % block_size];
+		pub.G[i] = Hb;
+		pub.G[i].resize (block_size, 0);
+		//for (j = 0; j < block_size; ++j) pub.G[i][j] = Hb[j];
 	}
 
 	//save the target params
@@ -128,18 +149,37 @@ int pubkey::encrypt (const bvector&in, bvector&out, const bvector&errors)
 	uint ps = plain_size();
 	if (in.size() != ps) return 1;
 	uint bs = G[0].size();
-	for (uint i = 1; i < G.size(); ++i) if (G[i].size() != bs) return 1; //prevent mangled keys
+	uint blocks = G.size();
+	for (uint i = 1; i < blocks; ++i)
+		if (G[i].size() != bs) return 1; //prevent mangled keys
 
 	//first, the checksum part
-	bvector bcheck;
+	vector<dcx> bcheck, Pd, Gd;
+	bcheck.resize (bs, dcx (0, 0)); //initially zero
+	bvector block;
 
-	//G stores first row(s) of the circulant matrix blocks, proceed row-by-row and construct the checkum
-	for (uint i = 0; i < ps; ++i)
-		if (in[i]) bcheck.rot_add (G[ (i % ps) / bs], i % bs);
+	/*
+	 * G stores first row(s) of the circulant matrix blocks.  Proceed block
+	 * by block and construct the checksum.
+	 *
+	 * On a side note, it would be cool to store the G already pre-FFT'd,
+	 * but the performance gain wouldn't be interesting enough to
+	 * compensate for 128 times larger public key (each bit would get
+	 * expanded to two doubles). Do it if you want to encrypt bulk data.
+	 */
+
+	for (size_t i = 0; i < blocks; ++i) {
+		in.get_block (i * bs, bs, block);
+		fft (block, Pd);
+		fft (G[i], Gd);
+		for (size_t j = 0; j < bs; ++j)
+			bcheck[j] += Pd[j] * Gd[j];
+	}
 
 	//compute the ciphertext
 	out = in;
-	out.append (bcheck);
+	fft (bcheck, block); //get the checksum part
+	out.append (block);
 	out.add (errors);
 
 	return 0;
@@ -155,53 +195,73 @@ int privkey::decrypt (const bvector & in, bvector & out)
 
 int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 {
-	uint i;
+	uint i, j;
 	uint cs = cipher_size();
 
 	if (in_orig.size() != cs) return 1;
-	uint bs;
-	bs = H[0].size();
+	uint bs = H[0].size();
+	uint blocks = H.size();
+	for (i = 1; i < blocks; ++i) if (H[i].size() != bs) return 2;
+
+	bvector in = in_orig; //we will modify this.
 
 	/*
 	 * probabilistic decoding!
 	 */
 
-	//compute the syndrome first
-	bvector syndrome;
-	syndrome.resize (bs, 0);
-	bvector in = in_orig; //we will modify it
+	vector<dcx> synd_diag, tmp, Htmp;
+	synd_diag.resize (bs, dcx (0, 0));
 
-	for (i = 0; i < cs; ++i) if (in[i])
-			syndrome.rot_add (H[i / bs], (cs - i) % bs);
+	//precompute the syndrome
+	for (i = 0; i < blocks; ++i) {
+		bvector b;
+		b.resize (bs, 0);
+		b.add_offset (in, bs * i, 0, bs);
+		fft (b, tmp);
+		fft (H[i], Htmp);
+		for (j = 0; j < bs; ++j) synd_diag[j] += Htmp[j] * tmp[j];
+	}
 
-	//minimize counts of unsatisfied equations by flipping
-	std::vector<uint> unsatisfied;
-	unsatisfied.resize (cs, 0);
+	bvector (syndrome);
+	fft (synd_diag, syndrome);
+
+	vector<unsigned> unsat;
+	unsat.resize (cs, 0);
 
 	for (i = 0; i < rounds; ++i) {
-		uint bit, max_unsat;
-		bvector tmp;
-		max_unsat = 0;
-		for (bit = 0; bit < cs; ++bit) {
-			tmp.fill_zeros();
-			tmp.rot_add (H[bit / bs], (cs - bit) % bs);
-			unsatisfied[bit] = tmp.and_hamming_weight (syndrome);
-			if (unsatisfied[bit] > max_unsat) max_unsat = unsatisfied[bit];
-		}
 
-		//TODO what about timing attacks?
+		/*
+		 * count the correlations, abuse the sparsity of matrices.
+		 *
+		 * TODO this is the slowest part of the whole thing. It's all
+		 * probabilistic, maybe there could be some potential to speed
+		 * it up by discarding some (already missing) precision.
+		 */
+
+		for (j = 0; j < cs; ++j) unsat[j] = 0;
+		for (uint Hi = 0; Hi < cs; ++Hi)
+			if (H[Hi / bs][Hi % bs]) {
+				uint blk = Hi / bs;
+				for (j = 0; j < bs; ++j)
+					if (syndrome[j])
+						++unsat[blk * bs +
+						        (j + cs - Hi) % bs];
+			}
+
+		uint max_unsat = 0;
+		for (j = 0; j < cs; ++j)
+			if (unsat[j] > max_unsat) max_unsat = unsat[j];
 		if (!max_unsat) break;
+		//TODO what about timing attacks? :]
 
 		uint threshold = 0;
 		if (max_unsat > delta) threshold = max_unsat - delta;
 
 		//TODO also timing (but it gets pretty statistically hard here I guess)
-		uint flipped = 0;
-		for (bit = 0; bit < cs; ++bit)
-			if (unsatisfied[bit] > threshold) {
+		for (uint bit = 0; bit < cs; ++bit)
+			if (unsat[bit] > threshold) {
 				in[bit] = !in[bit];
-				syndrome.rot_add (H[bit / bs], (cs - bit) % bs);
-				++flipped;
+				syndrome.rot_add (H[bit / bs], bit % bs);
 			}
 	}
 

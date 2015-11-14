@@ -108,16 +108,15 @@ algspectable_t& algspectable()
 	static bool init = false;
 
 	if (!init) {
-		table["enc"] = "MCEQD128FO-CUBE256-CHACHA20";
-		table["enc-strong"] = "MCEQD192FO-CUBE384-CHACHA20";
-		table["enc-strongest"] = "MCEQD256FO-CUBE512-CHACHA20";
+		table["enc"] = "MCEQCMDPC128FO-CUBE256-CHACHA20";
+		table["enc-256"] = "MCEQCMDPC256FO-CUBE512-CHACHA20";
 
 		table["sig"] = "FMTSEQ128C-CUBE256-CUBE128";
-		table["sig-strong"] = "FMTSEQ192C-CUBE384-CUBE192";
-		table["sig-strongest"] = "FMTSEQ256C-CUBE512-CUBE256";
+		table["sig-192"] = "FMTSEQ192C-CUBE384-CUBE192";
+		table["sig-256"] = "FMTSEQ256C-CUBE512-CUBE256";
 
 		table["sym"] = "chacha20,sha256";
-		table["sym-strong"] = "chacha20,xsynd,arcfour,cube512,sha512";
+		table["sym-combined"] = "chacha20,xsynd,arcfour,cube512,sha512";
 
 		init = true;
 	}

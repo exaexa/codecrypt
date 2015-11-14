@@ -214,6 +214,91 @@ bool bvector::zero() const
 	return true;
 }
 
+bool bvector::one() const
+{
+	//zero padding again
+	for (size_t i = 0; i < _data.size(); ++i) if (i == 0) {
+			if (_data[i] != 1) return false;
+		} else if (_data[i] != 0) return false;
+	return true;
+}
+
+int bvector::degree()
+{
+	//find the position of the last non-zero item
+	int r;
+	for (r = _data.size() - 1; r >= 0; --r) if (_data[r]) break;
+	if (r < 0) return -1; //only zeroes.
+	uint64_t tmp = _data[r];
+	int res = 64 * r;
+	while (tmp > 1) {
+		++res;
+		tmp >>= 1;
+	}
+	return res;
+}
+
+void bvector::poly_strip()
+{
+	resize (degree() + 1);
+}
+
+bvector bvector::ext_gcd (const bvector&b, bvector&s0, bvector&t0)
+{
+	//result gcd(this,b) =  s*this + t*b
+	bvector s1, t1;
+	s0.clear();
+	s1.clear();
+	t0.clear();
+	t1.clear();
+	s0.resize (1, 1);
+	t1.resize (1, 1);
+	bvector r1 = b;
+	bvector r0 = *this;
+
+	for (;;) {
+		int d0 = r0.degree();
+		int d1 = r1.degree();
+		//out ("r0" << r0 << "r1" << r1 << "s0" << s0 << "s1" << s1 << "t0" << t0 << "t1" << t1 << "d0=" << d0 << " d1=" << d1);
+		if (d0 < 0) {
+			s0.swap (s1);
+			t0.swap (t1);
+			return r1;
+		}
+		if (d1 < 0) {
+			//this would result in reorganization and failure in
+			//next step, return it the other way
+			return r0;
+		}
+		if (d0 > d1) {
+			//quotient is zero, reverse the thing manually
+			s0.swap (s1);
+			t0.swap (t1);
+			r0.swap (r1);
+			continue;
+		}
+
+		//we only consider quotient in form q=x^(log q)
+		//("only subtraction, not divmod, still slow")
+		int logq = d1 - d0;
+
+		//r(i+1)=r(i-1)-q*r(i)
+		//s(i+1)=s(i-1)-q*s(i)
+		//t(i+1)=t(i-1)-q*t(i)
+		r1.add_offset (r0, logq);
+		s1.add_offset (s0, logq);
+		t1.add_offset (t0, logq);
+		r1.poly_strip();
+		s1.poly_strip();
+		t1.poly_strip();
+
+		//"rotate" the thing to new positions
+		r1.swap (r0);
+		s1.swap (s0);
+		t1.swap (t0);
+	}
+}
+
 void bvector::from_poly_cotrace (const polynomial&r, gf2m&fld)
 {
 	clear();
