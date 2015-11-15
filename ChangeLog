@@ -1,6 +1,11 @@
 
 Codecrypt ChangeLog
 
+1.7.1
+
+- rewrite QC-MDPC decoding for speed (still around O(wi^2))
+- fix the padding broken on non-byte-aligned numbers
+
 1.7
 
 - add QC-MDPC McEliece variant
