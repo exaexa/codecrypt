@@ -24,9 +24,6 @@
 using namespace mce_qcmdpc;
 using namespace std;
 
-#include "iohelpers.h"
-#include "ios.h"
-
 int mce_qcmdpc::generate (pubkey&pub, privkey&priv, prng&rng,
                           uint block_size, uint block_count, uint wi,
                           uint t, uint rounds, uint delta)
@@ -236,6 +233,8 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 		 * TODO this is the slowest part of the whole thing. It's all
 		 * probabilistic, maybe there could be some potential to speed
 		 * it up by discarding some (already missing) precision.
+		 *
+		 * FFT would be a cool candidate.
 		 */
 
 		for (j = 0; j < cs; ++j) unsat[j] = 0;
@@ -252,7 +251,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 		for (j = 0; j < cs; ++j)
 			if (unsat[j] > max_unsat) max_unsat = unsat[j];
 		if (!max_unsat) break;
-		//TODO what about timing attacks? :]
+		//TODO do something about possible timing attacks
 
 		uint threshold = 0;
 		if (max_unsat > delta) threshold = max_unsat - delta;
