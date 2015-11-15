@@ -1,6 +1,14 @@
 
 Codecrypt ChangeLog
 
+1.7
+
+- add QC-MDPC McEliece variant
+- mark QD McEliece as broken
+- reimplement bit vectors (for speed)
+- some code quality updates
+- prevent mangling of command line output by crafted keyring
+
 1.6.1
 
 - simplify padding for symmetric encryption
