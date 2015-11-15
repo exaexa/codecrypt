@@ -8,7 +8,7 @@ The post-quantum cryptography tool.
 This is a GnuPG-like unix program for encryption and signing that uses only
 quantum-computer-resistant algorithms:
 
- - McEliece cryptosystem (compact quasi-dyadic variant) for encryption
+ - McEliece cryptosystem (compact QC-MDPC variant) for encryption
  - Hash-based Merkle tree algorithm (FMTSeq variant) for digital signatures
 
 #### Why this?
