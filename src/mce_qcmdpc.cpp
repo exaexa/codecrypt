@@ -189,6 +189,7 @@ int privkey::decrypt (const bvector & in, bvector & out)
 }
 
 #include <vector>
+#include <list>
 
 int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 {
@@ -222,49 +223,82 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 	bvector (syndrome);
 	fft (synd_diag, syndrome);
 
+	//precompute sparse matrix indexes
+	vector<list<uint> > Hsp;
+	Hsp.resize (blocks);
+	for (i = 0; i < blocks; ++i)
+		for (j = 0; j < bs; ++j)
+			if (H[i][j])
+				Hsp[i].push_back (j);
+
+	/*
+	 * count the correlations, abuse the sparsity of matrices.
+	 *
+	 * TODO updating the counts and so is the slowest part of the whole
+	 * thing. It's all probabilistic, maybe there could be some potential
+	 * to speed it up by discarding some (already missing) precision.
+	 *
+	 * FFT would be a cool candidate.
+	 */
+
 	vector<unsigned> unsat;
 	unsat.resize (cs, 0);
 
-	for (i = 0; i < rounds; ++i) {
+	for (uint blk = 0; blk < blocks; ++blk)
+		for (uint i : Hsp[blk]) {
+			for (j = 0; j < bs; ++j)
+				if (syndrome[j])
+					++unsat[blk * bs + (j + bs - i) % bs];
+		}
 
-		/*
-		 * count the correlations, abuse the sparsity of matrices.
-		 *
-		 * TODO this is the slowest part of the whole thing. It's all
-		 * probabilistic, maybe there could be some potential to speed
-		 * it up by discarding some (already missing) precision.
-		 *
-		 * FFT would be a cool candidate.
-		 */
-
-		for (j = 0; j < cs; ++j) unsat[j] = 0;
-		for (uint Hi = 0; Hi < cs; ++Hi)
-			if (H[Hi / bs][Hi % bs]) {
-				uint blk = Hi / bs;
-				for (j = 0; j < bs; ++j)
-					if (syndrome[j])
-						++unsat[blk * bs +
-						        (j + cs - Hi) % bs];
-			}
+	uint round;
+	for (round = 0; round < rounds; ++round) {
 
 		uint max_unsat = 0;
-		for (j = 0; j < cs; ++j)
-			if (unsat[j] > max_unsat) max_unsat = unsat[j];
+		for (i = 0; i < cs; ++i)
+			if (unsat[i] > max_unsat) max_unsat = unsat[i];
 		if (!max_unsat) break;
+		if(max_unsat>bs) out("EROR?!!!");
 		//TODO do something about possible timing attacks
 
 		uint threshold = 0;
 		if (max_unsat > delta) threshold = max_unsat - delta;
 
-		//TODO also timing (but it gets pretty statistically hard here I guess)
-		for (uint bit = 0; bit < cs; ++bit)
-			if (unsat[bit] > threshold) {
-				in[bit] = !in[bit];
-				syndrome.rot_add (H[bit / bs], bit % bs);
+		for (uint bit = 0; bit < cs; ++bit) {
+			if (unsat[bit] <= threshold) continue;
+
+			/*
+			 * heavy trickery starts here, we carefully
+			 * modify the state to avoid necessity of
+			 * recomputation as a whole.
+			 */
+
+			uint blk = bit / bs, blkpos = bit % bs;
+
+			//adjust the error counts that were
+			//caused by this column of H
+			for (uint hpos : Hsp[blk]) {
+				hpos += blkpos;
+				//decide whether there's 1 or 0
+				bool increase = !syndrome[hpos % bs];
+				for (uint b2 = 0; b2 < blocks; ++b2)
+					for (uint h2 : Hsp[b2]) {
+						unsigned&ref = unsat[b2 * bs +
+						                     (hpos + bs - h2) % bs];
+						if (increase) ++ref;
+						else --ref;
+					}
+
+				//and flip it
+				syndrome.flip (hpos % bs);
 			}
+
+			//fix the bit
+			in.flip (bit);
+		}
 	}
 
-	if (i == rounds) return 2; //we simply failed
+	if (round == rounds) return 3; //we simply failed, haha.
 
 	errors = in_orig;
 	errors.add (in); //get the difference

@@ -351,6 +351,11 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	//decrypt the symmetric key
 	volatile bool failed = Priv.decrypt (mce_cipher, mce_plain, ev);
 
+	if (failed) { //prevent memory errors
+		ev.resize (ciphersize, 0);
+		mce_plain.resize (plainsize, 0);
+	}
+
 	/*
 	 * if decoding failed, ev contains something weird. We need to make it
 	 * to contain some dummy (but still valid) error vector that would work
@@ -419,21 +424,21 @@ int algo_mceqcmdpc##name::create_keypair (sencode**pub, sencode**priv, prng&rng)
 
 #if HAVE_CRYPTOPP==1
 
-mceqcmdpc_create_keypair_func (128, 9857, 2, 71, 134, 60, 5)
-mceqcmdpc_create_keypair_func (256, 32771, 2, 137, 264, 60, 8)
-mceqcmdpc_create_keypair_func (128cha, 9857, 2, 71, 134, 60, 5)
-mceqcmdpc_create_keypair_func (256cha, 32771, 2, 137, 264, 60, 8)
-mceqcmdpc_create_keypair_func (128xs, 9857, 2, 71, 134, 60, 5)
-mceqcmdpc_create_keypair_func (256xs, 32771, 2, 137, 264, 60, 8)
+mceqcmdpc_create_keypair_func (128, 9857, 2, 71, 134, 25, 4)
+mceqcmdpc_create_keypair_func (256, 32771, 2, 137, 264, 40, 4)
+mceqcmdpc_create_keypair_func (128cha, 9857, 2, 71, 134, 25, 4)
+mceqcmdpc_create_keypair_func (256cha, 32771, 2, 137, 264, 40, 4)
+mceqcmdpc_create_keypair_func (128xs, 9857, 2, 71, 134, 25, 4)
+mceqcmdpc_create_keypair_func (256xs, 32771, 2, 137, 264, 40, 4)
 
 #endif //HAVE_CRYPTOPP==1
 
-mceqcmdpc_create_keypair_func (128cube, 9857, 2, 71, 134, 60, 5)
-mceqcmdpc_create_keypair_func (256cube, 32771, 2, 137, 264, 60, 8)
-mceqcmdpc_create_keypair_func (128cubecha, 9857, 2, 71, 134, 60, 5)
-mceqcmdpc_create_keypair_func (256cubecha, 32771, 2, 137, 264, 60, 8)
-mceqcmdpc_create_keypair_func (128cubexs, 9857, 2, 71, 134, 60, 5)
-mceqcmdpc_create_keypair_func (256cubexs, 32771, 2, 137, 264, 60, 8)
+mceqcmdpc_create_keypair_func (128cube, 9857, 2, 71, 134, 25, 4)
+mceqcmdpc_create_keypair_func (256cube, 32771, 2, 137, 264, 40, 4)
+mceqcmdpc_create_keypair_func (128cubecha, 9857, 2, 71, 134, 25, 4)
+mceqcmdpc_create_keypair_func (256cubecha, 32771, 2, 137, 264, 40, 4)
+mceqcmdpc_create_keypair_func (128cubexs, 9857, 2, 71, 134, 25, 4)
+mceqcmdpc_create_keypair_func (256cubexs, 32771, 2, 137, 264, 40, 4)
 
 #define mceqcmdpc_create_encdec_func(name,bs,bc,errcount,hash_type,pad_hash_type,scipher,ranksize) \
 int algo_mceqcmdpc##name::encrypt (const bvector&plain, bvector&cipher, \

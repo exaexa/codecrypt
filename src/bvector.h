@@ -165,6 +165,10 @@ public:
 		_data[blockof (i)] &= ~ ( ( (uint64_t) 1) << blockpos (i));
 	}
 
+	inline void flip (size_t i) {
+		_data[blockof (i)] = _data[blockof (i)] ^ ( ( (uint64_t) 1) << blockpos (i));
+	}
+
 	inline const_reference operator[] (size_t pos) const {
 		return const_reference (*this, pos);
 	}
