@@ -258,7 +258,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 		for (i = 0; i < cs; ++i)
 			if (unsat[i] > max_unsat) max_unsat = unsat[i];
 		if (!max_unsat) break;
-		if(max_unsat>bs) out("EROR?!!!");
+		if (max_unsat > bs) err ("mce_qcmdpc: weird decryption error, expect failures");
 		//TODO do something about possible timing attacks
 
 		uint threshold = 0;

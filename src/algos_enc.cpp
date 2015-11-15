@@ -259,6 +259,10 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	std::vector<byte> K;
 	K.resize (plainsize >> 3);
 	for (i = 0; i < K.size(); ++i) K[i] = rng.random (256);
+	if (plainsize & 7) { //the byte overlap
+		K.resize (1 + (plainsize >> 3), 0);
+		K[plainsize >> 3] = rng.random (256) % (1 << (uint) (plainsize & 7));
+	}
 
 	//create the base for error vector
 	std::vector<byte> H, M2;
@@ -269,7 +273,7 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 
 	//prepare the error vector (rotate the hash so we don't need ultralong hash functions)
 	bvector ev_rank;
-	ev_rank.resize (ranksize);
+	ev_rank.resize (ranksize, 0);
 	for (i = 0; i < ranksize; ++i)
 		ev_rank[i] = 1 & (H[ (i >> 3) % H.size()] >> (i & 0x7));
 
@@ -279,7 +283,7 @@ static int fo_encrypt (const bvector&plain, bvector&cipher,
 	//prepare plaintext
 	bvector mce_plain;
 	mce_plain.from_bytes (K);
-	mce_plain.resize (plainsize, 0); //pad with 0's to exact size
+	mce_plain.resize (plainsize, 0); //fit to exact size (there shouldn't be overflow)
 
 	//run McEliece
 	if (Pub.encrypt (mce_plain, cipher, ev)) return 5;
@@ -372,9 +376,7 @@ static int fo_decrypt (const bvector&cipher, bvector&plain,
 	//convert stuff to byte vectors
 	std::vector<byte> K, M;
 
-	bvector Kb;
-	mce_plain.get_block (0, plainsize, Kb);
-	Kb.to_bytes (K);
+	mce_plain.to_bytes (K);
 
 	bvector Mb;
 	cipher.get_block (ciphersize, msize, Mb);

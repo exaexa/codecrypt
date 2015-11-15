@@ -33,6 +33,7 @@
 #define out_bin(x) std::cout << x
 #define outeol std::cout << std::endl
 #define err(x) std::cerr << x << std::endl
+#define err_bin(x) std::cerr << x
 #define erreol std::cerr << std::endl
 #define progerr(x) std::cerr << argv[0] << ": " << x << std::endl
 

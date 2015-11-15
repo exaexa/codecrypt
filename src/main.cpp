@@ -92,6 +92,7 @@ void test()
 	/*
 	 * Dear hacker,
 	 * use this function for quicktesting your stuff.
+	 * It gets executed by the -T parameter.
 	 * Other places suck for that purpose.
 	 */
 }
