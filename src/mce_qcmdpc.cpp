@@ -107,7 +107,6 @@ int mce_qcmdpc::generate (pubkey&pub, privkey&priv, prng&rng,
 		//save it to G
 		pub.G[i] = Hb;
 		pub.G[i].resize (block_size, 0);
-		//for (j = 0; j < block_size; ++j) pub.G[i][j] = Hb[j];
 	}
 
 	//save the target params
@@ -283,8 +282,10 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 				bool increase = !syndrome[hpos % bs];
 				for (uint b2 = 0; b2 < blocks; ++b2)
 					for (uint h2 : Hsp[b2]) {
-						unsigned&ref = unsat[b2 * bs +
-						                     (hpos + bs - h2) % bs];
+						unsigned&
+						ref = unsat
+						      [b2 * bs
+						       + (hpos + bs - h2) % bs];
 						if (increase) ++ref;
 						else --ref;
 					}
