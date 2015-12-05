@@ -39,7 +39,7 @@ bool symkey::create (const std::string&in, prng&rng)
 {
 	//first, find cipher and hash names
 	blocksize = 1024 * 1024;
-	uint keysize = 32;
+	uint keysize = 64;
 	std::stringstream ss (in);
 	std::string tok;
 	while (getline (ss, tok, ',')) {
