@@ -52,7 +52,7 @@ bool symkey::create (const std::string&in, prng&rng)
 		else if (hash_proc::suite().count (tok))
 			hashes.insert (tok);
 		else {
-			err ("symkey: unknown token: " << tok);
+			err ("symkey: unknown token: " << escape_output (tok));
 			return false;
 		}
 	}
@@ -115,7 +115,7 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 	     i = ciphers.begin(), e = ciphers.end();
 	     i != e; ++i) {
 		if (!streamcipher::suite().count (*i)) {
-			err ("symkey: unsupported cipher: " << *i);
+			err ("symkey: unsupported cipher: " << escape_output (*i));
 			return false;
 		}
 		scs.push_back (streamcipher::suite() [*i]->get());
@@ -136,7 +136,7 @@ bool symkey::encrypt (std::istream&in, std::ostream&out, prng&rng)
 	     i = hashes.begin(), e = hashes.end();
 	     i != e; ++i) {
 		if (!hash_proc::suite().count (*i)) {
-			err ("symkey: unsupported hash function: " << *i);
+			err ("symkey: unsupported hash function: " << escape_output (*i));
 			return false;
 		}
 		hs.push_back (hash_proc::suite() [*i]->get());
@@ -232,7 +232,7 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 	     i = ciphers.begin(), e = ciphers.end();
 	     i != e; ++i) {
 		if (!streamcipher::suite().count (*i)) {
-			err ("symkey: unsupported cipher: " << *i);
+			err ("symkey: unsupported cipher: " << escape_output (*i));
 			return 1;
 		}
 		scs.push_back (streamcipher::suite() [*i]->get());
@@ -253,7 +253,7 @@ int symkey::decrypt (std::istream&in, std::ostream&out)
 	     i = hashes.begin(), e = hashes.end();
 	     i != e; ++i) {
 		if (!hash_proc::suite().count (*i)) {
-			err ("symkey: unsupported hash function: " << *i);
+			err ("symkey: unsupported hash function: " << escape_output (*i));
 			return 1;
 		}
 		hs.push_back (hash_proc::suite() [*i]->get());

@@ -219,7 +219,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 		for (j = 0; j < bs; ++j) synd_diag[j] += Htmp[j] * tmp[j];
 	}
 
-	bvector (syndrome);
+	bvector syndrome;
 	fft (synd_diag, syndrome);
 
 	//precompute sparse matrix indexes

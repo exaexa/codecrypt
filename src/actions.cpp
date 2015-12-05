@@ -108,15 +108,20 @@ algspectable_t& algspectable()
 	static bool init = false;
 
 	if (!init) {
-		table["enc"] = "MCEQCMDPC128FO-CUBE256-CHACHA20";
-		table["enc-256"] = "MCEQCMDPC256FO-CUBE512-CHACHA20";
+		table["ENC"] = "MCEQCMDPC128FO-CUBE256-CHACHA20";
+		table["ENC-256"] = "MCEQCMDPC256FO-CUBE512-CHACHA20";
 
-		table["sig"] = "FMTSEQ128C-CUBE256-CUBE128";
-		table["sig-192"] = "FMTSEQ192C-CUBE384-CUBE192";
-		table["sig-256"] = "FMTSEQ256C-CUBE512-CUBE256";
+		table["SIG"] = "FMTSEQ128C-CUBE256-CUBE128";
+		table["SIG-192"] = "FMTSEQ192C-CUBE384-CUBE192";
+		table["SIG-256"] = "FMTSEQ256C-CUBE512-CUBE256";
 
-		table["sym"] = "chacha20,sha256";
-		table["sym-combined"] = "chacha20,xsynd,arcfour,cube512,sha512";
+#if HAVE_CRYPTOPP==1
+		table["SYM"] = "CHACHA20,SHA256";
+		table["SYM-COMBINED"] = "CHACHA20,XSYND,ARCFOUR,CUBE512,SHA512";
+#else
+		table["SYM"] = "CHACHA20,CUBE512";
+		table["SYM-COMBINED"] = "CHACHA20,XSYND,ARCFOUR,CUBE512";
+#endif
 
 		init = true;
 	}
@@ -128,10 +133,12 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
                     const std::string&symmetric, bool armor,
                     keyring&KR, algorithm_suite&AS)
 {
-	if (p_algspec == "help") {
+	std::string algspec = to_unicase (p_algspec);
+
+	if (algspec == "HELP") {
 		//provide overview of algorithms available
 		err ("available algorithms: "
-		     "([S]ig., [E]nc., sym. [C]ipher, [H]ash) ");
+		     "([S]ig., [E]nc., sym. [C]ipher, [H]ash)");
 		std::string tag;
 		for (algorithm_suite::iterator i = AS.begin(), e = AS.end();
 		     i != e; ++i) {
@@ -153,21 +160,25 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 		     i != hash_proc::suite().end(); ++i)
 			out (" H\t" << i->first);
 
-		err ("following aliases are available for convenience: ");
+		err ("\nfollowing aliases are available for convenience:");
 		for (algspectable_t::iterator i = algspectable().begin(),
 		     e = algspectable().end();
 		     i != e; ++i)
 			err (i->first << " = " << i->second);
 
+		err ("\nfollowing modifiers are available for symmetric keys:");
+		err ("SHORTBLOCK  1KiB blocks instead of default 1MiB"
+		     " (for small files)");
+		err ("LONGBLOCK   64MiB blocks");
+		err ("LONGKEY     512B of key seed instead of default 64B"
+		     " (paranoid)");
+
 		return 0;
 	}
 
 	//replace algorithm name on match with alias
-	std::string algspec;
-	if (algspectable().count (p_algspec))
-		algspec = algspectable() [p_algspec];
-	else
-		algspec = p_algspec;
+	if (algspectable().count (algspec))
+		algspec = algspectable() [algspec];
 
 	//handle symmetric operation
 	if (symmetric.length())
@@ -182,8 +193,8 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 				algname = i->first;
 				alg = i->second;
 			} else {
-				err ("error: algorithm name `" << algspec
-				     << "' matches multiple algorithms");
+				err ("error: algorithm name "
+				     "matches multiple algorithms");
 				return 1;
 			}
 		}
@@ -505,7 +516,7 @@ int action_decrypt (bool armor, const std::string&symmetric,
 	if ( (!AS.count (msg.alg_id))
 	     || (!AS[msg.alg_id]->provides_encryption())) {
 		err ("error: decryption algorithm unsupported");
-		err ("info: requires algorithm " << msg.alg_id
+		err ("info: requires algorithm " << escape_output (msg.alg_id)
 		     << " with encryption support");
 		return 1;
 	}
@@ -525,9 +536,10 @@ int action_decrypt (bool armor, const std::string&symmetric,
 
 	//SEEMS OKAY, let's print some info.
 	err ("incoming encrypted message details:");
-	err ("  algorithm: " << msg.alg_id);
+	err ("  algorithm: " << escape_output (msg.alg_id));
 	err ("  recipient: @" << msg.key_id);
-	err ("  recipient local name: `" << kpe->pub.name << "'");
+	err ("  recipient local name: `" <<
+	     escape_output (kpe->pub.name) << "'");
 
 	/*
 	 * because there's no possibility to distinguish encrypted from
@@ -989,7 +1001,7 @@ int action_verify (bool armor, const std::string&detach,
 	if ( (!AS.count (msg.alg_id))
 	     || (!AS[msg.alg_id]->provides_signatures())) {
 		err ("error: verification algorithm unsupported");
-		err ("info: requires algorithm " << msg.alg_id
+		err ("info: requires algorithm " << escape_output (msg.alg_id)
 		     << " with signature support");
 		return 1;
 	}
@@ -998,9 +1010,9 @@ int action_verify (bool armor, const std::string&detach,
 	int r = msg.verify (AS, KR);
 
 	err ("incoming signed message details:");
-	err ("  algorithm: " << msg.alg_id);
+	err ("  algorithm: " << escape_output (msg.alg_id));
 	err ("  signed by: @" << msg.key_id);
-	err ("  signed local name: `" << pke->name << "'");
+	err ("  signed local name: `" << escape_output (pke->name) << "'");
 	err ("  verification status: "
 	     << (r == 0 ?
 	         "GOOD signature ;-)" :
@@ -1200,7 +1212,7 @@ int action_decrypt_verify (bool armor, bool yes,
 	if ( (!AS.count (emsg.alg_id))
 	     || (!AS[emsg.alg_id]->provides_encryption())) {
 		err ("error: decryption algorithm unsupported");
-		err ("info: requires algorithm " << emsg.alg_id
+		err ("info: requires algorithm " << escape_output (emsg.alg_id)
 		     << " with encryption support");
 		return 1;
 	}
@@ -1218,9 +1230,10 @@ int action_decrypt_verify (bool armor, bool yes,
 
 	//looks okay, print decryption status
 	err ("incoming encrypted message details:");
-	err ("  algorithm: " << emsg.alg_id);
+	err ("  algorithm: " << escape_output (emsg.alg_id));
 	err ("  recipient: @" << emsg.key_id);
-	err ("  recipient local name: `" << kpe->pub.name << "'");
+	err ("  recipient local name: `" <<
+	     escape_output (kpe->pub.name) << "'");
 
 	//continue with verification
 	M = sencode_decode (data);
@@ -1262,7 +1275,7 @@ int action_decrypt_verify (bool armor, bool yes,
 	if ( (!AS.count (smsg.alg_id))
 	     || (!AS[smsg.alg_id]->provides_signatures())) {
 		err ("error: verification algorithm unsupported");
-		err ("info: requires algorithm " << smsg.alg_id
+		err ("info: requires algorithm " << escape_output (smsg.alg_id)
 		     << " with signature support");
 		return 1;
 	}
@@ -1271,9 +1284,9 @@ int action_decrypt_verify (bool armor, bool yes,
 	int r = smsg.verify (AS, KR);
 
 	err ("incoming signed message details:");
-	err ("  algorithm: " << smsg.alg_id);
+	err ("  algorithm: " << escape_output (smsg.alg_id));
 	err ("  signed by: @" << smsg.key_id);
-	err ("  signed local name: `" << pke->name << "'");
+	err ("  signed local name: `" << escape_output (pke->name) << "'");
 	err ("  verification status: "
 	     << (r == 0 ?
 	         "GOOD signature ;-)" :
@@ -1302,61 +1315,20 @@ int action_decrypt_verify (bool armor, bool yes,
  * keyring stuff
  */
 
-static std::string escape_key_name (const std::string&s)
-{
-	std::string r;
-	const char hex[] = "0123456789abcdef";
-	for (size_t i = 0; i < s.length(); ++i)
-		if (s[i] == '\\') r += "\\\\";
-		else if (s[i] < 0x20)
-			switch (s[i]) {
-			case '\a':
-				r += "\\a";
-				break;
-			case '\b':
-				r += "\\b";
-				break;
-			case '\x1b':
-				r += "\\e";
-				break;
-			case '\f':
-				r += "\\f";
-				break;
-			case '\n':
-				r += "\\n";
-				break;
-			case '\r':
-				r += "\\r";
-				break;
-			case '\t':
-				r += "\\t";
-				break;
-			case '\v':
-				r += "\\v";
-				break;
-			default:
-				r += "\\x";
-				r += hex[0xf & (s[i] >> 4)];
-				r += hex[0xf & s[i]];
-			}
-		else r += s[i];
-	return r;
-}
-
 static void output_key (bool fp,
                         const std::string& ident, const std::string&longid,
                         const std::string&alg, const std::string&keyid,
                         const std::string&name)
 {
 	if (!fp)
-		out (ident << '\t' << alg << '\t'
+		out (ident << '\t' << escape_output (alg) << '\t'
 		     << '@' << keyid.substr (0, 22) << "...\t"
-		     << escape_key_name (name));
+		     << escape_output (name));
 	else {
-		out (longid << " with algorithm " << alg
-		     << ", name `" << escape_key_name (name) << "'");
+		out (longid << " with algorithm " << escape_output (alg)
+		     << ", name `" << escape_output (name) << "'");
 
-		std::cout << "  fingerprint ";
+		std::cout << "  fingerprint/keyid: ";
 		for (size_t j = 0; j < keyid.length(); ++j) {
 			std::cout << keyid[j];
 			if (! ( (j + 1) % 4) &&
@@ -1621,7 +1593,7 @@ int action_rename (bool yes,
 		bool okay = false;
 		ask_for_yes (okay, "This will rename " << kc
 		             << " pubkeys from your keyring to `"
-		             << escape_key_name (name) << "'. Continue?");
+		             << escape_output (name) << "'. Continue?");
 		if (!okay) return 0;
 	}
 
@@ -1878,7 +1850,7 @@ int action_rename_sec (bool yes,
 		bool okay = false;
 		ask_for_yes (okay, "This will rename " << kc
 		             << " secrets from your keyring to `"
-		             << escape_key_name (name) << "'. Continue?");
+		             << escape_output (name) << "'. Continue?");
 		if (!okay) return 0;
 	}
 

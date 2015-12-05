@@ -69,13 +69,13 @@ public:
 
 		r.resize (a.size());
 
-		uint i, t, x;
+		uint i;
 		for (i = 0; i < a.size(); ++i) {
 			r[sig] = a[i];
 
 			//flip the correct bit in signature
-			t = i + 1;
-			x = 1;
+			uint t = i + 1;
+			uint x = 1;
 			while (! (t & 1)) {
 				t >>= 1;
 				x <<= 1;

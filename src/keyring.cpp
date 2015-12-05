@@ -25,7 +25,7 @@ void keyring::clear()
 }
 
 /*
- * KeyID is SHA256 of pubkey string representation. Also serves as a
+ * KeyID is CUBE256 of pubkey string representation. Also serves as a
  * simple fingerprint.
  */
 

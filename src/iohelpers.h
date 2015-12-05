@@ -62,4 +62,6 @@ bool read_all_input (output_seq&data, std::istream&input = std::cin)
 	}
 }
 
+std::string escape_output (const std::string&);
+
 #endif

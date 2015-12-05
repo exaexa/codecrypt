@@ -158,7 +158,7 @@ int hashfile::verify (istream&in)
 	     i != e; ++i) {
 		if (!hm.count (i->first)) {
 			err ("hash verification: :-/ "
-			     << i->first << " not supported");
+			     << escape_output (i->first) << " not supported");
 			continue;
 		}
 		if (i->second == hm[i->first]->finish()) {

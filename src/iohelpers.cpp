@@ -36,3 +36,43 @@ bool redirect_cout (const std::string& fn)
 	return true;
 }
 
+std::string escape_output (const std::string&s)
+{
+	std::string r;
+	const char hex[] = "0123456789abcdef";
+	for (size_t i = 0; i < s.length(); ++i)
+		if (s[i] == '\\') r += "\\\\";
+		else if (s[i]>=0 && s[i] < 0x20) //utf-8 is "negative" here
+			switch (s[i]) {
+			case '\a':
+				r += "\\a";
+				break;
+			case '\b':
+				r += "\\b";
+				break;
+			case '\x1b':
+				r += "\\e";
+				break;
+			case '\f':
+				r += "\\f";
+				break;
+			case '\n':
+				r += "\\n";
+				break;
+			case '\r':
+				r += "\\r";
+				break;
+			case '\t':
+				r += "\\t";
+				break;
+			case '\v':
+				r += "\\v";
+				break;
+			default:
+				r += "\\x";
+				r += hex[0xf & (s[i] >> 4)];
+				r += hex[0xf & s[i]];
+			}
+		else r += s[i];
+	return r;
+}

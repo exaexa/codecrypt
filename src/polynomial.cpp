@@ -224,7 +224,6 @@ void polynomial::ext_euclid (polynomial&a_out, polynomial&b_out,
 {
 	//TODO: speed this up (spare degree calculations)
 	polynomial A, B, a, b, tmp;
-	int j;
 	uint h;
 
 	A = *this;
@@ -239,6 +238,7 @@ void polynomial::ext_euclid (polynomial&a_out, polynomial&b_out,
 
 		A.swap (a);
 		B.swap (b);
+		int j;
 		while ( (j = A.degree() - a.degree()) >= 0) {
 			h = fld.div (A.head(), a.head());
 			tmp = a;

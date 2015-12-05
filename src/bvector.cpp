@@ -259,7 +259,6 @@ bvector bvector::ext_gcd (const bvector&b, bvector&s0, bvector&t0)
 	for (;;) {
 		int d0 = r0.degree();
 		int d1 = r1.degree();
-		//out ("r0" << r0 << "r1" << r1 << "s0" << s0 << "s1" << s1 << "t0" << t0 << "t1" << t1 << "d0=" << d0 << " d1=" << d1);
 		if (d0 < 0) {
 			s0.swap (s1);
 			t0.swap (t1);
