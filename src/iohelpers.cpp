@@ -42,7 +42,7 @@ std::string escape_output (const std::string&s)
 	const char hex[] = "0123456789abcdef";
 	for (size_t i = 0; i < s.length(); ++i)
 		if (s[i] == '\\') r += "\\\\";
-		else if (s[i]>=0 && s[i] < 0x20) //utf-8 is "negative" here
+		else if (s[i] >= 0 && s[i] < 0x20) //utf-8 is "negative" here
 			switch (s[i]) {
 			case '\a':
 				r += "\\a";
