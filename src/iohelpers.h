@@ -43,6 +43,7 @@
 
 bool redirect_cin (const std::string& fn);
 bool redirect_cout (const std::string& fn);
+bool redirect_cerr (const std::string& fn);
 
 #define readall_bufsize 8192
 template<class output_seq>

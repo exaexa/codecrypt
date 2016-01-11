@@ -36,6 +36,15 @@ bool redirect_cout (const std::string& fn)
 	return true;
 }
 
+bool redirect_cerr (const std::string& fn)
+{
+	static std::ofstream alt_cerr;
+	alt_cerr.open (fn.c_str(), std::ios::out | std::ios::binary);
+	if (alt_cerr.fail()) return false;
+	std::cerr.rdbuf (alt_cerr.rdbuf());
+	return true;
+}
+
 std::string escape_output (const std::string&s)
 {
 	std::string r;

@@ -42,6 +42,7 @@ void print_help (char*pname)
 	out ("Global options:");
 	out (" -R, --in      input file, default is stdin");
 	out (" -o, --out     output file, default is stdout");
+	out (" -E, --err     the same for stderr");
 	out (" -a, --armor   use ascii-armored I/O");
 	out (" -y, --yes     assume that answer is `yes' everytime");
 	outeol;
@@ -120,7 +121,7 @@ int main (int argc, char**argv)
 	     opt_import_no_action = false;
 
 	std::string recipient, user,
-	    input, output,
+	    input, output, err_output,
 	    name, filter,
 	    action_param,
 	    detach_sign,
@@ -144,6 +145,7 @@ int main (int argc, char**argv)
 			//I/O redirection from default stdin/out
 			{"in",		1,	0,	'R' },
 			{"out",		1,	0,	'o' },
+			{"err",		1,	0,	'E' },
 
 			//keyring management
 			{"list",	0,	0,	'k' },
@@ -183,7 +185,7 @@ int main (int argc, char**argv)
 		option_index = -1;
 		c = getopt_long
 		    (argc, argv,
-		     "hVTayr:u:R:o:kipx:m:KIPX:M:g:N:F:fnsvedCb:S:",
+		     "hVTayr:u:R:o:E:kipx:m:KIPX:M:g:N:F:fnsvedCb:S:",
 		     long_opts, &option_index);
 		if (c == -1) break;
 
@@ -231,6 +233,8 @@ int main (int argc, char**argv)
 			                 "cannot accept multiple inputs")
 			read_single_opt ('o', output,
 			                 "cannot accept multiple outputs")
+			read_single_opt ('E', err_output,
+			                 "cannot accept multiple error outputs")
 
 			read_action ('k')
 			read_action ('i')
@@ -319,6 +323,12 @@ int main (int argc, char**argv)
 
 	if (output.length() && !redirect_cout (output)) {
 		progerr ("could not redirect to output file");
+		exitval = 1;
+		goto exit;
+	}
+
+	if (err_output.length() && !redirect_cerr (err_output)) {
+		progerr ("could not redirect to error output file");
 		exitval = 1;
 		goto exit;
 	}
