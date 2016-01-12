@@ -85,6 +85,7 @@ For completeness I add listing of all options here (also available from
 	Global options:
 	 -R, --in      input file, default is stdin
 	 -o, --out     output file, default is stdout
+	 -E, --err     the same for stderr
 	 -a, --armor   use ascii-armored I/O
 	 -y, --yes     assume that answer is `yes' everytime
 

@@ -1,4 +1,4 @@
-.TH CCR 1 2015-11-07 "ccr" "Codecrypt"
+.TH CCR 1 2016-01-12 "ccr" "Codecrypt"
 .SH NAME
 .B ccr
 \- The post-quantum cryptography encryption and signing tool
@@ -9,7 +9,7 @@
 .SH DESCRIPTION
 
 \fBccr\fR (short of Codecrypt) is a general purpose encryption/decryption
-signing/verification tool that uses only quantum-computer resistant algorithms.
+signing/verification tool that uses only quantum-computer-resistant algorithms.
 
 .SS
 General options:
@@ -35,8 +35,16 @@ Redirect standard input to be read from \fIfile\fR instead from stdin. You can
 still specify "-" to force reading from stdin.
 
 .TP
-\fB\-o\fR, \fB\-\-out\fR <\fIfile\fR> Redirect standard output to be written to
-\fIfile\fR. You can specify "-" to force writing to stdout.
+\fB\-o\fR, \fB\-\-out\fR <\fIfile\fR>
+Redirect standard output to be written to \fIfile\fR. You can specify "-" to
+force writing to stdout.
+
+.TP
+\fB\-E\fR, \fB\-\-err\fR <\fIfile\fR>
+Redirect the standard error output to \fIfile\fR. You can specify "-" to force
+writing to stderr. Error output does not carry any data, but provides useful
+error messages and metadata about what is happening, e.g. the identity of
+message signer or details about why decryption or verification fails.
 
 .TP
 \fB\-a\fR, \fB\-\-armor\fR
@@ -127,8 +135,8 @@ Purpose of the \fB\-\-symmetric\fR option is that symmetric cryptography is a
 lot faster than asymmetric, and symmetric primitives usually work also on very
 large files and data streams, as they don't need to be fully copied into
 allocated memory for this purpose. Thus, if working with a large file, process
-it symmetrically first, then process the resulting small \fIfile\fR
-asym,etrically and send it along with the large file.
+it symmetrically first, then sign/encrypt the (tiny) symmetric \fIfile\fR
+asymmetrically and send it along with the (possibly encrypted) large file.
 
 .SS
 Key management:
@@ -143,11 +151,11 @@ work with them, and sometimes also attached a private key to form a secret
 
 Keys can be specified using several methods:
 
-Using KeyID -- the key specification consists of @ and several first characters
-to identify a prefix of KeyID of a single key.
+Using KeyID -- the key specification starts with @ and continues with several
+first characters of the KeyID that identify a single key with that prefix.
 
-Using a name -- key specification consists of string and matches any key, that
-has a name that contains that string.
+Using a name -- key specification consists of a string, a key is then matched
+if its name contains the specified string. Matching is case-insensitive.
 
 .TP
 \fB\-g\fR, \fB\-\-gen\-key\fR <\fIalgorithm\fR>
@@ -193,7 +201,7 @@ public keys.
 .TP
 \fB\-f\fR, \fB\-\-fingerprint\fR
 When printing keys, format full KeyIDs. Note that full KeyIDs can be used in
-similar way as fingerprints known from other cryptosystems.
+similar way as fingerprints known from other crypto tools.
 
 .TP
 \fB\-p\fR, \fB\-\-export\fR
@@ -234,10 +242,11 @@ and applying flock(2) to it.
 
 .SH RETURN VALUE
 
-\fBccr\fR returns 0 if there was no error and all cryptography went fine, or 1
-on errors. If the error was that a missing public or private key was needed to
-complete the operation, 2 is returned. If signature verification fails (e.g.
-the signature is bad or likely forged), the program returns 3.
+\fBccr\fR returns exit status 0 if there was no error and all cryptography went
+fine, or 1 on generic errors. If the error was that a missing hash algorithm or
+a public or private key was needed to complete the operation, 2 is returned. If
+signature or hash verification fails (e.g. the signature is bad or likely
+forged), the program returns 3.
 
 .SH ALGORITHMS
 
@@ -270,15 +279,15 @@ speedup of 2^20 on a scheme with 2^80 bit security (which is fatal) with
 getting the same speedup on a scheme with 2^128 security (where the resulting
 2^108 is still strong).
 
-For comparison, 2^128 security level is very roughly equivalent to that of
-classical RSA with 3072bit modulus (which is, accordingly to the best results
-available in June 2013 for general public, reported to provide roughly 2^112
-attack complexity).
+For comparison with existing schemes, 2^128 security level is very roughly
+equivalent to that of classical RSA with 3072bit modulus (which is, accordingly
+to the best results available in June 2013 for general public, reported to
+provide roughly 2^112 attack complexity).
 
-For another comparison, a very good idea about the insane amount of energy that
-is actually needed for brute-forcing 2^256 operations can be obtained from
-wikipedia, which estimates the size of whole observable universe (!) to around
-2^270 atoms.
+For another comparison, a very good idea about the unbelievably insane amount
+of energy that is actually needed for brute-forcing 2^256 operations can be
+obtained from Wikipedia, which estimates the size of whole observable universe
+(!) to around 2^270 atoms.
 
 All algorithms are believed to be resistant to quantum-computer-specific
 attacks, except for the generic case of Grover search which (in a very
@@ -344,7 +353,7 @@ import of keys can bring serious inconsistencies into your key naming scheme.
 In a distant universe after much computation, KeyIDs can collide. If you find
 someone who has a colliding KeyID, kiss him and generate another key.
 
-.SH FAQ
+.SH Troubleshooting/FAQ
 
 Q: I can't read/verify messages from versions 1.3.1 and older!
 
@@ -358,7 +367,7 @@ A: There was a slight mistake in padding of messages shorter than signature
 hash function size (64 bytes in the 256-bit-secure signature types) with no
 security implications. It was decided not to provide backward compatibility for
 this minor use-case. If you really need to verify such signatures, edit the
-msg_pad function in src/algos_sig.h so that the `load_key()' function os called
+msg_pad function in src/algos_sig.h so that the `load_key()' function is called
 on empty vector instead of `out'.
 
 Q: I want to sign/encrypt a large file but it took all my RAM and takes ages!
@@ -368,7 +377,7 @@ A: Use \fB--symmetric\fR option. See the `CAVEATS' section for more details.
 Q: How much `broken' is the original quasi-dyadic McEliece?
 
 A: The private key of proposed dyadic variant by Misoczki and Barreto can be
-derived from the public key with standard computer equipment.
+derived from the public key with standard computer equipment pretty quickly.
 
 .SH EXAMPLE
 Following commands roughly demonstrate command line usage of \fBccr\fR:
@@ -422,5 +431,5 @@ it with caution.
 
 .SH AUTHORS
 
-Codecrypt was written by Mirek Kratochvil in 2013-2015.
+Codecrypt was written by Mirek Kratochvil in 2013-2016.
 

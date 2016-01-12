@@ -300,7 +300,7 @@ int main (int argc, char**argv)
 	}
 
 	/*
-	 * something will be happening, therefore init everything
+	 * initialization
 	 */
 
 	keyring KR;
