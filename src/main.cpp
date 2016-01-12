@@ -315,6 +315,12 @@ int main (int argc, char**argv)
 
 	int exitval = 0;
 
+	//handle the defaults
+	if (input == "-") input = "/dev/stdin";
+	if (output == "-") output = "/dev/stdout";
+	if (err_output == "-") err_output = "/dev/stderr";
+
+	//do the redirections
 	if (input.length() && !redirect_cin (input)) {
 		progerr ("could not open input file");
 		exitval = 1;
