@@ -18,8 +18,8 @@ AC_PROG_INSTALL
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR([Codecrypt requires gmp.h]))
 AC_CHECK_LIB(gmp, __gmpz_init, , AC_MSG_ERROR([Codecrypt requires libgmp]))
 
-#check for FFTW library presnece
-AC_CHECK_HEADERS([fftw3.h], , AC_MSG_ERROR([Codecrytp requires fftw3.h]))
+#check for FFTW library presence
+AC_CHECK_HEADERS([fftw3.h], , AC_MSG_ERROR([Codecrypt requires fftw3.h]))
 AC_CHECK_LIB(fftw3, fftw_plan_dft_1d, , AC_MSG_ERROR([Codecrypt requires libfftw3]))
 
 #check whether to build with crypto++
