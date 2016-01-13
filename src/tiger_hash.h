@@ -22,8 +22,13 @@
 
 #if HAVE_CRYPTOPP==1
 
-#include "sha_hash.h"
-#include <crypto++/tiger.h>
+#include "hash.h"
+
+#if CRYPTOPP_DIR_PLUS
+#  include <crypto++/tiger.h>
+#else
+#  include <cryptopp/tiger.h>
+#endif
 
 //it's used just like SHA, so create it from SHA
 class tiger192hash : public shahash<CryptoPP::Tiger> {};

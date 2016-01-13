@@ -22,8 +22,11 @@
 #if HAVE_CRYPTOPP==1
 
 #include "hash.h"
-
-#include <crypto++/sha.h>
+#if CRYPTOPP_DIR_PLUS
+#  include <crypto++/sha.h>
+#else
+#  include <cryptopp/sha.h>
+#endif
 
 template <class shatype>
 class shahash : public hash_func

@@ -27,8 +27,8 @@ echo "noinst_HEADERS = `find src/ -type f -name \*.h |tr \"\n\" \" \" `" >>$OUT
 echo "${NAME}_CPPFLAGS = -I\$(srcdir)/$i/ ${COMMON_CPPFLAGS}" >>$OUT
 echo "${NAME}_CFLAGS = ${COMMON_CFLAGS}" >>$OUT
 echo "${NAME}_CXXFLAGS = ${COMMON_CXXFLAGS}" >>$OUT
-echo "${NAME}_LDFLAGS = ${COMMON_LDFLAGS}" >>$OUT
-echo "${NAME}_LDADD = -lgmp -lfftw3 -lm @CRYPTOPP_LIBS@ ${COMMON_LDADD} " >>$OUT
+echo "${NAME}_LDFLAGS = ${COMMON_LDFLAGS} \$(CRYPTOPP_CFLAGS) " >>$OUT
+echo "${NAME}_LDADD = -lgmp -lfftw3 -lm \$(CRYPTOPP_LIBS) ${COMMON_LDADD} " >>$OUT
 
 libtoolize --force && aclocal && autoconf && automake --add-missing
 

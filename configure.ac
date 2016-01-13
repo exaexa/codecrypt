@@ -31,12 +31,20 @@ AC_ARG_WITH([cryptopp],
 #and check crypto++
 if test "$WITH_CRYPTOPP" = "yes"; then
 	
+	PKG_CHECK_MODULES([CRYPTOPP],[libcrypto++])
+
+	#crypto++ headers are either in include/crypto++ or include/cryptopp,
+	#the information is otherwise unavailable from standard configuration
+	#means. Please report/add more tests if you encounter distros that
+	#place them elsewhere.
 	AC_LANG_PUSH([C++])
-	AC_CHECK_HEADERS([crypto++/sha.h crypto++/tiger.h crypto++/ripemd.h], , AC_MSG_ERROR([Codecrypt requires Crypto++]))
+	AC_CHECK_HEADER([crypto++/config.h],
+		AC_DEFINE([CRYPTOPP_DIR_PLUS], [1]),
+		AC_DEFINE([CRYPTOPP_DIR_PLUS], [0])
+	)
 	AC_LANG_POP([C++])
 
 	AC_DEFINE([HAVE_CRYPTOPP], [1])
-	AC_SUBST([CRYPTOPP_LIBS], [-lcryptopp])
 else
 	AC_DEFINE([HAVE_CRYPTOPP], [0])
 fi
