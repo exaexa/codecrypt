@@ -187,6 +187,15 @@ int privkey::decrypt (const bvector & in, bvector & out)
 	return decrypt (in, out, tmp_errors);
 }
 
+void fft_reverse (bvector&inb, std::vector<dcx>&out)
+{
+	std::vector<dcx> in;
+	size_t s=inb.size();
+	in.resize (s, dcx (0, 0));
+	for (size_t i = 0; i < s; ++i) if (inb[(s-i)%s]) in[i] = dcx (1, 0);
+	fft (true, in, out);
+}
+
 #include <vector>
 #include <list>
 
@@ -194,6 +203,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 {
 	uint i, j;
 	uint cs = cipher_size();
+	uint delta=this->delta+5;
 
 	if (in_orig.size() != cs) return 1;
 	uint bs = H[0].size();
@@ -206,100 +216,60 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 	 * probabilistic decoding!
 	 */
 
-	vector<dcx> synd_diag, tmp, Htmp;
-	synd_diag.resize (bs, dcx (0, 0));
+	uint R;
+	for (R = 0;; ++R) {
 
-	//precompute the syndrome
-	for (i = 0; i < blocks; ++i) {
-		bvector b;
-		b.resize (bs, 0);
-		b.add_offset (in, bs * i, 0, bs);
-		fft (b, tmp);
-		fft (H[i], Htmp);
-		for (j = 0; j < bs; ++j) synd_diag[j] += Htmp[j] * tmp[j];
-	}
+		vector<dcx> synd_diag, tmp, Htmp;
+		synd_diag.resize (bs, dcx (0, 0));
 
-	bvector syndrome;
-	fft (synd_diag, syndrome);
-
-	//precompute sparse matrix indexes
-	vector<list<uint> > Hsp;
-	Hsp.resize (blocks);
-	for (i = 0; i < blocks; ++i)
-		for (j = 0; j < bs; ++j)
-			if (H[i][j])
-				Hsp[i].push_back (j);
-
-	/*
-	 * count the correlations, abuse the sparsity of matrices.
-	 *
-	 * TODO updating the counts and so is the slowest part of the whole
-	 * thing. It's all probabilistic, maybe there could be some potential
-	 * to speed it up by discarding some (already missing) precision.
-	 *
-	 * FFT would be a cool candidate.
-	 */
-
-	vector<unsigned> unsat;
-	unsat.resize (cs, 0);
-
-	for (uint blk = 0; blk < blocks; ++blk)
-		for (uint i : Hsp[blk]) {
-			for (j = 0; j < bs; ++j)
-				if (syndrome[j])
-					++unsat[blk * bs + (j + bs - i) % bs];
+		//recompute the syndrome
+		for (i = 0; i < blocks; ++i) {
+			bvector b;
+			b.resize (bs, 0);
+			b.add_offset (in, bs * i, 0, bs);
+			fft (b, tmp);
+			fft (H[i], Htmp);
+			for (j = 0; j < bs; ++j) synd_diag[j] += Htmp[j] * tmp[j];
 		}
 
-	uint round;
-	for (round = 0; round < rounds; ++round) {
+		bvector syndrome;
+		fft (synd_diag, syndrome);
+		//this is needed to squash the syndrome to 0 and 1s
+		//(and to transpose it)
+		fft_reverse (syndrome, synd_diag);
 
-		uint max_unsat = 0;
-		for (i = 0; i < cs; ++i)
-			if (unsat[i] > max_unsat) max_unsat = unsat[i];
-		if (!max_unsat) break;
-		if (max_unsat > bs) return 3;
-		//TODO do something about possible timing attacks
+		vector<unsigned> unsat;
+		unsat.resize (blocks * bs);
 
-		uint threshold = 0;
-		if (max_unsat > delta) threshold = max_unsat - delta;
-
-		for (uint bit = 0; bit < cs; ++bit) {
-			if (unsat[bit] <= threshold) continue;
-
-			/*
-			 * heavy trickery starts here, we carefully
-			 * modify the state to avoid necessity of
-			 * recomputation as a whole.
-			 */
-
-			uint blk = bit / bs, blkpos = bit % bs;
-
-			//adjust the error counts that were
-			//caused by this column of H
-			for (uint hpos : Hsp[blk]) {
-				hpos += blkpos;
-				//decide whether there's 1 or 0
-				bool increase = !syndrome[hpos % bs];
-				for (uint b2 = 0; b2 < blocks; ++b2)
-					for (uint h2 : Hsp[b2]) {
-						unsigned&
-						ref = unsat
-						      [b2 * bs
-						       + (hpos + bs - h2) % bs];
-						if (increase) ++ref;
-						else --ref;
-					}
-
-				//and flip it
-				syndrome.flip (hpos % bs);
+		//recompute the correlations
+		unsigned max_unsat = 0;
+		for (i = 0; i < blocks; ++i) {
+			vector<dcx> res, cnts;
+			fft (H[i], res);
+			for (j = 0; j < bs; ++j) res[j] *= synd_diag[j] / (double) bs;
+			fft (false, res, cnts);
+			for (j = 0; j < bs; ++j) {
+				unsigned cnt = round (cnts[j].real());
+				unsat[i * bs + (bs - j) % bs] = cnt;
+				if (cnt > max_unsat) max_unsat = cnt;
 			}
-
-			//fix the bit
-			in.flip (bit);
 		}
+
+		if (!max_unsat) {
+			R = 0;
+			break;
+		}
+		if(R>=rounds) break;
+
+		//flip bits with at least $threshold unsatisfied eqns.
+		uint threshold = 1;
+		if (max_unsat > delta) threshold = max_unsat - delta;
+		for (i = 0; i < blocks * bs; ++i)
+			if (unsat[i] >= threshold) in.flip (i);
+
 	}
 
-	if (round == rounds) return 4; //we simply failed, haha.
+	if (R == rounds) return 4; //we simply failed, haha.
 
 	errors = in_orig;
 	errors.add (in); //get the difference

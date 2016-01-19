@@ -88,6 +88,12 @@ void print_help (char*pname)
  * testing
  */
 
+#include "mce_qcmdpc.h"
+#include "generator.h"
+
+#include "iohelpers.h"
+#include "ios.h"
+
 void test()
 {
 	/*
@@ -96,6 +102,27 @@ void test()
 	 * It gets executed by the -T parameter.
 	 * Other places suck for that purpose.
 	 */
+
+	bvector b, c, d, e;
+	mce_qcmdpc::privkey Priv;
+	mce_qcmdpc::pubkey Pub;
+	ccr_rng r;
+	r.seed (10);
+
+	mce_qcmdpc::generate (Pub, Priv, r, 4801, 2, 45, 84, 6, 5);
+
+	out ("G: " << Pub.G[0]);
+	out ("H[0]: " << Priv.H[0]);
+	out ("H[1]: " << Priv.H[1]);
+
+	b.resize (Pub.plain_size(), 0);
+	b[0] = 1;
+	out ("b: " << b);
+	Pub.encrypt (b, c, r);
+	out ("c: " << c);
+	out ("decrypt: " << Priv.decrypt (c, d, e));
+	out ("d: " << d);
+	out ("e: " << e);
 }
 
 /*
