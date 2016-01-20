@@ -1,6 +1,14 @@
 
 Codecrypt ChangeLog
 
+1.7.2
+
+- better autoconfiguration of crypto++ include path
+- support redirection to `-'
+- add -E option
+- update docs a bit
+- correctly escape outputs
+
 1.7.1
 
 - rewrite QC-MDPC decoding for speed (still around O(wi^2))
