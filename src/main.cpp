@@ -93,6 +93,7 @@ void print_help (char*pname)
 #include "iohelpers.h"
 
 extern int qcmdpc_iter_counter;
+extern int qcmdpc_flip_counter;
 
 void test()
 {
@@ -110,13 +111,15 @@ void test()
 	bvector b, c, d;
 
 	int total_rounds = 0;
+	int total_flips = 0;
 	int failures = 0;
 	int successes = 0;
 
-	for (int rnd = 0; rnd < 100; ++rnd) {
+	for (int rnd = 0; rnd < 50; ++rnd) {
 		mce_qcmdpc::generate (Pub, Priv, r, 9857, 2, 71, 134, 25, 4);
+		//mce_qcmdpc::generate (Pub, Priv, r, 32771, 2, 137, 264, 40, 4);
 		b.resize (Pub.plain_size(), 0);
-		for (int enc = 0; enc < 100; ++enc) {
+		for (int enc = 0; enc < 50; ++enc) {
 			//generate a new plaintext
 			for (int flip = 0; flip < 100; ++flip)
 				b.flip (r.random (Pub.plain_size()));
@@ -125,13 +128,16 @@ void test()
 			else {
 				++successes;
 				total_rounds += qcmdpc_iter_counter;
+				total_flips += qcmdpc_flip_counter;
 				out ("rounds " << qcmdpc_iter_counter);
+				out ("flips " << qcmdpc_flip_counter);
 			}
 		}
 	}
 	out ("failures " << failures);
 	out ("successes " << successes);
 	out ("total_rounds " << total_rounds);
+	out ("total_flips " << total_flips);
 }
 
 /*

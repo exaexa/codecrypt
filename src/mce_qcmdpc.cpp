@@ -191,6 +191,7 @@ int privkey::decrypt (const bvector & in, bvector & out)
 #include <list>
 
 int qcmdpc_iter_counter;
+int qcmdpc_flip_counter;
 
 int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 {
@@ -253,6 +254,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 		}
 
 	qcmdpc_iter_counter = 0;
+	qcmdpc_flip_counter = 0;
 	uint round;
 	for (round = 0;; ++round) {
 
@@ -301,6 +303,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 
 			//fix the bit
 			in.flip (bit);
+			++qcmdpc_flip_counter;
 		}
 	}
 
