@@ -88,6 +88,12 @@ void print_help (char*pname)
  * testing
  */
 
+#include "mce_qcmdpc.h"
+#include "generator.h"
+#include "iohelpers.h"
+
+extern int qcmdpc_iter_counter;
+
 void test()
 {
 	/*
@@ -96,6 +102,36 @@ void test()
 	 * It gets executed by the -T parameter.
 	 * Other places suck for that purpose.
 	 */
+
+	mce_qcmdpc::privkey Priv;
+	mce_qcmdpc::pubkey Pub;
+	ccr_rng r;
+	r.seed (32);
+	bvector b, c, d;
+
+	int total_rounds = 0;
+	int failures = 0;
+	int successes = 0;
+
+	for (int rnd = 0; rnd < 100; ++rnd) {
+		mce_qcmdpc::generate (Pub, Priv, r, 9857, 2, 71, 134, 25, 4);
+		b.resize (Pub.plain_size(), 0);
+		for (int enc = 0; enc < 100; ++enc) {
+			//generate a new plaintext
+			for (int flip = 0; flip < 100; ++flip)
+				b.flip (r.random (Pub.plain_size()));
+			Pub.encrypt (b, c, r);
+			if (Priv.decrypt (c, d)) ++failures;
+			else {
+				++successes;
+				total_rounds += qcmdpc_iter_counter;
+				out ("rounds " << qcmdpc_iter_counter);
+			}
+		}
+	}
+	out ("failures " << failures);
+	out ("successes " << successes);
+	out ("total_rounds " << total_rounds);
 }
 
 /*

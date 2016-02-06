@@ -190,6 +190,8 @@ int privkey::decrypt (const bvector & in, bvector & out)
 #include <vector>
 #include <list>
 
+int qcmdpc_iter_counter;
+
 int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 {
 	uint i, j;
@@ -250,6 +252,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 					++unsat[blk * bs + (j + bs - i) % bs];
 		}
 
+	qcmdpc_iter_counter = 0;
 	uint round;
 	for (round = 0;; ++round) {
 
@@ -299,6 +302,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 		}
 	}
 
+	qcmdpc_iter_counter = round;
 
 	errors = in_orig;
 	errors.add (in); //get the difference
