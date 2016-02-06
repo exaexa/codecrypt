@@ -251,13 +251,13 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 		}
 
 	uint round;
-	for (round = 0; round < rounds; ++round) {
+	for (round = 0;; ++round) {
 
 		uint max_unsat = 0;
 		for (i = 0; i < cs; ++i)
 			if (unsat[i] > max_unsat) max_unsat = unsat[i];
-		if (!max_unsat) break;
-		if (max_unsat > bs) return 3;
+		if (!max_unsat) break; //success
+		if (round >= rounds) return 3; //decoding failure
 		//TODO do something about possible timing attacks
 
 		uint threshold = 0;
@@ -299,7 +299,6 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 		}
 	}
 
-	if (round == rounds) return 4; //we simply failed, haha.
 
 	errors = in_orig;
 	errors.add (in); //get the difference
