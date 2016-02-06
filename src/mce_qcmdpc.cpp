@@ -242,7 +242,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 	 * FFT would be a cool candidate.
 	 */
 
-	vector<unsigned> unsat;
+	vector<unsigned> unsat, round_unsat;
 	unsat.resize (cs, 0);
 
 	for (uint blk = 0; blk < blocks; ++blk)
@@ -266,8 +266,10 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 		uint threshold = 0;
 		if (max_unsat > delta) threshold = max_unsat - delta;
 
+		round_unsat = unsat;
+
 		for (uint bit = 0; bit < cs; ++bit) {
-			if (unsat[bit] <= threshold) continue;
+			if (round_unsat[bit] <= threshold) continue;
 
 			/*
 			 * heavy trickery starts here, we carefully
