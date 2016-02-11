@@ -9,7 +9,7 @@ Homepage: http://e-x-a.org/codecrypt
 Package: codecrypt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libgmp10, libcrypto++9v5, libfftw3-double3
-Description: Encryption and signing tool using post-quantum cryptography.
+Description: post-quantum encryption&signing tool
  Codecrypt is a quantum-computer-resistant cryptography tool that can be used
  to encrypt, decrypt, sign and verify documents and communications in a manner
  similar to GnuPG or PGP.

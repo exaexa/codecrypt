@@ -121,13 +121,13 @@ When doing "generate", "encrypt" or "decrypt" operation, do not encrypt
 asymmetrically, but instead generate or use a file with a key for specified
 symmetric cipher. Use "-g help" to see available symmetric primitives. For
 symmetric encryption to work, at least one stream cipher (marked with C) and at
-least one hash function (marked with H, used to protect agains malleability)
+least one hash function (marked with H, used to protect against malleability)
 separated by comma need to be selected. Additionally, user can specify
 "longblock" or "shortblock" keyword to manipulate size of internal encryption
 block structure (longer blocks consume more RAM, but the ciphertext doesn't
 grow very much); or the "longkey" flag which creates larger symmetric key to
 provide more key material to the ciphers (which can help to protect against
-low-quality random numbers, but is generally unneccesary and even considered to
+low-quality random numbers, but is generally unnecessary and even considered to
 be a bad practice). It is also possible to combine more stream ciphers and hash
 functions.
 
