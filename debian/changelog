@@ -1,11 +1,11 @@
-codecrypt (1.7.2-1) UNRELEASED; urgency=low
+codecrypt (1.7.2) unstable; urgency=low
 
   * Imported Upstream version 1.7.2
   * Fixed the libfftw3 dependency
 
  -- Mirek Kratochvil <exa.exa@gmail.com>  Wed, 10 Feb 2016 22:19:43 +0100
 
-codecrypt (1.6.1-1) UNRELEASED; urgency=low
+codecrypt (1.6.1) unstable; urgency=low
 
   * Initial release
 
