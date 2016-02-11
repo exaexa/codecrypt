@@ -1,0 +1,15 @@
+Source: codecrypt
+Section: utils
+Priority: optional
+Maintainer: Mirek Kratochvil <exa.exa@gmail.com>
+Build-Depends: debhelper (>= 9), autotools-dev, libgmp-dev, libcrypto++-dev, libfftw3-dev
+Standards-Version: 3.9.6
+Homepage: http://e-x-a.org/codecrypt
+
+Package: codecrypt
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libgmp10, libcrypto++9v5, libfftw3-double3
+Description: Encryption and signing tool using post-quantum cryptography.
+ Codecrypt is a quantum-computer-resistant cryptography tool that can be used
+ to encrypt, decrypt, sign and verify documents and communications in a manner
+ similar to GnuPG or PGP.

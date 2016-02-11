@@ -1,0 +1,12 @@
+codecrypt (1.7.2-1) UNRELEASED; urgency=low
+
+  * Imported Upstream version 1.7.2
+  * Fixed the libfftw3 dependency
+
+ -- Mirek Kratochvil <exa.exa@gmail.com>  Wed, 10 Feb 2016 22:19:43 +0100
+
+codecrypt (1.6.1-1) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- Mirek Kratochvil <exa.exa@gmail.com>  Sat, 25 Apr 2015 10:04:19 +0200
