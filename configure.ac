@@ -1,6 +1,6 @@
 
 AC_PREREQ(2.6)
-AC_INIT([codecrypt], [1.7.2])
+AC_INIT([codecrypt], [1.7.3])
 AC_CONFIG_AUX_DIR(.) # because of libtoolize
 AC_CONFIG_MACRO_DIR([m4])
 

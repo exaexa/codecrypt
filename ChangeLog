@@ -1,6 +1,10 @@
 
 Codecrypt ChangeLog
 
+1.7.3
+
+- tiny fixes in mce_qcmdpc to improve decoding
+
 1.7.2
 
 - better autoconfiguration of crypto++ include path

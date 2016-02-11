@@ -1,3 +1,9 @@
+codecrypt (1.7.3) unstable; urgency=low
+
+  * upstream version 1.7.3
+
+ -- Mirek Kratochvil <exa.exa@gmail.com>  Thu, 11 Feb 2016 20:25:55 +0100
+
 codecrypt (1.7.2) unstable; urgency=low
 
   * Imported Upstream version 1.7.2
