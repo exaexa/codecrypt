@@ -10,12 +10,15 @@ if [ -z "$1" ] ; then
 fi
 
 OUT_DIR=debian-packages
-NV="codecrypt-$1"
+N="codecrypt"
+V="$1"
+NV="$N-$V"
 DIST="$NV.tar.gz"
+ORIG="$OUT_DIR/${N}_$V.orig.tar.gz"
 
 mkdir -p "$OUT_DIR" && \
 make dist && \
-cp "$DIST" "$OUT_DIR" && \
+cp "$DIST" "$ORIG" && \
 tar xzf "$DIST" -C "$OUT_DIR" && \
 cp -a debian "$OUT_DIR/$NV/" && \
 cd "$OUT_DIR/$NV" && \

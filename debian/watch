@@ -1,0 +1,4 @@
+version=3
+http://e-x-a.org/codecrypt/files/codecrypt-(.+)\.tar\.gz \
+  debian uupdate
+
