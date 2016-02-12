@@ -2,7 +2,7 @@ Source: codecrypt
 Section: utils
 Priority: optional
 Maintainer: Mirek Kratochvil <exa.exa@gmail.com>
-Build-Depends: debhelper (>= 9), autotools-dev, libgmp-dev, libcrypto++-dev, libfftw3-dev
+Build-Depends: debhelper (>= 9), autotools-dev, pkg-config, libgmp-dev, libcrypto++-dev, libfftw3-dev
 Standards-Version: 3.9.6
 Homepage: http://e-x-a.org/codecrypt
 
