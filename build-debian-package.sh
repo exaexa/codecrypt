@@ -1,17 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 
-# run this in source directory to easily make the debian package&pals.
-# be sure the source is configured before running.
-
-if [ -z "$1" ] ; then
-	echo "usage: $0 <version>"
-	echo "e.g.: $0 0.1.2"
-	exit 1
-fi
+# Run this in source directory to easily make the debian package&pals. Be sure
+# the source is ./configured before running. Latest upstream version ($V here)
+# in debian/changelog must be equal to the version listed in configure.ac.
 
 OUT_DIR=debian-packages
-N="codecrypt"
-V="$1"
+N=`dpkg-parsechangelog --show-field Source`
+VD=`dpkg-parsechangelog --show-field Version`
+V="${VD%-*}"
 NV="$N-$V"
 DIST="$NV.tar.gz"
 ORIG="$OUT_DIR/${N}_$V.orig.tar.gz"
@@ -25,4 +21,4 @@ cd "$OUT_DIR/$NV" && \
 debuild && \
 cd .. && \
 rm -r "$NV" && \
-echo "ready?"
+echo "READY?" #z80?
