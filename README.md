@@ -20,6 +20,12 @@ Go read http://pqcrypto.org/
  - infopage: http://e-x-a.org/codecrypt/
  - *package downloads*: http://e-x-a.org/codecrypt/files/
 
+#### Distro packages
+
+ - Gentoo packages: https://packages.gentoo.org/packages/app-crypt/codecrypt with current ebuild usually available at http://e-x-a.org/codecrypt/files
+ - Debian packages: currently in mentors processing, use `debian/rules mk-orig-source && gbp buildpackage`.
+ - Arch linux: see https://aur.archlinux.org/packages/codecrypt/
+
 #### Documentation
 
 There is a complete, UNIXy manual page supplied with the package. You can view it online here: http://e-x-a.org/codecrypt/ccr.1.html

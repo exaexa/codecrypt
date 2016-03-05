@@ -9,6 +9,14 @@ config.log
 config.status
 config.sub
 configure
+debian/autoreconf.after
+debian/autoreconf.before
+debian/codecrypt/
+debian/codecrypt.debhelper.log
+debian/codecrypt.substvars
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
 debian-packages/
 depcomp
 INSTALL
