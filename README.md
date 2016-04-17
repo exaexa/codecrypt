@@ -14,7 +14,29 @@ quantum-computer-resistant algorithms:
 Codecrypt is free software. The code is licensed under terms of LGPL3 in a good
 hope that it will make combinations with other tools easier.
 
-##### Used cryptography
+#### Why this?
+
+Go read http://pqcrypto.org/
+
+#### Links
+
+ - infopage: http://e-x-a.org/codecrypt/
+ - *package downloads*: http://e-x-a.org/codecrypt/files/
+
+#### Distro packages
+
+ - Gentoo packages: https://packages.gentoo.org/packages/app-crypt/codecrypt
+   with current ebuild usually available at http://e-x-a.org/codecrypt/files
+ - Debian packages: currently in mentors processing, use `debian/rules
+   mk-orig-source && gbp buildpackage`.
+ - Arch linux: see https://aur.archlinux.org/packages/codecrypt/
+
+#### Documentation
+
+There is a complete, UNIXy manual page supplied with the package. You can view
+it online here: http://e-x-a.org/codecrypt/ccr.1.html
+
+##### Used cryptography overview
 
 To achieve the stated goal, codecrypt uses a lot of (traditional, but
 "quantum-secure") cryptographic primitives. Choices of primitives were based on
@@ -65,28 +87,6 @@ Caveats:
 
 Cryptography is **not intended for "online" use**, because some algorithms
 (especially the MDPC decoding) are (slightly) vulnerable to timing attacks.
-
-#### Why this?
-
-Go read http://pqcrypto.org/
-
-#### Links
-
- - infopage: http://e-x-a.org/codecrypt/
- - *package downloads*: http://e-x-a.org/codecrypt/files/
-
-#### Distro packages
-
- - Gentoo packages: https://packages.gentoo.org/packages/app-crypt/codecrypt
-   with current ebuild usually available at http://e-x-a.org/codecrypt/files
- - Debian packages: currently in mentors processing, use `debian/rules
-   mk-orig-source && gbp buildpackage`.
- - Arch linux: see https://aur.archlinux.org/packages/codecrypt/
-
-#### Documentation
-
-There is a complete, UNIXy manual page supplied with the package. You can view
-it online here: http://e-x-a.org/codecrypt/ccr.1.html
 
 ## Quick How-To
 
