@@ -11,6 +11,61 @@ quantum-computer-resistant algorithms:
  - McEliece cryptosystem (compact QC-MDPC variant) for encryption
  - Hash-based Merkle tree algorithm (FMTSeq variant) for digital signatures
 
+Codecrypt is free software. The code is licensed under terms of LGPL3 in a good
+hope that it will make combinations with other tools easier.
+
+##### Used cryptography
+
+To achieve the stated goal, codecrypt uses a lot of (traditional, but
+"quantum-secure") cryptographic primitives. Choices of primitives were based on
+easy auditability of design, simplicity and provided security.
+
+The git repo of codecrypt contains `doc/papers` with an unsorted heap of
+academic papers and slides about relevant topics.
+
+Stream ciphers used:
+
+- ChaCha20, the recommended choice from djb
+- XSynd stream cipher as an interesting and nontraditional candidate also based
+  on assumptions from coding theory; used NUMS (it requires lot of NUMS) are
+  explained in `doc/nums` directory in the repo.
+- Arcfour for initial simplicity of implementation. After recent statistical
+  attacks I cannot recommend using any RC4 variant anymore, but provided
+  padding and the "offline-only" usage of codecrypt keeps the usage mostly
+  secure.
+
+CRHFs used:
+
+- Cubehash variants where selected for implementation ease, really clean
+  design, quite good speed and flexibility of parameter choices. This is also
+  the only hash possibility when Crypto++ library is not linked to codecrypt.
+  KeyID's are CUBE256 hashes of serialized public key.
+- ripemd128 for small hashes
+- tiger192 is used as an alternative for Cubehash for 192bit hashes
+- There's always a variant with SHA-256, SHA-384 or SHA-512.
+
+Signature algorithms:
+
+- FMTSeq with many possibilities and combinations of aforementioned CRHFs
+- SPHINCS256 support is scheduled for next release
+
+Encryption algorithms:
+
+- MDPC McEliece on quasi-cyclic matrices. The implementation uses some tricks
+  to speedup the (pretty slow) cyclic matrix multiplication (most notably
+  libfftm3 in this version). For padding using the Fujisaki-Okamoto scheme, the
+  cipher requires a stream cipher and a CRHF, used ciphers and CRHFs are
+  specified in the algorithm name -- e.g. MCEQCMDPC128FO-CUBE256-CHACHA20 means
+  that the parameters are tuned to provide 128bit security, uses CUBE256 hash,
+  and ChaCha20 stream cipher.
+- Quasi-dyadic McEliece was included in codecrypt as an original algorithm, but
+  is now broken and prints a warning message on any usage.
+
+Caveats:
+
+Cryptography is **not intended for "online" use**, because some algorithms
+(especially the MDPC decoding) are (slightly) vulnerable to timing attacks.
+
 #### Why this?
 
 Go read http://pqcrypto.org/
@@ -22,13 +77,16 @@ Go read http://pqcrypto.org/
 
 #### Distro packages
 
- - Gentoo packages: https://packages.gentoo.org/packages/app-crypt/codecrypt with current ebuild usually available at http://e-x-a.org/codecrypt/files
- - Debian packages: currently in mentors processing, use `debian/rules mk-orig-source && gbp buildpackage`.
+ - Gentoo packages: https://packages.gentoo.org/packages/app-crypt/codecrypt
+   with current ebuild usually available at http://e-x-a.org/codecrypt/files
+ - Debian packages: currently in mentors processing, use `debian/rules
+   mk-orig-source && gbp buildpackage`.
  - Arch linux: see https://aur.archlinux.org/packages/codecrypt/
 
 #### Documentation
 
-There is a complete, UNIXy manual page supplied with the package. You can view it online here: http://e-x-a.org/codecrypt/ccr.1.html
+There is a complete, UNIXy manual page supplied with the package. You can view
+it online here: http://e-x-a.org/codecrypt/ccr.1.html
 
 ## Quick How-To
 
