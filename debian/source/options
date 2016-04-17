@@ -1,1 +1,0 @@
-extend-diff-ignore = "^(doc|m4)/|^(config|README)\b|^(depcomp|missing|install-sh|compile|INSTALL|ltmain.sh)$|\.tar\.gz$"
