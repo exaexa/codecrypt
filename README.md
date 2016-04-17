@@ -27,8 +27,7 @@ Go read http://pqcrypto.org/
 
  - Gentoo packages: https://packages.gentoo.org/packages/app-crypt/codecrypt
    with current ebuild usually available at http://e-x-a.org/codecrypt/files
- - Debian packages: currently in mentors processing, use `debian/rules
-   mk-orig-source && gbp buildpackage`.
+ - Debian packages: currently in mentors processing and separate repo
  - Arch linux: see https://aur.archlinux.org/packages/codecrypt/
 
 #### Documentation
