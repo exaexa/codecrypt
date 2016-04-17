@@ -111,8 +111,9 @@ For completeness I add listing of all options here (also available from
 	                    hashes, and specify a filename of symmetric key or hashes
 
 	Key management:
-	 -g, --gen-key        generate specified keypair, `help' lists algorithms
-	 -k, --list           list keys
+	 -g, --gen-key        generate keys for specified algorithm
+	 -g help              list available cryptographic algorithms
+	 -k, --list           list contents of keyring
 	 -K, --list-secret
 	 -i, --import         import keys
 	 -I, --import-secret

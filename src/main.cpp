@@ -62,8 +62,9 @@ void print_help (char*pname)
 	out ("                    hashes, and specify a filename of symmetric key or hashes");
 	outeol;
 	out ("Key management:");
-	out (" -g, --gen-key        generate specified keypair, `help' lists algorithms");
-	out (" -k, --list           list keys");
+	out (" -g, --gen-key        generate keys for specified algorithm");
+	out (" -g help              list available cryptographic algorithms");
+	out (" -k, --list           list the contents of keyring");
 	out (" -K, --list-secret");
 	out (" -i, --import         import keys");
 	out (" -I, --import-secret");
