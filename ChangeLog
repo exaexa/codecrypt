@@ -1,6 +1,10 @@
 
 Codecrypt ChangeLog
 
+1.7.4
+
+- maintenance release that fixes some cosmetic issues for debianization
+
 1.7.3
 
 - tiny fixes in mce_qcmdpc to improve decoding
