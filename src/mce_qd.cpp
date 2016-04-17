@@ -32,8 +32,8 @@ static void print_attack_warning()
 	if (printed) return;
 	err ("\n***MCEQD SECURITY WARNING***\n\n"
 	     "Security of the QD-McEliece variant was greatly reduced to less than 2^30\n"
-	     "by an algebraic attack! The functions are kept only for compatibility.\n"
-	     "Be sure to use another encryption variant instead.");
+	     "by an algebraic attack! The functions are kept only for compatibility\n"
+	     "and will be removed soon. Use `-g help' for other encryption variants.");
 	printed = true;
 }
 
