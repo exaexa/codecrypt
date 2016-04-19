@@ -190,7 +190,7 @@ For completeness I add listing of all options here (also available from
 
 ## Disclaimer
 
-Codecrypt eats data. Use it with caution.
+Codecrypt eats data. Use it with caution. Read the F manual.
 
 Author is a self-taught cryptographer.
 
