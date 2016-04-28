@@ -25,7 +25,6 @@
 #include "gf2m.h"
 #include "polynomial.h"
 #include "permutation.h"
-#include "mce_qd.h"
 #include "mce_qcmdpc.h"
 #include "fmtseq.h"
 #include "message.h"
@@ -167,95 +166,6 @@ bool polynomial::unserialize (sencode* s)
 #define PUBKEY_IDENT "CCR-PUBLIC-KEY-"
 #define PRIVKEY_IDENT "CCR-PRIVATE-KEY-"
 
-sencode* mce_qd::privkey::serialize()
-{
-	sencode_list*l = new sencode_list;
-	l->items.resize (7);
-	l->items[0] = new sencode_bytes (PRIVKEY_IDENT "QD-MCE");
-	l->items[1] = fld.serialize();
-	l->items[2] = new sencode_int (T);
-	l->items[3] = serialize_uint_vector (&essence);
-	l->items[4] = block_perm.serialize();
-	l->items[5] = serialize_uint_vector (&block_perms);
-	l->items[6] = hperm.serialize();
-	return l;
-}
-
-bool mce_qd::privkey::unserialize (sencode* s)
-{
-	sencode_list*CAST_LIST (s, l);
-	if (l->items.size() != 7) return false;
-
-	sencode_bytes*CAST_BYTES (l->items[0], ident);
-	if (ident->b.compare (PRIVKEY_IDENT "QD-MCE")) return false;
-
-	sencode_int*CAST_INT (l->items[2], p);
-	T = p->i;
-
-	if (! (fld.unserialize (l->items[1]) &&
-	       unserialize_uint_vector (&essence, l->items[3]) &&
-	       block_perm.unserialize (l->items[4]) &&
-	       unserialize_uint_vector (&block_perms, l->items[5]) &&
-	       hperm.unserialize (l->items[6]))) return false;
-
-	return true;
-}
-
-sencode* mce_qd::pubkey::serialize()
-{
-	sencode_list*l = new sencode_list;
-	l->items.resize (3);
-	l->items[0] = new sencode_bytes (PUBKEY_IDENT "QD-MCE");
-	l->items[1] = new sencode_int (T);
-	l->items[2] = qd_sigs.serialize();
-	return l;
-}
-
-bool mce_qd::pubkey::unserialize (sencode*s)
-{
-	sencode_list*CAST_LIST (s, l);
-	if (l->items.size() != 3) return false;
-
-	sencode_bytes*CAST_BYTES (l->items[0], ident);
-	if (ident->b.compare (PUBKEY_IDENT "QD-MCE")) return false;
-
-	sencode_int*CAST_INT (l->items[1], p);
-	T = p->i;
-
-	if (!qd_sigs.unserialize (l->items[2])) return false;
-
-	return true;
-}
-
-sencode* fmtseq::privkey::tree_stk_item::serialize()
-{
-	sencode_list*l = new sencode_list;
-	l->items.resize (3);
-	l->items[0] = new sencode_int (level);
-	l->items[1] = new sencode_int (pos);
-	l->items[2] = new sencode_bytes (item);
-	return l;
-}
-
-bool fmtseq::privkey::tree_stk_item::unserialize (sencode*s)
-{
-	sencode_list*CAST_LIST (s, l);
-	if (l->items.size() != 3) return false;
-
-	sencode_int*p;
-	CAST_INT (l->items[0], p);
-	level = p->i;
-
-	CAST_INT (l->items[1], p);
-	pos = p->i;
-
-	sencode_bytes* CAST_BYTES (l->items[2], a);
-	item = std::vector<byte> (a->b.begin(), a->b.end());
-
-	return true;
-
-}
-
 sencode* mce_qcmdpc::pubkey::serialize()
 {
 	sencode_list*l = new sencode_list;
@@ -316,6 +226,34 @@ bool mce_qcmdpc::privkey::unserialize (sencode*s)
 	return true;
 }
 
+sencode* fmtseq::privkey::tree_stk_item::serialize()
+{
+	sencode_list*l = new sencode_list;
+	l->items.resize (3);
+	l->items[0] = new sencode_int (level);
+	l->items[1] = new sencode_int (pos);
+	l->items[2] = new sencode_bytes (item);
+	return l;
+}
+
+bool fmtseq::privkey::tree_stk_item::unserialize (sencode*s)
+{
+	sencode_list*CAST_LIST (s, l);
+	if (l->items.size() != 3) return false;
+
+	sencode_int*p;
+	CAST_INT (l->items[0], p);
+	level = p->i;
+
+	CAST_INT (l->items[1], p);
+	pos = p->i;
+
+	sencode_bytes* CAST_BYTES (l->items[2], a);
+	item = std::vector<byte> (a->b.begin(), a->b.end());
+
+	return true;
+
+}
 
 sencode* fmtseq::privkey::serialize()
 {

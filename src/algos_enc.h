@@ -49,16 +49,6 @@ public: \
  * SHA-based variants
  */
 
-mce_alg_class (qd128, "MCEQD128FO-SHA256-ARCFOUR");
-mce_alg_class (qd192, "MCEQD192FO-SHA384-ARCFOUR");
-mce_alg_class (qd256, "MCEQD256FO-SHA512-ARCFOUR");
-mce_alg_class (qd128cha, "MCEQD128FO-SHA256-CHACHA20");
-mce_alg_class (qd192cha, "MCEQD192FO-SHA384-CHACHA20");
-mce_alg_class (qd256cha, "MCEQD256FO-SHA512-CHACHA20");
-mce_alg_class (qd128xs, "MCEQD128FO-SHA256-XSYND");
-mce_alg_class (qd192xs, "MCEQD192FO-SHA384-XSYND");
-mce_alg_class (qd256xs, "MCEQD256FO-SHA512-XSYND");
-
 mce_alg_class (qcmdpc128, "MCEQCMDPC128FO-SHA256-ARCFOUR");
 mce_alg_class (qcmdpc256, "MCEQCMDPC256FO-SHA512-ARCFOUR");
 mce_alg_class (qcmdpc128cha, "MCEQCMDPC128FO-SHA256-CHACHA20");
@@ -71,16 +61,6 @@ mce_alg_class (qcmdpc256xs, "MCEQCMDPC256FO-SHA512-XSYND");
 /*
  * Cubehash-based variants
  */
-
-mce_alg_class (qd128cube, "MCEQD128FO-CUBE256-ARCFOUR");
-mce_alg_class (qd192cube, "MCEQD192FO-CUBE384-ARCFOUR");
-mce_alg_class (qd256cube, "MCEQD256FO-CUBE512-ARCFOUR");
-mce_alg_class (qd128cubecha, "MCEQD128FO-CUBE256-CHACHA20");
-mce_alg_class (qd192cubecha, "MCEQD192FO-CUBE384-CHACHA20");
-mce_alg_class (qd256cubecha, "MCEQD256FO-CUBE512-CHACHA20");
-mce_alg_class (qd128cubexs, "MCEQD128FO-CUBE256-XSYND");
-mce_alg_class (qd192cubexs, "MCEQD192FO-CUBE384-XSYND");
-mce_alg_class (qd256cubexs, "MCEQD256FO-CUBE512-XSYND");
 
 mce_alg_class (qcmdpc128cube, "MCEQCMDPC128FO-CUBE256-ARCFOUR");
 mce_alg_class (qcmdpc256cube, "MCEQCMDPC256FO-CUBE512-ARCFOUR");

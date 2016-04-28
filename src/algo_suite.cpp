@@ -28,16 +28,6 @@ void fill_algorithm_suite (algorithm_suite&s)
 #define do_alg(x) static x var_##x ; var_##x.register_into_suite(s);
 
 #if HAVE_CRYPTOPP==1
-	do_alg (algo_mceqd128);
-	do_alg (algo_mceqd192);
-	do_alg (algo_mceqd256);
-	do_alg (algo_mceqd128cha);
-	do_alg (algo_mceqd192cha);
-	do_alg (algo_mceqd256cha);
-	do_alg (algo_mceqd128xs);
-	do_alg (algo_mceqd192xs);
-	do_alg (algo_mceqd256xs);
-
 	do_alg (algo_mceqcmdpc128);
 	do_alg (algo_mceqcmdpc256);
 	do_alg (algo_mceqcmdpc128cha);
@@ -52,17 +42,6 @@ void fill_algorithm_suite (algorithm_suite&s)
 	do_alg (algo_fmtseq192h20);
 	do_alg (algo_fmtseq256h20);
 #endif //HAVE_CRYPTOPP==1
-
-	do_alg (algo_mceqd128cube);
-	do_alg (algo_mceqd192cube);
-	do_alg (algo_mceqd256cube);
-	do_alg (algo_mceqd128cubecha);
-	do_alg (algo_mceqd192cubecha);
-	do_alg (algo_mceqd256cubecha);
-	do_alg (algo_mceqd128cubexs);
-	do_alg (algo_mceqd192cubexs);
-	do_alg (algo_mceqd256cubexs);
-
 	do_alg (algo_mceqcmdpc128cube);
 	do_alg (algo_mceqcmdpc256cube);
 	do_alg (algo_mceqcmdpc128cubecha);
