@@ -25,10 +25,6 @@
 
 #include <stdint.h>
 
-#if __BYTE_ORDER__!=__ORDER_LITTLE_ENDIAN__
-#error "Only for little endian now, sorry."
-#endif
-
 #define ROT(a,b,n) (((a) << (b)) | ((a) >> (n - b)))
 #define i16(cmd) for(i=0;i<16;++i) cmd;
 
@@ -86,7 +82,14 @@ public:
 		int i;
 
 		for (i = 0; i + 4 <= B; i += 4)
+#if __BYTE_ORDER__==__ORDER_LITTLE_ENDIAN__  //allow a small speedup for LE architectures
 			X[i / 4] ^= * (uint32_t*) &data[i];
+#else
+			X[i / 4] ^= (uint32_t) data[i]
+			            | ( (uint32_t) data[i + 1]) << 8
+			            | ( (uint32_t) data[i + 2]) << 16
+			            | ( (uint32_t) data[i + 3]) << 24;
+#endif
 
 		for (; i < B; ++i)
 			X[i / 4] ^= ( (uint32_t) (data[i])) << ( (i % 4) * 8);
@@ -98,7 +101,14 @@ public:
 		int i;
 
 		for (i = 0; i + 4 <= n; i += 4)
+#if __BYTE_ORDER__==__ORDER_LITTLE_ENDIAN__
 			X[i / 4] ^= * (uint32_t*) &data[i];
+#else
+			X[i / 4] ^= (uint32_t) data[i]
+			            | ( (uint32_t) data[i + 1]) << 8
+			            | ( (uint32_t) data[i + 2]) << 16
+			            | ( (uint32_t) data[i + 3]) << 24;
+#endif
 
 		for (; i < n; ++i)
 			X[i / 4] ^= ( (uint32_t) (data[i])) << ( (i % 4) * 8);
