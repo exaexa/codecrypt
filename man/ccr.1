@@ -361,6 +361,11 @@ A: KeyID algorithm changed after that version. If you want, you can manually
 rewrite the message sencode envelopes to contain new recipient/signer KeyIDs
 and new message identificators, things should work perfectly after that.
 
+Q: I can't read/verify messages from versions 1.7.4 and older!
+
+A: There was a mistake with no security implications in Cubehash
+implementation. Same advice as in previous case applies.
+
 Q: Some signatures from version 1.5 and older fail to verify!
 
 A: There was a slight mistake in padding of messages shorter than signature
@@ -369,6 +374,13 @@ security implications. It was decided not to provide backward compatibility for
 this minor use-case. If you really need to verify such signatures, edit the
 msg_pad function in src/algos_sig.h so that the `load_key()' function is called
 on empty vector instead of `out'.
+
+Q: My Cubehash-based FMTSeq key produces invalid signatures after version
+1.7.5!
+
+A: Cubehash was corrected to obey standards in 1.7.5. It is possible to
+generate a new public key that would work with your private key, but the
+general advice is just to generate a new key.
 
 Q: I want to sign/encrypt a large file but it took all my RAM and takes ages!
 
