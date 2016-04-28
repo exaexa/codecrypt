@@ -1,6 +1,14 @@
 
 Codecrypt ChangeLog
 
+1.7.5
+
+- standardize Cubehash implementation
+	(all implications for FMTSeq keys and KeyIDs are documented in FAQ)
+
+- remove obsolete MCE-QD
+- support big-endian architectures
+
 1.7.4
 
 - maintenance release that fixes some cosmetic issues for debianization
