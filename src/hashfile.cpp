@@ -62,6 +62,10 @@ public:
 		}
 		return r;
 	}
+
+	bool cryptographically_significant() {
+		return false;
+	}
 };
 
 /*
@@ -164,7 +168,8 @@ int hashfile::verify (istream&in)
 			continue;
 		}
 		if (i->second == hm[i->first]->finish()) {
-			++ok;
+			//avoid doing a positive decision on informative-grade-only hashes
+			if (hm[i->first]->cryptographically_significant()) ++ok;
 			err ("hash verification: ;-) "
 			     << i->first << " is GOOD");
 		} else {
