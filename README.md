@@ -102,8 +102,10 @@ margin. Let's play with random data!
 
 	ccr -p -a -o my_pubkeys.asc -F Doe  # export your pubkeys for friends
 
-	#see what people sent us
-	ccr -ina < friends_pubkeys.asc
+	#(now you should exchange the pubkeys with friends)
+
+	#see what people sent us, possibly check the fingerprints
+	ccr -inaf < friends_pubkeys.asc
 
 	#import Frank's key and rename it
 	ccr -ia -R friends_pubkeys.asc --name "Friendly Frank"
