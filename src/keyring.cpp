@@ -2,7 +2,7 @@
 /*
  * This file is part of Codecrypt.
  *
- * Copyright (C) 2013-2016 Mirek Kratochvil <exa.exa@gmail.com>
+ * Copyright (C) 2013-2017 Mirek Kratochvil <exa.exa@gmail.com>
  *
  * Codecrypt is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -405,8 +405,8 @@ static bool file_put_sencode_with_backup (const std::string&fn, sencode*in,
 	std::string data = in->encode();
 	if (data == backup_data) return true; //nothing to do
 
-	return file_put_string (fn, data) &&
-	       file_put_string (backup_fn, backup_data);
+	return file_put_string (backup_fn, backup_data) &&
+	       file_put_string (fn, data);
 }
 
 #ifndef WIN32
