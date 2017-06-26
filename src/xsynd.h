@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 /*
- * XSYND is a stream cipher based on XSYND, the stream cipher with
+ * This is a stream cipher based on XSYND, the stream cipher with
  * mathematicaly provable (AND also proven) security.
  *
  * Parameters chosen for this implementation were chosen to have better attack

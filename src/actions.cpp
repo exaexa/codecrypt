@@ -2,7 +2,7 @@
 /*
  * This file is part of Codecrypt.
  *
- * Copyright (C) 2013-2016 Mirek Kratochvil <exa.exa@gmail.com>
+ * Copyright (C) 2013-2017 Mirek Kratochvil <exa.exa@gmail.com>
  *
  * Codecrypt is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -46,6 +46,8 @@
 #define MSG_CLEARTEXT "MESSAGE-IN-CLEARTEXT"
 #define MSG_DETACHED "MESSAGE-DETACHED"
 
+#define SEED_FAILED { err("error: could not seed PRNG"); return 1; }
+
 inline bool open_keyring (keyring&KR)
 {
 	if (!KR.open()) {
@@ -62,7 +64,7 @@ int action_gen_symkey (const std::string&algspec,
 {
 	symkey sk;
 	ccr_rng r;
-	r.seed (256);
+	if (!r.seed (256)) SEED_FAILED;
 
 	if (!sk.create (algspec, r)) {
 		err ("error: symkey creation failed");
@@ -219,7 +221,7 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 	err ("If nothing happens, move mouse, type random stuff on keyboard,");
 	err ("or just wait longer.");
 
-	r.seed (512, false);
+	if (!r.seed (512, false)) SEED_FAILED;
 
 	err ("Seeding done, generating the key...");
 
@@ -312,7 +314,7 @@ int action_sym_encrypt (const std::string&symmetric, bool armor)
 	sencode_destroy (SK);
 
 	ccr_rng r;
-	r.seed (256);
+	if (!r.seed (256)) SEED_FAILED;
 
 	if (!sk.encrypt (std::cin, std::cout, r)) {
 		err ("error: encryption failed");
@@ -375,7 +377,7 @@ int action_encrypt (const std::string&recipient, bool armor,
 	//encryption part
 	encrypted_msg msg;
 	ccr_rng r;
-	r.seed (256);
+	if (!r.seed (256)) SEED_FAILED;
 
 	bvector plaintext;
 	plaintext.from_string (data);
@@ -589,7 +591,7 @@ int action_hash_sign (bool armor, const std::string&symmetric)
 		parts.resize (1);
 		base64_encode (data, parts[0]);
 		ccr_rng r;
-		r.seed (128);
+		if (!r.seed (256)) SEED_FAILED;
 		data = envelope_format (ENVELOPE_HASHFILE, parts, r);
 	}
 
@@ -679,7 +681,7 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 	//signature production part
 	signed_msg msg;
 	ccr_rng r;
-	r.seed (256);
+	if (!r.seed (256)) SEED_FAILED;
 
 	bvector message;
 	message.from_string (data);
@@ -1120,7 +1122,7 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 	//make a signature
 	signed_msg smsg;
 	ccr_rng r;
-	r.seed (256);
+	if (!r.seed (256)) SEED_FAILED;
 
 	bvector bv;
 	bv.from_string (data);
@@ -1521,7 +1523,7 @@ int action_export (bool armor,
 		parts.resize (1);
 		base64_encode (data, parts[0]);
 		ccr_rng r;
-		r.seed (128);
+		if (!r.seed (256)) SEED_FAILED;
 		data = envelope_format (ENVELOPE_PUBKEYS, parts, r);
 	}
 
@@ -1777,7 +1779,7 @@ int action_export_sec (bool armor, bool yes,
 		parts.resize (1);
 		base64_encode (data, parts[0]);
 		ccr_rng r;
-		r.seed (128);
+		if (!r.seed (256)) SEED_FAILED;
 		data = envelope_format (ENVELOPE_SECRETS, parts, r);
 	}
 

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # simple autogen script that generates basic layout for autotools.
 

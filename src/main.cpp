@@ -2,7 +2,7 @@
 /*
  * This file is part of Codecrypt.
  *
- * Copyright (C) 2013-2016 Mirek Kratochvil <exa.exa@gmail.com>
+ * Copyright (C) 2013-2017 Mirek Kratochvil <exa.exa@gmail.com>
  *
  * Codecrypt is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,7 @@
 void print_version()
 {
 	out ("codecrypt " PACKAGE_VERSION);
-	out ("Copyright (C) 2013-2016 Mirek Kratochvil <exa.exa@gmail.com>");
+	out ("Copyright (C) 2013-2017 Mirek Kratochvil <exa.exa@gmail.com>");
 	out ("This is free software; see the source "
 	     "for copying conditions.  There is NO");
 	out ("warranty; not even for MERCHANTABILITY "

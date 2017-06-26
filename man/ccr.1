@@ -237,8 +237,13 @@ private keyring.
 Backups of user data (i.e. for each file the last state that was loaded
 successfully) are, on each change, written to files "pubkeys~" and "secrets~".
 
-When Codecrypt is running, it locks the .ccr directory using a lockfile "lock"
+When Codecrypt is running, it locks the ".ccr" directory using a lockfile "lock"
 and applying flock(2) to it.
+
+For seeding the random number generator, Codecrypt uses data from "/dev/random"
+for generating keys and "/dev/urandom" for everything else, e.g. nonces or
+envelopes. Both cases can be overriden at once by specifying some other
+filename in environment variable CCR_RANDOM_SEED.
 
 .SH RETURN VALUE
 
@@ -353,6 +358,17 @@ import of keys can bring serious inconsistencies into your key naming scheme.
 In a distant universe after much computation, KeyIDs can collide. If you find
 someone who has a colliding KeyID, kiss him and generate another key.
 
+.SS Own sources of random seed
+
+Using CCR_RANDOM_SEED is slightly counterintuitive and dangerous, use it only
+for debugging.
+
+If your system does not have /dev/(u)random, make a port by choosing a safe
+value in the source code instead of specifying the seed each time you invoke
+Codecrypt.
+
+If the seed source of your system can not be trusted, fix the system instead.
+
 .SH Troubleshooting/FAQ
 
 Q: I can't read/verify messages from versions 1.3.1 and older!
@@ -443,5 +459,5 @@ it with caution.
 
 .SH AUTHORS
 
-Codecrypt was written by Mirek Kratochvil in 2013-2016.
+Codecrypt was written by Mirek Kratochvil in 2013-2017.
 

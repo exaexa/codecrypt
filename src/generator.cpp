@@ -2,7 +2,7 @@
 /*
  * This file is part of Codecrypt.
  *
- * Copyright (C) 2013-2016 Mirek Kratochvil <exa.exa@gmail.com>
+ * Copyright (C) 2013-2017 Mirek Kratochvil <exa.exa@gmail.com>
  *
  * Codecrypt is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -19,16 +19,20 @@
  */
 
 #include "generator.h"
+#include "iohelpers.h"
 
 #include <fstream>
 #include <vector>
+
+#include <string.h> //for strerror
+#include <stdlib.h> //for getenv
 
 static inline uint bytes (uint bits)
 {
 	return (bits >> 3) + ( (bits & 7) ? 1 : 0);
 }
 
-void ccr_rng::seed (uint bits, bool quick)
+bool ccr_rng::seed (uint bits, bool quick)
 {
 	std::vector<byte> s;
 	std::ifstream f;
@@ -36,12 +40,22 @@ void ccr_rng::seed (uint bits, bool quick)
 	uint b = bytes (bits);
 	if (b > 256) b = 256;
 
-	f.open (quick ? "/dev/urandom" : "/dev/random",
-	        std::ios::in | std::ios::binary);
+	char*user_source = getenv ("CCR_RANDOM_SEED");
+	std::string seed_source = user_source ? user_source :
+	                          quick ? "/dev/urandom" :
+	                          "/dev/random";
+
+	f.open (seed_source, std::ios::in | std::ios::binary);
+	if (!f.good()) {
+		err ("opening " << seed_source << " failed: "
+		     << strerror (errno));
+		return false;
+	}
 	s.resize (b);
 	for (uint i = 0; i < b; ++i) f >> s[i];
 	f.close();
 
 	r.load_key_vector (s);
+	return true;
 }
 
