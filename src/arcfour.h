@@ -71,7 +71,7 @@ public:
 		I = (I + 1) & mask;
 		J = (J + S[I]) & mask;
 
-		register inttype t;
+		inttype t;
 		t = S[J];
 		S[J] = S[I];
 		S[I] = t;
