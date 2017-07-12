@@ -289,7 +289,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 						unsigned&
 						ref = unsat
 						      [b2 * bs
-						       + (hpos + bs - h2) % bs];
+						          + (hpos + bs - h2) % bs];
 						if (increase) ++ref;
 						else --ref;
 					}

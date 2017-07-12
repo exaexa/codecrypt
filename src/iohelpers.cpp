@@ -83,7 +83,6 @@ std::string escape_output (const std::string&s)
 				r += "\\x";
 				r += hex[0xf & (s[i] >> 4)];
 				r += hex[0xf & s[i]];
-			}
-		else r += s[i];
+			} else r += s[i];
 	return r;
 }
