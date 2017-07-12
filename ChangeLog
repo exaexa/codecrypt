@@ -1,6 +1,12 @@
 
 Codecrypt ChangeLog
 
+1.7.6
+
+- small improvements in keyring, hash verification and documentation
+- allow user-supplied random seed source
+- fix warnings on clang
+
 1.7.5
 
 - standardize Cubehash implementation
