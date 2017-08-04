@@ -57,10 +57,10 @@ Stream ciphers used:
 
 CRHFs used:
 
-- Cubehash variants where selected for implementation ease, really clean
-  design, quite good speed and flexibility of parameter choices. This is also
-  the only hash possibility when Crypto++ library is not linked to codecrypt.
-  KeyID's are CUBE256 hashes of serialized public key.
+- Cubehash variants were selected for implementation ease, really clean design,
+  quite good speed and flexibility of parameter choices. This is also the only
+  hash possibility when Crypto++ library is not linked to codecrypt.  KeyIDs
+  are CUBE256 hashes of corresponding serialized public keys.
 - ripemd128 for small hashes
 - tiger192 is used as an alternative for Cubehash for 192bit hashes
 - There's always a variant with SHA-256, SHA-384 or SHA-512.
