@@ -29,7 +29,8 @@
 #include "algorithm.h"
 
 int action_gen_key (const std::string& algspec, const std::string&name,
-                    const std::string&symmetric, bool armor,
+                    const std::string&symmetric, const std::string&withlock,
+                    bool armor, bool force_lock,
                     keyring&, algorithm_suite&);
 
 /*
@@ -37,24 +38,25 @@ int action_gen_key (const std::string& algspec, const std::string&name,
  */
 
 int action_encrypt (const std::string&recipient, bool armor,
-                    const std::string&symmetric,
+                    const std::string&symmetric, const std::string&withlock,
                     keyring&, algorithm_suite&);
 
 int action_decrypt (bool armor, const std::string&symmetric,
-                    keyring&, algorithm_suite&);
+                    const std::string&withlock, keyring&, algorithm_suite&);
 
 int action_sign (const std::string&user, bool armor, const std::string&detach,
                  bool clearsign, const std::string&symmetric,
-                 keyring&, algorithm_suite&);
+                 const std::string&withlock, keyring&, algorithm_suite&);
 
 int action_verify (bool armor, const std::string&detach,
                    bool clearsign, bool yes, const std::string&symmetric,
-                   keyring&, algorithm_suite&);
+                   const std::string&withlock, keyring&, algorithm_suite&);
 
 int action_sign_encrypt (const std::string&user, const std::string&recipient,
-                         bool armor, keyring&, algorithm_suite&);
+                         const std::string&withlock, bool armor,
+                         keyring&, algorithm_suite&);
 
-int action_decrypt_verify (bool armor, bool yes,
+int action_decrypt_verify (bool armor, bool yes, const std::string&withlock,
                            keyring&, algorithm_suite&);
 
 /*
@@ -96,5 +98,16 @@ int action_rename_sec (bool yes,
                        const std::string&filter, const std::string&name,
                        keyring&);
 
+int action_lock_sec (const std::string&filter,
+                     const std::string&symmetric,
+                     const std::string&withlock,
+                     bool armor,
+                     keyring&);
+
+int action_unlock_sec (const std::string&filter,
+                       const std::string&symmetric,
+                       const std::string&withlock,
+                       bool armor,
+                       keyring&);
 
 #endif

@@ -28,7 +28,7 @@
 #include <vector>
 
 #include "types.h"
-#include "generator.h"
+#include "prng.h"
 #include "sencode.h"
 
 class symkey
@@ -48,6 +48,11 @@ public:
 
 	bool is_valid();
 	bool create (const std::string&, prng&);
+
+	bool load (const std::string&fn, const std::string&withlock,
+	           bool for_encryption, bool armor);
+	bool save (const std::string&fn, const std::string&withlock,
+	           bool armor, bool force_lock, prng&r);
 };
 
 #endif

@@ -25,11 +25,12 @@
 #include "prng.h"
 
 #include <stdint.h>
-#define randmax_type uint64_t
 
 class ccr_rng : public prng
 {
 public:
+	typedef uint64_t randmax_t;
+
 	chacha20 r;
 
 	ccr_rng() {
@@ -43,8 +44,8 @@ public:
 	bool seed (uint bits, bool quick = true);
 
 	uint random (uint n) {
-		randmax_type i;
-		r.gen (sizeof (randmax_type), (byte*) &i);
+		randmax_t i;
+		r.gen (sizeof (randmax_t), (byte*) &i);
 		return i % n;
 	}
 };

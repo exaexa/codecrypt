@@ -84,6 +84,128 @@ bool symkey::create (const std::string&in, prng&rng)
 	return true;
 }
 
+/*
+ * loading/saving
+ */
+
+#include "envelope.h"
+#include "base64.h"
+#include "seclock.h"
+
+#define ENVELOPE_SYMKEY "symkey"
+
+bool symkey::load (const std::string&fn, const std::string&withlock,
+                   bool for_encryption, bool armor)
+{
+	if (fn.length() && fn[0] == '@') {
+		//shared-secret password is requested
+		return load_lock_secret (*this, fn, "expanding shared secret",
+		                         "SYMMETRIC", for_encryption);
+	}
+
+	std::ifstream sk_in;
+	sk_in.open (fn == "-" ? "/dev/stdin" : fn.c_str(),
+	            std::ios::in | std::ios::binary);
+
+	if (!sk_in) {
+		err ("error: can't open symkey file");
+		return false;
+	}
+
+	std::string sk_data;
+	if (!read_all_input (sk_data, sk_in)) {
+		err ("error: can't read symkey");
+		return false;
+	}
+	sk_in.close();
+
+	if (armor) {
+		std::vector<std::string> parts;
+		std::string type;
+		if (!envelope_read (sk_data, 0, type, parts)) {
+			err ("error: no data envelope found");
+			return false;
+		}
+
+		if (type != ENVELOPE_SYMKEY || parts.size() != 1) {
+			err ("error: wrong envelope format");
+			return false;
+		}
+
+		if (!base64_decode (parts[0], sk_data)) {
+			err ("error: malformed data");
+			return false;
+		}
+	}
+
+	if (looks_like_locked_secret (sk_data)) {
+		std::string tmp;
+		if (!unlock_secret (sk_data, tmp,
+		                    withlock, fn, "SYMKEY")) return false;
+		sk_data = tmp;
+	}
+
+	sencode*SK = sencode_decode (sk_data);
+	if (!SK) {
+		err ("error: could not parse input sencode");
+		return false;
+	}
+
+	if (!unserialize (SK)) {
+		err ("error: could not parse input structure");
+		sencode_destroy (SK);
+		return false;
+	}
+
+	sencode_destroy (SK);
+
+	return true;
+}
+
+bool symkey::save (const std::string&fn, const std::string&withlock,
+                   bool armor, bool force_lock, prng&r)
+{
+	sencode*SK = serialize();
+	std::string data = SK->encode();
+	sencode_destroy (SK);
+
+	if (force_lock) {
+		std::string tmp;
+		if (!lock_secret (data, tmp, withlock, fn, "SYMKEY", r))
+			return false;
+		data = tmp;
+	}
+
+	std::ofstream sk_out;
+	sk_out.open (fn == "-" ? "/dev/stdout" : fn.c_str(),
+	             std::ios::out | std::ios::binary);
+	if (!sk_out) {
+		err ("error: can't open symkey file for writing");
+		return false;
+	}
+
+	if (armor) {
+		std::vector<std::string> parts;
+		parts.resize (1);
+		base64_encode (data, parts[0]);
+		data = envelope_format (ENVELOPE_SYMKEY, parts, r);
+	}
+
+	sk_out << data;
+	if (!sk_out.good()) {
+		err ("error: can't write to symkey file");
+		return false;
+	}
+
+	sk_out.close();
+	if (!sk_out.good()) {
+		err ("error: couldn't close symkey file");
+		return false;
+	}
+
+	return true;
+}
+
 typedef std::list<instanceof<streamcipher> > scs_t;
 typedef std::list<instanceof<hash_proc> > hashes_t;
 

@@ -1,4 +1,4 @@
-.TH CCR 1 2016-01-12 "ccr" "Codecrypt"
+.TH CCR 1 2017-10-22 "ccr" "Codecrypt"
 .SH NAME
 .B ccr
 \- The post-quantum cryptography encryption and signing tool
@@ -227,6 +227,12 @@ Rename matching public keys. Use "-N" to specify a new name.
 \fB\-M\fR, \fB\-\-rename\-secret\fR <\fIkeyspec\fR>
 Rename matching private keys.
 
+.TP
+\fB\-w\fR, \fB\-\-with-lock\fR <\fIfile\fR>
+When loading the secret part of the keyring, decrypt the file using the
+specified shared key. If that file looks encrypted and \fB-w\fR is not
+specified, asking for the password interactively (i.e. "-w @") will be assumed.
+
 .SH FILES
 
 Codecrypt stores user data in a directory specified by environment variable
@@ -300,6 +306,40 @@ idealized case and very roughly) halves the bit security (although the attack
 remains exponential).  Users who are aware of large quantum computers being
 built are advised to use 2^192 or 2^256 bit security keys.
 
+.SH PASSWORD-DERIVED SYMMETRIC KEYS AND PASSWORD-PROTECTED SECRETS
+
+Symmetric keys can be specified using a filename, or expanded from a password
+(which is convenient e.g. for protecting private keys): If the filename for
+\fB-S\fR starts with "@", program will first check the rest of the filename to
+find a symmetric cipher algorithm specification, as in \fB-g\fR. If nothing is
+specified, it will check CCR_SYMMETRIC_ALGORITHM environment variable, and if
+that is still unspecified, it will default to "SYM,SHORTBLOCK". The reason for
+defaulting the short blocks is that the functionality focuses on tiny keys.
+
+After the symmetric algorithm is chosen, program will try to get the password
+from environment variable CCR_SYMMETRIC_PASSWORD. If that variable is not set,
+it will ask the user for the password interactively.
+
+The password will be expanded to internally form a symmetric key for the
+specified algorithm, which will in turn be used for the requested action.
+
+Symmetric and private keys may be encrypted by a password or a symmetric key.
+Parameter \fB-w\fR accepts the same arguments as \fB-S\fR, with the exception
+that the resulting loaded or internally generated symmetric key will be used to
+encrypt or decrypt symmetric and private keys when required:
+
+Actions \fB-L\fR and \fB-U\fR can be used to lock, resp. unlock private keys
+(specific keys to be modified can be selected using \fB--filter\fR) or
+symmetric keys (if used together with \fB-S\fR). Action \fB-g\fR can be
+modified by \fB-L\fR in the same way.
+
+The environment variables used for automatically-specifying the password in
+this case are separate from the previous ones: CCR_KEYRING_PASSWORD and
+CCR_KEYRING_ALGORITHM for locking/unlocking private keys, respectively
+CCR_SYMKEY_PASSWORD and CCR_SYMKEY_ALGORITHM for specifying symmetric key used
+to unlock other symmetric keys (even the ones that are themselves used for
+locking other keys).
+
 .SH WARNINGS AND CAVEATS
 
 .SS General advice
@@ -368,6 +408,14 @@ value in the source code instead of specifying the seed each time you invoke
 Codecrypt.
 
 If the seed source of your system can not be trusted, fix the system instead.
+
+.SH Password-derived symmetric keys
+
+Passwords are weak and, if times did not change and humanoids are still
+humanoids, you are prone to $5 wrench attacks.
+
+Combination of \fB-L\fR and \fB-S\fR options can be exploited to output a
+password-expanded key to a file. Doing that for any real purpose is a bad idea.
 
 .SH Troubleshooting/FAQ
 

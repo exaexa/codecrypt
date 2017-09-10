@@ -41,7 +41,6 @@
 #define ENVELOPE_CLEARSIGN "clearsigned"
 #define ENVELOPE_DETACHSIGN "detachsign"
 #define ENVELOPE_HASHFILE "hashfile"
-#define ENVELOPE_SYMKEY "symkey"
 
 #define MSG_CLEARTEXT "MESSAGE-IN-CLEARTEXT"
 #define MSG_DETACHED "MESSAGE-DETACHED"
@@ -59,8 +58,10 @@ inline bool open_keyring (keyring&KR)
 
 #define PREPARE_KEYRING if(!open_keyring(KR)) return 1
 
-int action_gen_symkey (const std::string&algspec,
-                       const std::string&symmetric, bool armor)
+static int action_gen_symkey (const std::string&algspec,
+                              const std::string&symmetric,
+                              const std::string&withlock,
+                              bool armor, bool force_lock)
 {
 	symkey sk;
 	ccr_rng r;
@@ -71,42 +72,13 @@ int action_gen_symkey (const std::string&algspec,
 		return 1;
 	}
 
-	sencode*SK = sk.serialize();
-	std::string data = SK->encode();
-	sencode_destroy (SK);
-
-	std::ofstream sk_out;
-	sk_out.open (symmetric == "-" ? "/dev/stdout" : symmetric.c_str(),
-	             std::ios::out | std::ios::binary);
-	if (!sk_out) {
-		err ("error: can't open symkey file for writing");
-		return 1;
-	}
-
-	if (armor) {
-		std::vector<std::string> parts;
-		parts.resize (1);
-		base64_encode (data, parts[0]);
-		data = envelope_format (ENVELOPE_SYMKEY, parts, r);
-	}
-
-	sk_out << data;
-	if (!sk_out.good()) {
-		err ("error: can't write to symkey file");
-		return 1;
-	}
-
-	sk_out.close();
-	if (!sk_out.good()) {
-		err ("error: couldn't close symkey file");
-		return 1;
-	}
+	if (!sk.save (symmetric, "", armor, force_lock, r)) return 1;
 
 	return 0;
 }
 
 typedef std::map<std::string, std::string> algspectable_t;
-algspectable_t& algspectable()
+static algspectable_t& algspectable()
 {
 	static algspectable_t table;
 	static bool init = false;
@@ -119,11 +91,10 @@ algspectable_t& algspectable()
 		table["SIG-192"] = "FMTSEQ192C-CUBE384-CUBE192";
 		table["SIG-256"] = "FMTSEQ256C-CUBE512-CUBE256";
 
+		table["SYM"] = "CHACHA20,CUBE512";
 #if HAVE_CRYPTOPP==1
-		table["SYM"] = "CHACHA20,SHA256";
 		table["SYM-COMBINED"] = "CHACHA20,XSYND,ARCFOUR,CUBE512,SHA512";
 #else
-		table["SYM"] = "CHACHA20,CUBE512";
 		table["SYM-COMBINED"] = "CHACHA20,XSYND,ARCFOUR,CUBE512";
 #endif
 
@@ -134,7 +105,8 @@ algspectable_t& algspectable()
 }
 
 int action_gen_key (const std::string& p_algspec, const std::string&name,
-                    const std::string&symmetric, bool armor,
+                    const std::string&symmetric, const std::string&withlock,
+                    bool armor, bool force_lock,
                     keyring&KR, algorithm_suite&AS)
 {
 	std::string algspec = to_unicase (p_algspec);
@@ -186,7 +158,8 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 
 	//handle symmetric operation
 	if (symmetric.length())
-		return action_gen_symkey (algspec, symmetric, armor);
+		return action_gen_symkey (algspec, symmetric, withlock,
+		                          armor, force_lock);
 
 	algorithm*alg = NULL;
 	std::string algname;
@@ -261,57 +234,11 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
  * signatures/encryptions
  */
 
-int action_sym_encrypt (const std::string&symmetric, bool armor)
+static int action_sym_encrypt (const std::string&symmetric,
+                               const std::string&withlock, bool armor)
 {
-	//read the symmetric key first
-	std::ifstream sk_in;
-	sk_in.open (symmetric == "-" ? "/dev/stdin" : symmetric.c_str(),
-	            std::ios::in | std::ios::binary);
-
-	if (!sk_in) {
-		err ("error: can't open symkey file");
-		return 1;
-	}
-
-	std::string sk_data;
-	if (!read_all_input (sk_data, sk_in)) {
-		err ("error: can't read symkey");
-		return 1;
-	}
-	sk_in.close();
-
-	if (armor) {
-		std::vector<std::string> parts;
-		std::string type;
-		if (!envelope_read (sk_data, 0, type, parts)) {
-			err ("error: no data envelope found");
-			return 1;
-		}
-
-		if (type != ENVELOPE_SYMKEY || parts.size() != 1) {
-			err ("error: wrong envelope format");
-			return 1;
-		}
-
-		if (!base64_decode (parts[0], sk_data)) {
-			err ("error: malformed data");
-			return 1;
-		}
-	}
-
-	sencode*SK = sencode_decode (sk_data);
-	if (!SK) {
-		err ("error: could not parse input sencode");
-		return 1;
-	}
-
 	symkey sk;
-	if (!sk.unserialize (SK)) {
-		err ("error: could not parse input structure");
-		return 1;
-	}
-
-	sencode_destroy (SK);
+	if (!sk.load (symmetric, withlock, true, armor)) return 1;
 
 	ccr_rng r;
 	if (!r.seed (256)) SEED_FAILED;
@@ -326,10 +253,11 @@ int action_sym_encrypt (const std::string&symmetric, bool armor)
 
 int action_encrypt (const std::string&recipient, bool armor,
                     const std::string&symmetric,
+                    const std::string&withlock,
                     keyring&KR, algorithm_suite&AS)
 {
 	if (symmetric.length())
-		return action_sym_encrypt (symmetric, armor);
+		return action_sym_encrypt (symmetric, withlock, armor);
 
 	//first, read plaintext
 	std::string data;
@@ -403,56 +331,11 @@ int action_encrypt (const std::string&recipient, bool armor,
 }
 
 
-int action_sym_decrypt (const std::string&symmetric, bool armor)
+static int action_sym_decrypt (const std::string&symmetric,
+                               const std::string&withlock, bool armor)
 {
-	std::ifstream sk_in;
-	sk_in.open (symmetric == "-" ? "/dev/stdin" : symmetric.c_str(),
-	            std::ios::in | std::ios::binary);
-
-	if (!sk_in) {
-		err ("error: can't open symkey file");
-		return 1;
-	}
-
-	std::string sk_data;
-	if (!read_all_input (sk_data, sk_in)) {
-		err ("error: can't read symkey");
-		return 1;
-	}
-	sk_in.close();
-
-	if (armor) {
-		std::vector<std::string> parts;
-		std::string type;
-		if (!envelope_read (sk_data, 0, type, parts)) {
-			err ("error: no data envelope found");
-			return 1;
-		}
-
-		if (type != ENVELOPE_SYMKEY || parts.size() != 1) {
-			err ("error: wrong envelope format");
-			return 1;
-		}
-
-		if (!base64_decode (parts[0], sk_data)) {
-			err ("error: malformed data");
-			return 1;
-		}
-	}
-
-	sencode*SK = sencode_decode (sk_data);
-	if (!SK) {
-		err ("error: could not parse input sencode");
-		return 1;
-	}
-
 	symkey sk;
-	if (!sk.unserialize (SK)) {
-		err ("error: could not parse input structure");
-		return 1;
-	}
-
-	sencode_destroy (SK);
+	if (!sk.load (symmetric, withlock, false, armor)) return 1;
 
 	int ret = sk.decrypt (std::cin, std::cout);
 
@@ -461,10 +344,11 @@ int action_sym_decrypt (const std::string&symmetric, bool armor)
 }
 
 int action_decrypt (bool armor, const std::string&symmetric,
+                    const std::string&withlock,
                     keyring&KR, algorithm_suite&AS)
 {
 	if (symmetric.length())
-		return action_sym_decrypt (symmetric, armor);
+		return action_sym_decrypt (symmetric, withlock, armor);
 
 	std::string data;
 	read_all_input (data);
@@ -566,7 +450,7 @@ int action_decrypt (bool armor, const std::string&symmetric,
 	return 0;
 }
 
-int action_hash_sign (bool armor, const std::string&symmetric)
+static int action_hash_sign (bool armor, const std::string&symmetric)
 {
 	hashfile hf;
 	if (!hf.create (std::cin)) {
@@ -612,6 +496,7 @@ int action_hash_sign (bool armor, const std::string&symmetric)
 
 int action_sign (const std::string&user, bool armor, const std::string&detach,
                  bool clearsign, const std::string&symmetric,
+                 const std::string&withlock,
                  keyring&KR, algorithm_suite&AS)
 {
 	//symmetric processing has its own function
@@ -748,7 +633,7 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 	return 0;
 }
 
-int action_hash_verify (bool armor, const std::string&symmetric)
+static int action_hash_verify (bool armor, const std::string&symmetric)
 {
 	// first, input the hashfile
 	std::ifstream hf_in;
@@ -807,6 +692,7 @@ int action_hash_verify (bool armor, const std::string&symmetric)
 
 int action_verify (bool armor, const std::string&detach,
                    bool clearsign, bool yes, const std::string&symmetric,
+                   const std::string&withlock,
                    keyring&KR, algorithm_suite&AS)
 {
 	//symmetric processing has its own function
@@ -1048,6 +934,7 @@ int action_verify (bool armor, const std::string&detach,
  */
 
 int action_sign_encrypt (const std::string&user, const std::string&recipient,
+                         const std::string&withlock,
                          bool armor, keyring&KR, algorithm_suite&AS)
 {
 	/*
@@ -1161,6 +1048,7 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 
 
 int action_decrypt_verify (bool armor, bool yes,
+                           const std::string&withlock,
                            keyring&KR, algorithm_suite&AS)
 {
 	std::string data;
@@ -1871,4 +1759,54 @@ int action_rename_sec (bool yes,
 		return 1;
 	}
 	return 0;
+}
+
+/*
+ * locking/unlocking
+ */
+
+static int action_lock_symkey (const std::string&symmetric,
+                               const std::string&withlock,
+                               bool armor)
+{
+	symkey sk;
+	if (!sk.load (symmetric, "", true, armor)) return 1;
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	if (!sk.save (symmetric, withlock, armor, true, r)) return 1;
+	return 0;
+}
+
+int action_lock_sec (const std::string&filter,
+                     const std::string&symmetric,
+                     const std::string&withlock,
+                     bool armor,
+                     keyring&)
+{
+	if (!symmetric.empty())
+		return action_lock_symkey (symmetric, withlock, armor);
+	return 1;
+}
+
+static int action_unlock_symkey (const std::string&symmetric,
+                                 const std::string&withlock,
+                                 bool armor)
+{
+	symkey sk;
+	if (!sk.load (symmetric, withlock, false, armor)) return 1;
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	if (!sk.save (symmetric, "", armor, false, r)) return 1;
+	return 0;
+}
+
+int action_unlock_sec (const std::string&filter,
+                       const std::string&symmetric,
+                       const std::string&withlock,
+                       bool armor,
+                       keyring&)
+{
+	if (!symmetric.empty())
+		return action_unlock_symkey (symmetric, withlock, armor);
+	return 1;
 }
