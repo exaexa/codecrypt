@@ -210,8 +210,10 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 	 * that has a colliding KeyID with anyone else. This is highly
 	 * improbable, so apologize nicely in that case.
 	 */
-	if (!KR.store_keypair (keyring::get_keyid (pub),
-	                       name, algname, pub, priv)) {
+	keyring::keypair_entry*
+	kp = KR.store_keypair (keyring::get_keyid (pub),
+	                       name, algname, pub, priv);
+	if (!kp) {
 
 		err ("error: new key cannot be saved into the keyring.");
 		err ("notice: produced KeyID @" << keyring::get_keyid (pub)
@@ -222,7 +224,12 @@ int action_gen_key (const std::string& p_algspec, const std::string&name,
 	}
 	//note that pub&priv sencode data will get destroyed along with keyring
 
-	if (!KR.save()) {
+	if (force_lock && !kp->lock (withlock)) {
+		err ("error: locking the key failed");
+		return 1;
+	}
+
+	if (!KR.save (r)) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -400,6 +407,11 @@ int action_decrypt (bool armor, const std::string&symmetric,
 		return 2; //missing key flag
 	}
 
+	if (!kpe->decode_privkey (withlock)) {
+		err ("error: could not decrypt required private key");
+		return 1;
+	}
+
 	//and the algorithm
 	if ( (!AS.count (msg.alg_id))
 	     || (!AS[msg.alg_id]->provides_encryption())) {
@@ -560,6 +572,12 @@ int action_sign (const std::string&user, bool armor, const std::string&detach,
 
 	if (!u) {
 		err ("error: no such supported local privkey");
+		return 1;
+	}
+
+	//decode it for message.h
+	if (!u->decode_privkey (withlock)) {
+		err ("error: could not decrypt required private key");
 		return 1;
 	}
 
@@ -1006,6 +1024,12 @@ int action_sign_encrypt (const std::string&user, const std::string&recipient,
 		return 1;
 	}
 
+	//decode the signing key for message.h
+	if (!u->decode_privkey (withlock)) {
+		err ("error: could not decrypt required private key");
+		return 1;
+	}
+
 	//make a signature
 	signed_msg smsg;
 	ccr_rng r;
@@ -1099,6 +1123,11 @@ int action_decrypt_verify (bool armor, bool yes,
 		err ("error: decryption privkey unavailable");
 		err ("info: requires key @" << emsg.key_id);
 		return 2; //missing key flag
+	}
+
+	if (!kpe->decode_privkey (withlock)) {
+		err ("error: could not decrypt required private key");
+		return 1;
 	}
 
 	if ( (!AS.count (emsg.alg_id))
@@ -1359,7 +1388,9 @@ int action_import (bool armor, bool no_action, bool yes, bool fp,
 		}
 	}
 
-	if (!KR.save()) {
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	if (!KR.save (r)) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1450,7 +1481,9 @@ int action_delete (bool yes, const std::string & filter, keyring & KR)
 	     i = todel.begin(), e = todel.end(); i != e; ++i)
 		KR.remove_pubkey (*i);
 
-	if (!KR.save()) {
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	if (!KR.save (r)) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1497,7 +1530,9 @@ int action_rename (bool yes,
 			i->second.name = name;
 	}
 
-	if (!KR.save()) {
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	if (!KR.save (r)) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1615,11 +1650,13 @@ int action_import_sec (bool armor, bool no_action, bool yes, bool fp,
 			                  name.length() ?
 			                  name : i->second.pub.name,
 			                  i->second.pub.alg,
-			                  i->second.pub.key, i->second.privkey);
+			                  i->second.pub.key, i->second.privkey_raw);
 		}
 	}
 
-	if (!KR.save()) {
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	if (!KR.save (r)) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1657,7 +1694,9 @@ int action_export_sec (bool armor, bool yes,
 		if (!okay) return 0;
 	}
 
-	sencode*S = keyring::serialize_keypairs (s);
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	sencode*S = keyring::serialize_keypairs (s, r);
 	if (!S) return 1; //weird.
 	std::string data = S->encode();
 	sencode_destroy (S);
@@ -1666,8 +1705,6 @@ int action_export_sec (bool armor, bool yes,
 		std::vector<std::string> parts;
 		parts.resize (1);
 		base64_encode (data, parts[0]);
-		ccr_rng r;
-		if (!r.seed (256)) SEED_FAILED;
 		data = envelope_format (ENVELOPE_SECRETS, parts, r);
 	}
 
@@ -1707,7 +1744,9 @@ int action_delete_sec (bool yes, const std::string & filter, keyring & KR)
 	     i = todel.begin(), e = todel.end(); i != e; ++i)
 		KR.remove_keypair (*i);
 
-	if (!KR.save()) {
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	if (!KR.save (r)) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1754,7 +1793,9 @@ int action_rename_sec (bool yes,
 			i->second.pub.name = name;
 	}
 
-	if (!KR.save()) {
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	if (!KR.save (r)) {
 		err ("error: couldn't save keyring");
 		return 1;
 	}
@@ -1777,15 +1818,53 @@ static int action_lock_symkey (const std::string&symmetric,
 	return 0;
 }
 
-int action_lock_sec (const std::string&filter,
+int action_lock_sec (bool yes,
+                     const std::string&filter,
                      const std::string&symmetric,
                      const std::string&withlock,
                      bool armor,
-                     keyring&)
+                     keyring&KR)
 {
 	if (!symmetric.empty())
 		return action_lock_symkey (symmetric, withlock, armor);
-	return 1;
+
+	PREPARE_KEYRING;
+
+	int kc = 0;
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first))
+			++kc;
+	}
+	if (!kc) {
+		err ("error: no such key");
+		return 0;
+	}
+	if (!yes) {
+		bool okay = false;
+		ask_for_yes (okay, "This will protect " << kc
+		             << " secrets from your keyring. Continue?");
+		if (!okay) return 0;
+	}
+
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first))
+			if(!i->second.lock (withlock)) {
+				err("error: key locking failed");
+				return false;
+			}
+	}
+
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	if (!KR.save (r)) {
+		err ("error: couldn't save keyring");
+		return 1;
+	}
+	return 0;
 }
 
 static int action_unlock_symkey (const std::string&symmetric,
@@ -1800,13 +1879,51 @@ static int action_unlock_symkey (const std::string&symmetric,
 	return 0;
 }
 
-int action_unlock_sec (const std::string&filter,
+int action_unlock_sec (bool yes,
+                       const std::string&filter,
                        const std::string&symmetric,
                        const std::string&withlock,
                        bool armor,
-                       keyring&)
+                       keyring&KR)
 {
 	if (!symmetric.empty())
 		return action_unlock_symkey (symmetric, withlock, armor);
-	return 1;
+
+	PREPARE_KEYRING;
+
+	int kc = 0;
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first))
+			++kc;
+	}
+	if (!kc) {
+		err ("error: no such key");
+		return 0;
+	}
+	if (!yes) {
+		bool okay = false;
+		ask_for_yes (okay, "This will remove protection from " << kc
+		             << " secrets from your keyring. Continue?");
+		if (!okay) return 0;
+	}
+
+	for (keyring::keypair_storage::iterator
+	     i = KR.pairs.begin(), e = KR.pairs.end();
+	     i != e; ++i) {
+		if (keyspec_matches (filter, i->second.pub.name, i->first))
+			if(!i->second.unlock (withlock)) {
+				err("error: key unlocking failed");
+				return false;
+			}
+	}
+
+	ccr_rng r;
+	if (!r.seed (256)) SEED_FAILED;
+	if (!KR.save (r)) {
+		err ("error: couldn't save keyring");
+		return 1;
+	}
+	return 0;
 }

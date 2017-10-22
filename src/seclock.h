@@ -37,9 +37,16 @@ bool lock_secret (const std::string&secret, std::string&locked,
                   const std::string&reason,
                   const std::string&secret_type,
                   prng&rng);
+bool lock_secret_sk (const std::string&secret, std::string&locked,
+                     symkey&sk, prng&rng);
 bool unlock_secret (const std::string&locked, std::string&secret,
                     const std::string&withlock,
                     const std::string&reason,
                     const std::string&secret_type);
+bool unlock_secret_sk (const std::string&locked, std::string&secret,
+                       const std::string&withlock,
+                       const std::string&reason,
+                       const std::string&secret_type,
+                       symkey&sk);
 
 #endif

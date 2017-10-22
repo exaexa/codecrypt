@@ -84,19 +84,18 @@ int signed_msg::sign (const bvector&msg,
 
 	keyring::keypair_entry *k = kr.get_keypair (key_id);
 	if (!k) return 2;
+	//note that someone has to prepare the k->privkey in advance!
 
 	if (k->pub.alg != alg_id) return 3;
 
-	bool privkey_dirty = false;
 	int r;
-
-	r = alg->sign (message, signature, & (k->privkey), privkey_dirty, rng);
+	r = alg->sign (message, signature, & (k->privkey), k->dirty, rng);
 
 	if (r) return r;
 
-	if (privkey_dirty) {
+	if (k->dirty) {
 		//we can't output a signature without storing privkey changes!
-		if (!kr.save()) return 4;
+		if (!kr.save (rng)) return 4;
 	}
 
 	return 0;

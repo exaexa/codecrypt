@@ -477,12 +477,14 @@ int main (int argc, char**argv)
 		break;
 
 	case 'L':
-		exitval = action_lock_sec (filter, symmetric, withlock,
+		exitval = action_lock_sec (opt_yes, filter,
+		                           symmetric, withlock,
 		                           opt_armor, KR);
 		break;
 
 	case 'U':
-		exitval = action_unlock_sec (filter, symmetric, withlock,
+		exitval = action_unlock_sec (opt_yes, filter,
+		                             symmetric, withlock,
 		                             opt_armor, KR);
 		break;
 

@@ -98,13 +98,15 @@ int action_rename_sec (bool yes,
                        const std::string&filter, const std::string&name,
                        keyring&);
 
-int action_lock_sec (const std::string&filter,
+int action_lock_sec (bool yes,
+                     const std::string&filter,
                      const std::string&symmetric,
                      const std::string&withlock,
                      bool armor,
                      keyring&);
 
-int action_unlock_sec (const std::string&filter,
+int action_unlock_sec (bool yes,
+                       const std::string&filter,
                        const std::string&symmetric,
                        const std::string&withlock,
                        bool armor,

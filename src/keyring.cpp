@@ -104,7 +104,8 @@ void keyring::clear_keypairs (keypair_storage&pairs)
 	for (std::map<std::string, keypair_entry>::iterator
 	     i = pairs.begin(), e = pairs.end(); i != e; ++i) {
 		sencode_destroy (i->second.pub.key);
-		sencode_destroy (i->second.privkey);
+		if (i->second.privkey)
+			sencode_destroy (i->second.privkey);
 	}
 	pairs.clear();
 }
@@ -149,19 +150,13 @@ bool keyring::parse_keypairs (sencode*keypairs, keypair_storage&pairs)
 		if (! (ident && alg && privkey && pubkey)) goto failure;
 
 		std::string keyid = get_keyid (pubkey->b);
-		sencode *priv, *pub;
-
-		priv = sencode_decode (privkey->b);
-		if (!priv) goto failure;
+		sencode *pub;
 
 		pub = sencode_decode (pubkey->b);
-		if (!pub) {
-			sencode_destroy (priv);
-			goto failure;
-		}
+		if (!pub) goto failure;
 
 		pairs[keyid] = keypair_entry (keyid, ident->b, alg->b,
-		                              pub, priv);
+		                              pub, privkey->b);
 	}
 
 	return true;
@@ -170,8 +165,12 @@ failure:
 	return false;
 }
 
-sencode* keyring::serialize_keypairs (const keypair_storage&pairs)
+sencode* keyring::serialize_keypairs (keypair_storage&pairs, prng&rng)
 {
+	for (std::map<std::string, keypair_entry>::iterator
+	     i = pairs.begin(), e = pairs.end(); i != e; ++i)
+		if (!i->second.fix_dirty (rng)) return NULL;
+
 	sencode_list*L = new sencode_list();
 	L->items.push_back (new sencode_bytes (KEYPAIRS_ID));
 
@@ -182,7 +181,7 @@ sencode* keyring::serialize_keypairs (const keypair_storage&pairs)
 		a->items.resize (4);
 		a->items[0] = new sencode_bytes (i->second.pub.name);
 		a->items[1] = new sencode_bytes (i->second.pub.alg);
-		a->items[2] = new sencode_bytes (i->second.privkey->encode());
+		a->items[2] = new sencode_bytes (i->second.privkey_raw);
 		a->items[3] = new sencode_bytes (i->second.pub.key->encode());
 		L->items.push_back (a);
 	}
@@ -443,7 +442,7 @@ static void ignore_term_signals (bool ignore)
 }
 #endif
 
-bool keyring::save()
+bool keyring::save (prng&rng)
 {
 	std::string dir, fn, bfn;
 	sencode*S;
@@ -466,7 +465,9 @@ bool keyring::save()
 	/*
 	 * keypairs
 	 */
-	S = serialize_keypairs (pairs);
+	S = serialize_keypairs (pairs, rng);
+	if (!S) return false;
+
 	fn = dir + SECRETS_FILENAME;
 	bfn = fn + BAK_SUFFIX;
 	res = file_put_sencode_with_backup (fn, S, bfn, backup_pairs);
@@ -557,5 +558,84 @@ bool keyring::close()
 
 	lockfd = -1;
 
+	return true;
+}
+
+/*
+ * keypair_entry loads the privkeys lazily so that it's not necessary to have
+ * all the secrets all the time
+ */
+
+#include "seclock.h"
+#include "iohelpers.h"
+
+bool keyring::keypair_entry::lock (const std::string&withlock)
+{
+	//withlock here is useful for just re-encrypting,
+	//possibly with different password
+	if (!decode_privkey (withlock)) return false;
+	err ("notice: locking key @" + pub.keyid);
+	if (!load_lock_secret (sk, withlock,
+	                       "protecting key `"
+	                       + escape_output (pub.name)
+	                       + "'",
+	                       "KEYRING", true))
+		return false;
+
+	dirty = true;
+	locked = true;
+	return true;
+}
+
+bool keyring::keypair_entry::unlock (const std::string&withlock)
+{
+	if (!decode_privkey (withlock)) return false;
+	if (locked) {
+		locked = false;
+		dirty = true;
+	}
+	return true;
+}
+
+bool keyring::keypair_entry::decode_privkey (const std::string&withlock)
+{
+	if (privkey) return true; //already done
+	std::string encoded;
+	if (looks_like_locked_secret (privkey_raw)) {
+		err ("notice: unlocking key @" + pub.keyid);
+		if (!unlock_secret_sk (privkey_raw, encoded,
+		                       withlock,
+		                       "loading key `"
+		                       + escape_output (pub.name)
+		                       + "'",
+		                       "KEYRING", sk))
+			return false;
+		locked = true;
+	} else {
+		encoded = privkey_raw;
+		locked = false;
+	}
+
+	privkey = sencode_decode (encoded);
+	if (!privkey)
+		return false;
+
+	dirty = false;
+	return true;
+}
+
+#include <sstream>
+
+bool keyring::keypair_entry::fix_dirty (prng&rng)
+{
+	if (!privkey || !dirty) return true; //nothing to do!
+	if (locked) {
+		std::string encoded = privkey->encode();
+		if (!lock_secret_sk (encoded, privkey_raw, sk, rng))
+			return false;
+	} else {
+		privkey_raw = privkey->encode();
+	}
+	dirty = false;
 	return true;
 }

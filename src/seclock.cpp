@@ -84,6 +84,12 @@ bool lock_secret (const std::string &secret, std::string &locked,
 	if (!load_lock_secret (sk, withlock, reason, secret_type, true))
 		return false;
 
+	return lock_secret_sk (secret, locked, sk, rng);
+}
+
+bool lock_secret_sk (const std::string &secret, std::string &locked,
+                     symkey&sk, prng&rng)
+{
 	std::istringstream i (secret);
 	std::ostringstream o;
 	o << LOCKED_PREFIX;
@@ -92,12 +98,13 @@ bool lock_secret (const std::string &secret, std::string &locked,
 	return ret;
 }
 
-bool unlock_secret (const std::string &locked, std::string &secret,
-                    const std::string &withlock,
-                    const std::string &reason,
-                    const std::string &secret_type)
+
+bool unlock_secret_sk (const std::string &locked, std::string &secret,
+                       const std::string &withlock,
+                       const std::string &reason,
+                       const std::string &secret_type,
+                       symkey&sk)
 {
-	symkey sk;
 	if (!looks_like_locked_secret (locked)) {
 		err ("seclock: malformed locked secret");
 		return false;
@@ -112,5 +119,17 @@ bool unlock_secret (const std::string &locked, std::string &secret,
 	std::ostringstream o;
 	bool ret = !sk.decrypt (i, o); //returns int!
 	secret = o.str();
+	if (!ret) err ("error: unlocking a secret failed,"
+		               " double check you password/symkey");
 	return ret;
+}
+
+bool unlock_secret (const std::string &locked, std::string &secret,
+                    const std::string &withlock,
+                    const std::string &reason,
+                    const std::string &secret_type)
+{
+	symkey sk;
+	return unlock_secret_sk (locked, secret, withlock,
+	                         reason, secret_type, sk);
 }
