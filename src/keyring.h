@@ -183,7 +183,8 @@ public:
 	void remove_keypair (const std::string&keyid) {
 		if (pairs.count (keyid)) {
 			sencode_destroy (pairs[keyid].pub.key);
-			sencode_destroy (pairs[keyid].privkey);
+			if (pairs[keyid].privkey)
+				sencode_destroy (pairs[keyid].privkey);
 			pairs.erase (keyid);
 		}
 	}
