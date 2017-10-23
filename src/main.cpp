@@ -85,6 +85,8 @@ void print_help (char*pname)
 	out (" -N, --name         specify a new name for renaming or importing");
 	out (" -n, --no-action    on import, only show what would be imported");
 	out (" -w, --with-lock    specify the symmetric key for (un)locking the secrets");
+	out (" -w @SPEC           ask for password and expand it to a symmetric key");
+	out("                     of type SPEC for (un)locking the secret");
 	outeol;
 	out (" With -S and -w, using `@' as the key file name will cause the program to");
 	out (" interactively ask for a password and derive the symmetric key from it.");
