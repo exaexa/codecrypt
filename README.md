@@ -199,7 +199,7 @@ For completeness I add listing of all options here (also available from
 	 -f, --fingerprint  format full key IDs nicely for human eyes
 	 -N, --name         specify a new name for renaming or importing
 	 -n, --no-action    on import, only show what would be imported
-	 -w, --with-lock    specify the symmetric key for (un)locking the secrets,
+	 -w, --with-lock    specify the symmetric key for (un)locking the secrets
 	 -w @SPEC           ask for password and expand it to a symmetric key
 	                    of type SPEC for (un)locking the secret
 
