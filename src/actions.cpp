@@ -1852,8 +1852,8 @@ int action_lock_sec (bool yes,
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i) {
 		if (keyspec_matches (filter, i->second.pub.name, i->first))
-			if(!i->second.lock (withlock)) {
-				err("error: key locking failed");
+			if (!i->second.lock (withlock)) {
+				err ("error: key locking failed");
 				return false;
 			}
 	}
@@ -1913,8 +1913,8 @@ int action_unlock_sec (bool yes,
 	     i = KR.pairs.begin(), e = KR.pairs.end();
 	     i != e; ++i) {
 		if (keyspec_matches (filter, i->second.pub.name, i->first))
-			if(!i->second.unlock (withlock)) {
-				err("error: key unlocking failed");
+			if (!i->second.unlock (withlock)) {
+				err ("error: key unlocking failed");
 				return false;
 			}
 	}
