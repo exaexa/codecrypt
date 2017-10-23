@@ -112,6 +112,7 @@ void test()
  */
 
 #include <getopt.h>
+#include <stdlib.h>
 
 #include "actions.h"
 #include "algo_suite.h"
@@ -330,6 +331,12 @@ int main (int argc, char**argv)
 	//register all available algorithms
 	fill_algorithm_suite (AS);
 
+	//default local user key from environment
+	if(user.empty()) {
+		const char*u=getenv("CCR_USER");
+		if(u) user=u;
+	}
+		
 	/*
 	 * cin/cout redirection
 	 */
