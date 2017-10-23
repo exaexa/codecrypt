@@ -283,14 +283,14 @@ static std::string get_user_dir()
 	return "." CCR_CONFDIR; //fallback for absolutely desolate systems
 }
 
+#include "privfile.h"
+#include <fstream>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-
-#include <fstream>
 
 /*
  * prepares the user directory with empty files and similar stuff.
@@ -302,33 +302,12 @@ static std::string get_user_dir()
 static bool ensure_empty_sencode_file (const std::string&fn,
                                        const std::string&ident)
 {
-	struct stat st;
-	if (stat (fn.c_str(), &st)) {
-		if (errno != ENOENT)
-			return false;
+	sencode_list l;
+	sencode_bytes b (ident);
+	l.items.push_back (&b);
+	std::string emptyfile = l.encode();
 
-		//if it simply doesn't exist, create it
-		sencode_list l;
-		sencode_bytes b (ident);
-		l.items.push_back (&b);
-		std::string emptyfile = l.encode();
-
-		int fd;
-		fd = creat (fn.c_str(), S_IRUSR | S_IWUSR);
-		if (fd < 0) return false;
-		ssize_t res = write (fd, emptyfile.c_str(),
-		                     emptyfile.length());
-		if (close (fd)) return false;
-		if ( (size_t) res != emptyfile.length()) return false;
-
-	} else {
-		if (!S_ISREG (st.st_mode))
-			return false;
-	}
-
-	if (access (fn.c_str(), R_OK | W_OK)) return false;
-
-	return true;
+	return put_private_file (fn, emptyfile, true);
 }
 
 static bool prepare_user_dir (const std::string&dir)

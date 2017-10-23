@@ -20,10 +20,11 @@
 
 #include "symkey.h"
 
-#include "sc.h"
 #include "hash.h"
-#include "str_match.h"
 #include "iohelpers.h"
+#include "privfile.h"
+#include "sc.h"
+#include "str_match.h"
 
 #include <sstream>
 
@@ -176,14 +177,6 @@ bool symkey::save (const std::string&fn, const std::string&withlock,
 		data = tmp;
 	}
 
-	std::ofstream sk_out;
-	sk_out.open (fn == "-" ? "/dev/stdout" : fn.c_str(),
-	             std::ios::out | std::ios::binary);
-	if (!sk_out) {
-		err ("error: can't open symkey file for writing");
-		return false;
-	}
-
 	if (armor) {
 		std::vector<std::string> parts;
 		parts.resize (1);
@@ -191,15 +184,10 @@ bool symkey::save (const std::string&fn, const std::string&withlock,
 		data = envelope_format (ENVELOPE_SYMKEY, parts, r);
 	}
 
-	sk_out << data;
-	if (!sk_out.good()) {
+	bool to_stdout = (fn == "-");
+	if (!put_private_file (to_stdout ? "/dev/stdout" : fn,
+	                       data, !to_stdout)) {
 		err ("error: can't write to symkey file");
-		return false;
-	}
-
-	sk_out.close();
-	if (!sk_out.good()) {
-		err ("error: couldn't close symkey file");
 		return false;
 	}
 
