@@ -1243,7 +1243,7 @@ static void output_key (bool fp,
 {
 	if (!fp)
 		out (ident << '\t' << escape_output (alg) << '\t'
-		     << '@' << keyid.substr (0, 22) << "...\t"
+		     << '@' << keyid.substr (0, 10) << "...\t"
 		     << escape_output (name));
 	else {
 		out (longid << " with algorithm " << escape_output (alg)
