@@ -35,6 +35,8 @@ AC_ARG_WITH([cryptopp],
 #and check crypto++
 if test "$WITH_CRYPTOPP" = "yes"; then
 	
+	PKG_PROG_PKG_CONFIG([0.25])
+
 	PKG_CHECK_MODULES([CRYPTOPP],[libcrypto++])
 
 	#crypto++ headers are either in include/crypto++ or include/cryptopp,
