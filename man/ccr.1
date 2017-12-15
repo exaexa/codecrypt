@@ -48,7 +48,7 @@ message signer or details about why decryption or verification fails.
 
 .TP
 \fB\-a\fR, \fB\-\-armor\fR
-Where expecting input or output of data in codecrypt communication format, use
+Where expecting input or output of data in Codecrypt communication format, use
 ascii-armoring.
 
 Codecrypt otherwise usually generates raw binary data, that are very hard to
@@ -351,13 +351,25 @@ can rename or delete more keys at once. Used cryptography is relatively new,
 therefore be sure to verify current state of cryptanalysis before you put your
 data at risk.
 
+.SS On-line use and side channels
+
+Codecrypt does not do much to prevent attacks that rely on side channels that
+are common on the internet. IF YOU DESPERATELY NEED TO PUT CODECRYPT TO E.G.
+AN ON-LINE SERVICE, MAKE SURE THAT ANY POTENTIAL ATTACKER CAN NOT ACCESS THE SIDE
+CHANNELS: Never execute Codecrypt directly from the server software. Sanitize
+BOTH the input and output of Codecrypt. Make any way to gather usable
+statistics about the running time of Codecrypt impossible. Make it hard for
+anyone to collect side-channel information, and, in particular, ensure that
+your application does not allow to repeatedly run Codecrypt in a way that makes
+it fail on invalid or damaged outputs, or produces any statistical
+information about timings and failures of the runs.
+
 .SS Current state of cryptanalysis
 
 In a fashion similar to aforementioned `new cryptography', the original
-algebraic variant of quasi-dyadic McEliece that is still in codecrypt (MCEQD*
-algorithms, kept for compatibility purposes) has been broken by an algebraic
-attack. Security is greatly reduced. Use the QC-MDPC variant which dodges
-similar attacks.
+algebraic variant of quasi-dyadic McEliece that was in Codecrypt has been
+broken by an algebraic attack. Security was greatly reduced. Use the QC-MDPC
+variant which dodges similar attacks.
 
 .SS Large files
 
@@ -512,7 +524,7 @@ ccr -L -S symkey2 -w @xsynd,cube512
 
 .SH DISCLAIMER
 
-Used cryptography is relatively new. For this reason, codecrypt eats data. Use
+Used cryptography is relatively new. For this reason, Codecrypt eats data. Use
 it with caution.
 
 .SH AUTHORS
