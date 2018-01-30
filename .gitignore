@@ -32,3 +32,5 @@ NEWS
 src/.deps/
 src/.dirstamp
 src/*.o
+.idea
+cmake-build-debug

@@ -20,6 +20,10 @@
 
 #include "iohelpers.h"
 
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION "1.7.6"
+#endif
+
 void print_version()
 {
 	out ("codecrypt " PACKAGE_VERSION);
