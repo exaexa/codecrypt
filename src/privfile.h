@@ -18,31 +18,13 @@
  * along with Codecrypt. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ccr_qdutils_h_
-#define _ccr_qdutils_h_
+#ifndef _ccr_privfile_h_
+#define _ccr_privfile_h_
 
-#include <vector>
-#include <set>
+#include <string>
 
-#include "bvector.h"
-#include "prng.h"
-
-/*
- * FWHT matrix mult in O(n log n). parameters MUST be of 2^m size.
- *
- * c1-c3 are caches. Just supply the same vector objects everytime, it's gonna
- * be a lot faster.
- */
-void fwht_dyadic_multiply (const bvector&, const bvector&, bvector&,
-                           std::vector<int>& c1,
-                           std::vector<int>& c2,
-                           std::vector<int>& c3);
-
-//create a generator using fwht
-bool qd_to_right_echelon_form (std::vector<std::vector<bvector> >&matrix);
-
-//disjunct random set selector. Doesn't select 0 (thus 0 is returned on failure)
-uint choose_random (uint limit, prng&rng, std::set<uint>&used);
+bool put_private_file (const std::string&fn,
+                       const std::string&contents,
+                       bool force_permissions);
 
 #endif
-

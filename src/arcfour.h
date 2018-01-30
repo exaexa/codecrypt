@@ -37,7 +37,7 @@ public:
 		I = J = 0;
 		S.resize (Ssize);
 		mask = ~ (inttype) 0;
-		if ( (inttype) (1 << bits)) mask %= 1 << bits;
+		if ( (inttype) (1 << bits) != 0) mask %= 1 << bits;
 		for (size_t i = 0; i < Ssize; ++i) S[i] = i;
 	}
 
@@ -45,7 +45,31 @@ public:
 		init();
 	}
 
-	void load_key (const inttype*begin, const inttype*end) {
+	//ugly byte padding with zeroes for streamcipher compatibility
+	void load_key (const byte*begin, const byte*end) {
+		inttype j, t;
+		size_t i;
+		const byte *keypos;
+
+		//eat whole key iteratively, even if longer than permutation
+		for (; begin < end; begin += mask + 1) {
+			j = 0;
+			for (i = 0, keypos = begin;
+			     i <= mask;
+			     ++i, ++keypos) {
+				if (keypos >= end) keypos = begin; //rotate
+				j = (j + S[i] + (*keypos)) & mask;
+				t = S[j];
+				S[j] = S[i];
+				S[i] = t;
+			}
+		}
+
+		discard (disc_bytes);
+	}
+
+	//this works on wide keys
+	void load_wkey (const inttype*begin, const inttype*end) {
 		inttype j, t;
 		size_t i;
 		const inttype *keypos;
@@ -67,11 +91,15 @@ public:
 		discard (disc_bytes);
 	}
 
-	inttype gen() {
+	inline byte gen() {
+		return genw();
+	}
+
+	inttype genw() {
 		I = (I + 1) & mask;
 		J = (J + S[I]) & mask;
 
-		register inttype t;
+		inttype t;
 		t = S[J];
 		S[J] = S[I];
 		S[I] = t;
@@ -79,11 +107,18 @@ public:
 		return S[ (S[I] + S[J]) & mask];
 	}
 
-	void gen (size_t n, inttype*out) {
+	void gen (size_t n, byte*out) {
 		if (out)
 			for (size_t i = 0; i < n; ++i) out[i] = gen();
 		else
 			for (size_t i = 0; i < n; ++i) gen();
+	}
+
+	void genw (size_t n, inttype*out) {
+		if (out)
+			for (size_t i = 0; i < n; ++i) out[i] = genw();
+		else
+			for (size_t i = 0; i < n; ++i) genw();
 	}
 
 	void gen (size_t n, std::vector<inttype>&out) {

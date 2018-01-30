@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # simple autogen script that generates basic layout for autotools.
 
@@ -28,7 +28,10 @@ echo "${NAME}_CPPFLAGS = -I\$(srcdir)/$i/ ${COMMON_CPPFLAGS}" >>$OUT
 echo "${NAME}_CFLAGS = ${COMMON_CFLAGS}" >>$OUT
 echo "${NAME}_CXXFLAGS = ${COMMON_CXXFLAGS}" >>$OUT
 echo "${NAME}_LDFLAGS = ${COMMON_LDFLAGS} \$(CRYPTOPP_CFLAGS) " >>$OUT
-echo "${NAME}_LDADD = -lgmp -lfftw3 -lm \$(CRYPTOPP_LIBS) ${COMMON_LDADD} " >>$OUT
+echo "${NAME}_LDADD = -lgmp -lfftw3 -lm \$(CRYPTOPP_LIBS) ${COMMON_LDADD} \$(EXTRA_LIBS) " >>$OUT
 
-libtoolize --force && aclocal && autoconf && automake --add-missing
-
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  glibtoolize --force && aclocal && autoconf && automake --add-missing
+else
+  libtoolize --force && aclocal && autoconf && automake --add-missing
+fi

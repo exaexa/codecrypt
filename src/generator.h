@@ -2,7 +2,7 @@
 /*
  * This file is part of Codecrypt.
  *
- * Copyright (C) 2013-2016 Mirek Kratochvil <exa.exa@gmail.com>
+ * Copyright (C) 2013-2017 Mirek Kratochvil <exa.exa@gmail.com>
  *
  * Codecrypt is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -25,11 +25,12 @@
 #include "prng.h"
 
 #include <stdint.h>
-#define randmax_type uint64_t
 
 class ccr_rng : public prng
 {
 public:
+	typedef uint64_t randmax_t;
+
 	chacha20 r;
 
 	ccr_rng() {
@@ -40,11 +41,11 @@ public:
 		r.clear();
 	}
 
-	void seed (uint bits, bool quick = true);
+	bool seed (uint bits, bool quick = true);
 
 	uint random (uint n) {
-		randmax_type i;
-		r.gen (sizeof (randmax_type), (byte*) &i);
+		randmax_t i;
+		r.gen (sizeof (randmax_t), (byte*) &i);
 		return i % n;
 	}
 };

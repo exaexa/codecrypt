@@ -25,6 +25,7 @@
 #include <map>
 
 #include "sencode.h"
+#include "symkey.h"
 
 class keyring
 {
@@ -50,10 +51,22 @@ public:
 
 	struct keypair_entry {
 		pubkey_entry pub;
+
 		sencode *privkey;
+		bool locked; //store encrypted
+		symkey sk;
+		bool dirty; //privkey_raw needs to be updated
+
+		std::string privkey_raw;
+
+		bool decode_privkey (const std::string&withlock);
+		bool lock (const std::string&withlock);
+		bool unlock (const std::string&withlock);
+		bool fix_dirty (prng&rng);
 
 		keypair_entry() {
 			privkey = NULL;
+			dirty = false;
 		}
 
 		keypair_entry (const std::string&KID,
@@ -61,7 +74,22 @@ public:
 		               const std::string& A,
 		               sencode*PubK,
 		               sencode*PrivK)
-			: pub (KID, N, A, PubK), privkey (PrivK) {}
+			: pub (KID, N, A, PubK),
+			  privkey (PrivK),
+			  locked (false),
+			  dirty (true)
+		{}
+
+		keypair_entry (const std::string&KID,
+		               const std::string& N,
+		               const std::string& A,
+		               sencode*PubK,
+		               const std::string&PrivK_raw)
+			: pub (KID, N, A, PubK),
+			  privkey (NULL),
+			  dirty (false),
+			  privkey_raw (PrivK_raw)
+		{}
 	};
 
 	typedef std::map<std::string, pubkey_entry> pubkey_storage;
@@ -84,7 +112,7 @@ public:
 
 	bool open();
 	bool close();
-	bool save();
+	bool save (prng&rng);
 
 	static std::string get_keyid (const std::string& pubkey);
 
@@ -96,7 +124,7 @@ public:
 	static void clear_pubkeys (pubkey_storage&);
 
 	static bool parse_keypairs (sencode*, keypair_storage&);
-	static sencode* serialize_keypairs (const keypair_storage&);
+	static sencode* serialize_keypairs (keypair_storage&, prng&rng);
 	static bool parse_pubkeys (sencode*, pubkey_storage&);
 	static sencode* serialize_pubkeys (const pubkey_storage&);
 
@@ -107,15 +135,14 @@ public:
 		return NULL;
 	}
 
-	bool store_pubkey (const std::string&keyid,
-	                   const std::string&name,
-	                   const std::string&alg,
-	                   sencode*key) {
+	pubkey_entry* store_pubkey (const std::string&keyid,
+	                            const std::string&name,
+	                            const std::string&alg,
+	                            sencode*key) {
 
-		if (pairs.count (keyid)) return false;
-		if (pubs.count (keyid)) return false;
-		pubs[keyid] = pubkey_entry (keyid, name, alg, key);
-		return true;
+		if (pairs.count (keyid)) return NULL;
+		if (pubs.count (keyid)) return NULL;
+		return & (pubs[keyid] = pubkey_entry (keyid, name, alg, key));
 	}
 
 	void remove_pubkey (const std::string&keyid) {
@@ -130,22 +157,34 @@ public:
 		return NULL;
 	}
 
-	bool store_keypair (const std::string&keyid,
-	                    const std::string&name,
-	                    const std::string&alg,
-	                    sencode*pubkey, sencode*privkey) {
+	keypair_entry* store_keypair (const std::string&keyid,
+	                              const std::string&name,
+	                              const std::string&alg,
+	                              sencode*pubkey, sencode*privkey) {
 
-		if (pairs.count (keyid)) return false;
-		if (pubs.count (keyid)) return false;
-		pairs[keyid] = keypair_entry (keyid, name, alg,
-		                              pubkey, privkey);
-		return true;
+		if (pairs.count (keyid)) return NULL;
+		if (pubs.count (keyid)) return NULL;
+		return & (pairs[keyid] = keypair_entry (keyid, name, alg,
+		                                        pubkey, privkey));
+	}
+
+	keypair_entry* store_keypair (const std::string&keyid,
+	                              const std::string&name,
+	                              const std::string&alg,
+	                              sencode*pubkey,
+	                              const std::string&privkey_raw) {
+
+		if (pairs.count (keyid)) return NULL;
+		if (pubs.count (keyid)) return NULL;
+		return & (pairs[keyid] = keypair_entry (keyid, name, alg,
+		                                        pubkey, privkey_raw));
 	}
 
 	void remove_keypair (const std::string&keyid) {
 		if (pairs.count (keyid)) {
 			sencode_destroy (pairs[keyid].pub.key);
-			sencode_destroy (pairs[keyid].privkey);
+			if (pairs[keyid].privkey)
+				sencode_destroy (pairs[keyid].privkey);
 			pairs.erase (keyid);
 		}
 	}

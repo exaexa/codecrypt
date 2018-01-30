@@ -53,6 +53,10 @@ public:
 
 	typedef std::map<std::string, factoryof<hash_proc>*> suite_t;
 	static suite_t& suite();
+
+	virtual bool cryptographically_significant() {
+		return true;
+	}
 };
 
 #endif

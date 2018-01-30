@@ -20,12 +20,14 @@
 
 #include "base64.h"
 
+static const unsigned char b64str[65] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static int b64d[256];
+static bool b64d_init = false;
+
 void base64_encode (const std::string& in, std::string&out, int cols)
 {
 	//note: it could be b64str[64], but we'd need -fpermissive
-	static const unsigned char b64str[65] =
-	    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
 	unsigned int acc = 0;
 	int accbits = 0, idx = 0, idxmax = in.length(), col = 0;
 	out.clear();
@@ -52,80 +54,12 @@ void base64_encode (const std::string& in, std::string&out, int cols)
 	}
 }
 
-static void init_dec_str (unsigned char s[256])
+static void init_b64d ()
 {
-	for (int i = 0; i < 256; ++i) s[i] = -1;
-
-	s['A'] = 0;
-	s['B'] = 1;
-	s['C'] = 2;
-	s['D'] = 3;
-	s['E'] = 4;
-	s['F'] = 5;
-	s['G'] = 6;
-	s['H'] = 7;
-	s['I'] = 8;
-	s['J'] = 9;
-
-	s['K'] = 10;
-	s['L'] = 11;
-	s['M'] = 12;
-	s['N'] = 13;
-	s['O'] = 14;
-	s['P'] = 15;
-	s['Q'] = 16;
-	s['R'] = 17;
-	s['S'] = 18;
-	s['T'] = 19;
-
-	s['U'] = 20;
-	s['V'] = 21;
-	s['W'] = 22;
-	s['X'] = 23;
-	s['Y'] = 24;
-	s['Z'] = 25;
-	s['a'] = 26;
-	s['b'] = 27;
-	s['c'] = 28;
-	s['d'] = 29;
-
-	s['e'] = 30;
-	s['f'] = 31;
-	s['g'] = 32;
-	s['h'] = 33;
-	s['i'] = 34;
-	s['j'] = 35;
-	s['k'] = 36;
-	s['l'] = 37;
-	s['m'] = 38;
-	s['n'] = 39;
-
-	s['o'] = 40;
-	s['p'] = 41;
-	s['q'] = 42;
-	s['r'] = 43;
-	s['s'] = 44;
-	s['t'] = 45;
-	s['u'] = 46;
-	s['v'] = 47;
-	s['w'] = 48;
-	s['x'] = 49;
-
-	s['y'] = 50;
-	s['z'] = 51;
-	s['0'] = 52;
-	s['1'] = 53;
-	s['2'] = 54;
-	s['3'] = 55;
-	s['4'] = 56;
-	s['5'] = 57;
-	s['6'] = 58;
-	s['7'] = 59;
-
-	s['8'] = 60;
-	s['9'] = 61;
-	s['+'] = 62;
-	s['/'] = 63;
+	if (b64d_init) return;
+	for (int i = 0; i < 256; ++i) b64d[i] = -1;
+	for (int i = 0; i < 64; ++i) b64d[b64str[i]] = i;
+	b64d_init = true;
 }
 
 static inline bool is_white (unsigned char c)
@@ -147,7 +81,7 @@ static void eat_white (const std::string&in, int&idx, int idxmax)
 	for (; (idx < idxmax) && is_white (in[idx]); ++idx);
 }
 
-static bool eat_4 (const std::string&in, int&idx, int idxmax, unsigned char*a)
+static bool eat_4 (const std::string&in, int&idx, int idxmax, int a[4])
 {
 	for (int i = 0; i < 4; ++i) {
 		eat_white (in, idx, idxmax);
@@ -161,13 +95,7 @@ static bool eat_4 (const std::string&in, int&idx, int idxmax, unsigned char*a)
 
 bool base64_decode (const std::string& in, std::string&out)
 {
-	static unsigned char b64d[256];
-	static bool b64d_init = false;
-
-	if (!b64d_init) {
-		init_dec_str (b64d);
-		b64d_init = true;
-	}
+	init_b64d();
 
 	int idx = 0, idxmax = in.length();
 
@@ -175,10 +103,12 @@ bool base64_decode (const std::string& in, std::string&out)
 	out.reserve (3 * in.length() / 4);
 
 	//start parsing
-	unsigned char c[4];
+	int c[4];
 	while (eat_4 (in, idx, idxmax, c)) {
-		for (int i = 0; i < 4; ++i)
+		for (int i = 0; i < 4; ++i) {
+			if (c[i] < 0 || c[i] >= 256) return false;
 			c[i] = b64d[c[i]]; // '=' gets converted to -1
+		}
 
 		//consistency checks
 		if ( (c[0] == -1) || (c[1] == -1)) return false;

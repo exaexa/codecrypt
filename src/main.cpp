@@ -2,7 +2,7 @@
 /*
  * This file is part of Codecrypt.
  *
- * Copyright (C) 2013-2016 Mirek Kratochvil <exa.exa@gmail.com>
+ * Copyright (C) 2013-2017 Mirek Kratochvil <exa.exa@gmail.com>
  *
  * Codecrypt is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -27,7 +27,7 @@
 void print_version()
 {
 	out ("codecrypt " PACKAGE_VERSION);
-	out ("Copyright (C) 2013-2016 Mirek Kratochvil <exa.exa@gmail.com>");
+	out ("Copyright (C) 2013-2017 Mirek Kratochvil <exa.exa@gmail.com>");
 	out ("This is free software; see the source "
 	     "for copying conditions.  There is NO");
 	out ("warranty; not even for MERCHANTABILITY "
@@ -46,8 +46,8 @@ void print_help (char*pname)
 	out (" -T, --test     perform (probably nonexistent) testing/debugging stuff");
 	outeol;
 	out ("Global options:");
-	out (" -R, --in      input file, default is stdin");
-	out (" -o, --out     output file, default is stdout");
+	out (" -R, --in      set input file, default is stdin");
+	out (" -o, --out     set output file, default is stdout");
 	out (" -E, --err     the same for stderr");
 	out (" -a, --armor   use ascii-armored I/O");
 	out (" -y, --yes     assume that answer is `yes' everytime");
@@ -80,12 +80,20 @@ void print_help (char*pname)
 	out (" -X, --delete-secret");
 	out (" -m, --rename         rename matching keys");
 	out (" -M, --rename-secret");
+	out (" -L, --lock           lock secrets");
+	out (" -U, --unlock         unlock secrets");
 	outeol;
 	out ("Key management options:");
-	out (" -n, --no-action    on import, only show what would be imported");
-	out (" -N, --name         specify a new name for renaming or importing");
 	out (" -F, --filter       only work with keys with matching names");
 	out (" -f, --fingerprint  format full key IDs nicely for human eyes");
+	out (" -N, --name         specify a new name for renaming or importing");
+	out (" -n, --no-action    on import, only show what would be imported");
+	out (" -w, --with-lock    specify the symmetric key for (un)locking the secrets");
+	out (" -w @SPEC           ask for password and expand it to a symmetric key");
+	out("                     of type SPEC for (un)locking the secret");
+	outeol;
+	out (" With -S and -w, using `@' as the key file name will cause the program to");
+	out (" interactively ask for a password and derive the symmetric key from it.");
 	outeol;
 	out ("Codecrypt eats data. Use it with caution.");
 	outeol;
@@ -110,6 +118,7 @@ void test()
  */
 
 #include <getopt.h>
+#include <stdlib.h>
 
 #include "actions.h"
 #include "algo_suite.h"
@@ -130,6 +139,7 @@ int main (int argc, char**argv)
 	std::string recipient, user,
 	    input, output, err_output,
 	    name, filter,
+	    withlock,
 	    action_param,
 	    detach_sign,
 	    symmetric;
@@ -167,6 +177,9 @@ int main (int argc, char**argv)
 			{"delete-secret", 1,	0,	'X' },
 			{"rename-secret", 1,	0,	'M' },
 
+			{"lock",	0,	0,	'L' },
+			{"unlock",	0,	0,	'U' },
+
 			{"gen-key",	1,	0,	'g' },
 
 			{"name", 	1,	0,	'N' },
@@ -174,6 +187,8 @@ int main (int argc, char**argv)
 
 			{"fingerprint",	0,	0,	'f' },
 			{"no-action",	0,	0,	'n' },
+
+			{"with-lock",	1,	0,	'w' },
 
 			//actions
 			{"sign",	0,	0,	's' },
@@ -192,7 +207,7 @@ int main (int argc, char**argv)
 		option_index = -1;
 		c = getopt_long
 		    (argc, argv,
-		     "hVTayr:u:R:o:E:kipx:m:KIPX:M:g:N:F:fnsvedCb:S:",
+		     "hVTayr:u:R:o:E:kipx:m:KIPX:M:LUg:N:F:fnw:svedCb:S:",
 		     long_opts, &option_index);
 		if (c == -1) break;
 
@@ -255,25 +270,31 @@ int main (int argc, char**argv)
 			read_action ('X')
 			read_action ('M')
 
-			read_action ('g')
+			read_action ('U')
 
 			read_single_opt ('N', name,
-			                 "please specify single name")
+			                 "specify a single name")
 			read_single_opt ('F', filter,
-			                 "please specify single filter string")
+			                 "specify a single filter string")
 
 			read_flag ('f', opt_fingerprint)
 			read_flag ('n', opt_import_no_action)
 
+			read_single_opt ('w', withlock,
+			                 "specify a single key lock")
+
 			/*
 			 * combinations of s+e and d+v are possible. result is
-			 * 'E' = "big encrypt with sig" and 'D' "big decrypt
-			 * with verify".
+			 * 'E' = "big encrypt with sig", 'D' "big decrypt
+			 * with verify" and 'G' = "generate and lock"
 			 */
 			read_action_comb ('s', 'e', 'E')
-			read_action_comb ('v', 'd', 'D')
 			read_action_comb ('e', 's', 'E')
+			read_action_comb ('v', 'd', 'D')
 			read_action_comb ('d', 'v', 'D')
+
+			read_action_comb ('g', 'L', 'G')
+			read_action_comb ('L', 'g', 'G')
 
 			read_flag ('C', opt_clearsign)
 			read_single_opt ('b', detach_sign,
@@ -316,6 +337,12 @@ int main (int argc, char**argv)
 	//register all available algorithms
 	fill_algorithm_suite (AS);
 
+	//default local user key from environment
+	if(user.empty()) {
+		const char*u=getenv("CCR_USER");
+		if(u) user=u;
+	}
+		
 	/*
 	 * cin/cout redirection
 	 */
@@ -356,14 +383,18 @@ int main (int argc, char**argv)
 	}
 
 	if (symmetric.length()) switch (action) {
-		case 'd':
 		case 'e':
-		case 'g':
+		case 'd':
 		case 's':
 		case 'v':
+		case 'g':
+		case 'G':
+		case 'L':
+		case 'U':
 			break;
 		default:
-			progerr ("specified action doesn't support symmetric operation");
+			progerr ("specified action doesn't support"
+			         " symmetric operation");
 			exitval = 1;
 			goto exit;
 		}
@@ -371,36 +402,45 @@ int main (int argc, char**argv)
 	switch (action) {
 	case 'g':
 		exitval = action_gen_key (action_param, name,
-		                          symmetric, opt_armor,
+		                          symmetric, withlock,
+		                          opt_armor, false,
+		                          KR, AS);
+		break;
+
+	case 'G':
+		exitval = action_gen_key (action_param, name,
+		                          symmetric, withlock,
+		                          opt_armor, true,
 		                          KR, AS);
 		break;
 
 	case 'e':
 		exitval = action_encrypt (recipient, opt_armor, symmetric,
-		                          KR, AS);
+		                          withlock, KR, AS);
 		break;
 
 	case 'd':
-		exitval = action_decrypt (opt_armor, symmetric, KR, AS);
+		exitval = action_decrypt (opt_armor, symmetric, withlock,
+		                          KR, AS);
 		break;
 
 	case 's':
 		exitval = action_sign (user, opt_armor, detach_sign,
-		                       opt_clearsign, symmetric, KR, AS);
+		                       opt_clearsign, symmetric, withlock, KR, AS);
 		break;
 
 	case 'v':
 		exitval = action_verify (opt_armor, detach_sign, opt_clearsign,
-		                         opt_yes, symmetric, KR, AS);
+		                         opt_yes, symmetric, withlock, KR, AS);
 		break;
 
 	case 'E':
-		exitval = action_sign_encrypt (user, recipient, opt_armor,
-		                               KR, AS);
+		exitval = action_sign_encrypt (user, recipient, withlock,
+		                               opt_armor, KR, AS);
 		break;
 
 	case 'D':
-		exitval = action_decrypt_verify (opt_armor, opt_yes,
+		exitval = action_decrypt_verify (opt_armor, opt_yes, withlock,
 		                                 KR, AS);
 		break;
 
@@ -447,6 +487,18 @@ int main (int argc, char**argv)
 
 	case 'M':
 		exitval = action_rename_sec (opt_yes, action_param, name, KR);
+		break;
+
+	case 'L':
+		exitval = action_lock_sec (opt_yes, filter,
+		                           symmetric, withlock,
+		                           opt_armor, KR);
+		break;
+
+	case 'U':
+		exitval = action_unlock_sec (opt_yes, filter,
+		                             symmetric, withlock,
+		                             opt_armor, KR);
 		break;
 
 	default:

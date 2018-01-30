@@ -27,7 +27,7 @@ Go read http://pqcrypto.org/
 
  - Gentoo packages: https://packages.gentoo.org/packages/app-crypt/codecrypt
    with current ebuild usually available at http://e-x-a.org/codecrypt/files
- - Debian packages: currently in mentors processing and separate repo
+ - Debian packages: `apt-get install codecrypt`
  - Arch linux: see https://aur.archlinux.org/packages/codecrypt/
 
 #### Documentation
@@ -57,10 +57,10 @@ Stream ciphers used:
 
 CRHFs used:
 
-- Cubehash variants where selected for implementation ease, really clean
-  design, quite good speed and flexibility of parameter choices. This is also
-  the only hash possibility when Crypto++ library is not linked to codecrypt.
-  KeyID's are CUBE256 hashes of serialized public key.
+- Cubehash variants were selected for implementation ease, really clean design,
+  quite good speed and flexibility of parameter choices. This is also the only
+  hash possibility when Crypto++ library is not linked to codecrypt.  KeyIDs
+  are CUBE256 hashes of corresponding serialized public keys.
 - ripemd128 for small hashes
 - tiger192 is used as an alternative for Cubehash for 192bit hashes
 - There's always a variant with SHA-256, SHA-384 or SHA-512.
@@ -102,8 +102,10 @@ margin. Let's play with random data!
 
 	ccr -p -a -o my_pubkeys.asc -F Doe  # export your pubkeys for friends
 
-	#see what people sent us
-	ccr -ina < friends_pubkeys.asc
+	#(now you should exchange the pubkeys with friends)
+
+	#see what people sent us, possibly check the fingerprints
+	ccr -inaf < friends_pubkeys.asc
 
 	#import Frank's key and rename it
 	ccr -ia -R friends_pubkeys.asc --name "Friendly Frank"
@@ -133,6 +135,15 @@ margin. Let's play with random data!
 	#decrypt a large file
 	ccr -daS symkey.asc <big_data_encrypted.iso >big_data.iso
 
+	#password-protect all your private keys
+	ccr -L
+
+	#protect a symmetric key using another symmetric key
+	ccr -L -S symkey1 -w symkey2
+
+	#password-protect symkey2 with a custom cipher
+	ccr -L -S symkey2 -w @xsynd,cube512
+
 ## Option reference
 
 For completeness I add listing of all options here (also available from
@@ -146,8 +157,8 @@ For completeness I add listing of all options here (also available from
 	 -T, --test     perform (probably nonexistent) testing/debugging stuff
 
 	Global options:
-	 -R, --in      input file, default is stdin
-	 -o, --out     output file, default is stdout
+	 -R, --in      set input file, default is stdin
+	 -o, --out     set output file, default is stdout
 	 -E, --err     the same for stderr
 	 -a, --armor   use ascii-armored I/O
 	 -y, --yes     assume that answer is `yes' everytime
@@ -164,13 +175,13 @@ For completeness I add listing of all options here (also available from
 	 -C, --clearsign    work with cleartext signatures
 	 -b, --detach-sign  specify file with detached signature
 	 -S, --symmetric    enable symmetric mode of operation where encryption
-	                    is done using symmetric cipher and signatures are
-	                    hashes, and specify a filename of symmetric key or hashes
+			    is done using symmetric cipher and signatures are
+			    hashes, and specify a filename of symmetric key or hashes
 
 	Key management:
 	 -g, --gen-key        generate keys for specified algorithm
 	 -g help              list available cryptographic algorithms
-	 -k, --list           list contents of keyring
+	 -k, --list           list the contents of keyring
 	 -K, --list-secret
 	 -i, --import         import keys
 	 -I, --import-secret
@@ -180,12 +191,17 @@ For completeness I add listing of all options here (also available from
 	 -X, --delete-secret
 	 -m, --rename         rename matching keys
 	 -M, --rename-secret
+	 -L, --lock           lock secrets
+	 -U, --unlock         unlock secrets
 
 	Key management options:
-	 -n, --no-action    on import, only show what would be imported
-	 -N, --name         specify a new name for renaming or importing
 	 -F, --filter       only work with keys with matching names
 	 -f, --fingerprint  format full key IDs nicely for human eyes
+	 -N, --name         specify a new name for renaming or importing
+	 -n, --no-action    on import, only show what would be imported
+	 -w, --with-lock    specify the symmetric key for (un)locking the secrets
+	 -w @SPEC           ask for password and expand it to a symmetric key
+	                    of type SPEC for (un)locking the secret
 
 
 ## Disclaimer

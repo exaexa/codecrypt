@@ -1,11 +1,11 @@
 
 AC_PREREQ(2.6)
-AC_INIT([codecrypt], [1.7.5])
+AC_INIT([codecrypt], [1.8])
 AC_CONFIG_AUX_DIR(.) # because of libtoolize
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE()
-m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES])
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 CFLAGS="$CFLAGS"
 CXXFLAGS="$CXXFLAGS"
@@ -35,6 +35,8 @@ AC_ARG_WITH([cryptopp],
 #and check crypto++
 if test "$WITH_CRYPTOPP" = "yes"; then
 	
+	PKG_PROG_PKG_CONFIG([0.25])
+
 	PKG_CHECK_MODULES([CRYPTOPP],[libcrypto++])
 
 	#crypto++ headers are either in include/crypto++ or include/cryptopp,
@@ -53,6 +55,22 @@ else
 	AC_DEFINE([HAVE_CRYPTOPP], [0])
 fi
 
+#check for readpassphrase. If none is found, we use getpass (with a warning)
+AC_CHECK_HEADER([readpassphrase.h],
+	[READPASSPHRASE=native],
+	AC_CHECK_HEADER([bsd/readpassphrase.h],
+		[READPASSPHRASE=bsd], ))
+
+if test "$READPASSPHRASE" = "native"; then
+	AC_DEFINE([HAVE_READPASSPHRASE], [1])
+fi
+if test "$READPASSPHRASE" = "bsd"; then
+	AC_DEFINE([HAVE_BSDREADPASSPHRASE], [1])
+	AC_CHECK_LIB([bsd], [readpassphrase],
+		[LIBS="-lbsd $LIBS"], #is there a better version of this?
+		AC_MSG_ERROR([library for bsd/readpassphrase.h not found]))
+fi
+
 #check for standard functions
 AC_CHECK_FUNCS([memset mkdir], , AC_MSG_ERROR([Required function missing]))
 
@@ -63,6 +81,7 @@ AC_CHECK_HEADERS([fcntl.h inttypes.h stddef.h stdlib.h string.h sys/file.h unist
 AC_CHECK_HEADER_STDBOOL
 AC_C_INLINE
 AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
