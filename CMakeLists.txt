@@ -11,6 +11,7 @@ elseif(UNIX)
     link_directories(/usr/lib)
 endif (APPLE)
 
+add_definitions(-DPACKAGE_VERSION=1.8)
 
 add_executable(codecrypt
         src/actions.cpp
