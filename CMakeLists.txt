@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(codecrypt)
+project(ccrc)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -13,7 +13,7 @@ endif (APPLE)
 
 add_definitions(-DPACKAGE_VERSION="1.8")
 
-add_executable(codecrypt
+add_executable(ccr
         src/actions.cpp
         src/algo_suite.cpp
         src/algos_enc.cpp
@@ -47,4 +47,4 @@ add_executable(codecrypt
         src/pwrng.cpp
         src/xsynd.cpp)
 
-target_link_libraries(codecrypt fftw3 gmp)
+target_link_libraries(ccr fftw3 gmp)
