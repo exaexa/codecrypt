@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ccrc)
+project(ccr)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -10,6 +10,7 @@ if (APPLE)
 elseif(UNIX)
     include_directories(/usr/include)
     link_directories(/usr/lib)
+    add_definitions(-DHAVE_BSDREADPASSPHRASE=1)
 endif (APPLE)
 
 add_definitions(-DPACKAGE_VERSION="1.8")
@@ -48,4 +49,8 @@ add_executable(ccr
         src/pwrng.cpp
         src/xsynd.cpp)
 
-target_link_libraries(ccr fftw3 gmp)
+if (APPLE)
+    target_link_libraries(ccr fftw3 gmp)
+elseif(UNIX)
+    target_link_libraries(ccr fftw3 gmp bsd)
+endif (APPLE)
