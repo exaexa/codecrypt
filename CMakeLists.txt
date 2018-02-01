@@ -1,3 +1,8 @@
+# Alternative way for building the project from git, viable for less-unixy
+# platforms.  Do _NOT_ use this for packaging; _DO_ use autotools instead.
+#
+# (c) 2018- tearsofphoenix <tearsofphoenix@icloud.com>
+
 cmake_minimum_required(VERSION 3.8)
 project(ccr)
 
