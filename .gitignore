@@ -2,6 +2,10 @@ aclocal.m4
 AUTHORS
 autom4te.cache/
 ccr
+cmake-build-debug
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
 codecrypt-*.tar.gz
 compile
 config.guess
@@ -10,6 +14,7 @@ config.status
 config.sub
 configure
 depcomp
+.idea
 INSTALL
 install-sh
 libtool
