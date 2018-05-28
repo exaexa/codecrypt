@@ -49,7 +49,8 @@ dnl check for readpassphrase. If none is found, we use getpass (with a warning)
 AC_CHECK_HEADER([readpassphrase.h],
     [READPASSPHRASE=native],
     AC_CHECK_HEADER([bsd/readpassphrase.h],
-        [READPASSPHRASE=bsd], []))
+        [READPASSPHRASE=bsd],
+        [AC_MSG_WARN([falling back to obsoleted getpass(3)])]))
 
 AS_IF([test "x$READPASSPHRASE" = "xnative"],[
     AC_DEFINE([HAVE_READPASSPHRASE], [1], [Enable readpassphrase])])
