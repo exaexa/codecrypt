@@ -21,7 +21,6 @@ libtool
 ltmain.sh
 m4/
 Makefile
-Makefile.am
 Makefile.in
 missing
 NEWS
