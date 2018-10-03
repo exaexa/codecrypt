@@ -29,6 +29,7 @@ Go read http://pqcrypto.org/
    with current ebuild usually available at http://e-x-a.org/codecrypt/files
  - Debian packages: `apt-get install codecrypt`
  - Arch linux: see https://aur.archlinux.org/packages/codecrypt/
+ - *Windows port* is maintained separately here: https://github.com/mike805/codecrypt-win32
 
 #### Documentation
 
