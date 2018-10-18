@@ -31,6 +31,10 @@ Go read http://pqcrypto.org/
  - Arch linux: see https://aur.archlinux.org/packages/codecrypt/
  - *Windows port* is maintained separately here: https://github.com/mike805/codecrypt-win32
 
+Language wrappers:
+
+ - Python bindings: https://github.com/mike805/codecrypt-python/
+
 #### Documentation
 
 There is a complete, UNIXy manual page supplied with the package. You can view
