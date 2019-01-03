@@ -39,7 +39,11 @@ public:
 		for (i = 0; i + B <= a.size(); i += B)
 			state.process_block (& (a[i]));
 
-		state.process_final_incomplete_block (& (a[i]), a.size() - i);
+		if (a.size() - i != 0)
+			state.process_final_incomplete_block (& (a[i]), a.size() - i);
+		else
+			state.process_final_incomplete_block (NULL, 0);  //empty block, just finalize
+
 		std::vector<byte> result;
 		result.resize (H, 0);
 		state.get_hash (& (result[0]));
