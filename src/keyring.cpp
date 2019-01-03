@@ -43,8 +43,8 @@ std::string keyring::get_keyid (const std::string&pubkey)
 	cube256hash hf;
 	std::vector<byte> tmp =
 	    hf (std::vector<byte>
-	        (&pubkey[0],
-	         &pubkey[pubkey.length()]));
+	        (pubkey.data(),
+		 pubkey.data() + pubkey.length()));
 
 	r.resize (tmp.size() * 2, ' ');
 	for (size_t i = 0; i < tmp.size(); ++i) {
