@@ -37,16 +37,14 @@ public:
 		state.init();
 
 		for (i = 0; i + B <= a.size(); i += B)
-			state.process_block (& (a[i]));
+			state.process_block (a.data() + i);
 
-		if (a.size() - i != 0)
-			state.process_final_incomplete_block (& (a[i]), a.size() - i);
-		else
-			state.process_final_incomplete_block (NULL, 0);  //empty block, just finalize
+		state.process_final_incomplete_block (a.data() + i,
+		                                      a.size() - i);
 
 		std::vector<byte> result;
 		result.resize (H, 0);
-		state.get_hash (& (result[0]));
+		state.get_hash (result.data());
 		return result;
 	}
 };
@@ -79,7 +77,7 @@ public:
 			}
 		}
 		while (apos + B <= asize) {
-			state.process_block (& (a[apos]));
+			state.process_block (a + apos);
 			apos += B;
 		}
 		for (; apos < asize; ++apos, ++bpos)
@@ -90,7 +88,7 @@ public:
 		state.process_final_incomplete_block (buf, bpos);
 		std::vector<byte> result;
 		result.resize (H, 0);
-		state.get_hash (& (result[0]));
+		state.get_hash (result.data());
 		return result;
 	}
 };
