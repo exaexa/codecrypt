@@ -86,7 +86,7 @@ void print_help (char*pname)
 	out (" -n, --no-action    on import, only show what would be imported");
 	out (" -w, --with-lock    specify the symmetric key for (un)locking the secrets");
 	out (" -w @SPEC           ask for password and expand it to a symmetric key");
-	out("                     of type SPEC for (un)locking the secret");
+	out ("                     of type SPEC for (un)locking the secret");
 	outeol;
 	out (" With -S and -w, using `@' as the key file name will cause the program to");
 	out (" interactively ask for a password and derive the symmetric key from it.");
@@ -334,11 +334,11 @@ int main (int argc, char**argv)
 	fill_algorithm_suite (AS);
 
 	//default local user key from environment
-	if(user.empty()) {
-		const char*u=getenv("CCR_USER");
-		if(u) user=u;
+	if (user.empty()) {
+		const char*u = getenv ("CCR_USER");
+		if (u) user = u;
 	}
-		
+
 	/*
 	 * cin/cout redirection
 	 */
