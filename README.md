@@ -3,6 +3,9 @@
 
 The post-quantum cryptography tool.
 
+Codecrypt is currently unmaintained, although I still successfully use it. If
+you are interested in developing/maintaining it, ping me.
+
 #### About
 
 This is a GnuPG-like unix program for encryption and signing that uses only
