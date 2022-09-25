@@ -21,9 +21,7 @@
 #include "hashfile.h"
 
 #include <map>
-using namespace std;
-
-#include <stdint.h>
+#include <cstdint>
 
 #include "hash.h"
 #include "iohelpers.h"
@@ -72,7 +70,7 @@ public:
  * list of hash functions available
  */
 
-typedef map<string, instanceof<hash_proc> > hashmap;
+typedef std::map<std::string, instanceof<hash_proc> > hashmap;
 
 void fill_hashmap (hashmap&t)
 {
@@ -89,7 +87,7 @@ void fill_hashmap (hashmap&t)
 	t["SIZE64"] = new size64proc;
 }
 
-bool hashfile::create (istream&in)
+bool hashfile::create (std::istream&in)
 {
 	hashes.clear();
 
@@ -120,7 +118,7 @@ bool hashfile::create (istream&in)
 	}
 }
 
-int hashfile::verify (istream&in)
+int hashfile::verify (std::istream&in)
 {
 	hashmap hm_all, hm;
 	fill_hashmap (hm_all);

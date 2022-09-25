@@ -20,11 +20,12 @@
 
 #include "mce_qcmdpc.h"
 
-#include "fft.h"
+#include <list>
 #include <cmath>
 
+#include "fft.h"
+
 using namespace mce_qcmdpc;
-using namespace std;
 
 int mce_qcmdpc::generate (pubkey&pub, privkey&priv, prng&rng,
                           uint block_size, uint block_count, uint wi,
@@ -43,7 +44,7 @@ int mce_qcmdpc::generate (pubkey&pub, privkey&priv, prng&rng,
 	 * (1+x^n).
 	 */
 
-	vector<dcx> H_last_inv;
+	std::vector<dcx> H_last_inv;
 
 	for (;;) {
 		//retry generating the rightmost block until it is invertible
@@ -100,7 +101,7 @@ int mce_qcmdpc::generate (pubkey&pub, privkey&priv, prng&rng,
 		priv.H[i] = Hb;
 
 		//compute inv(H[last])*H[i]
-		vector<dcx> H;
+		std::vector<dcx> H;
 		fft (Hb, H);
 		for (j = 0; j < block_size; ++j)
 			H[j] *= H_last_inv[j];
@@ -152,7 +153,7 @@ int pubkey::encrypt (const bvector&in, bvector&out, const bvector&errors)
 		if (G[i].size() != bs) return 1; //prevent mangled keys
 
 	//first, the checksum part
-	vector<dcx> bcheck, Pd, Gd;
+	std::vector<dcx> bcheck, Pd, Gd;
 	bcheck.resize (bs, dcx (0, 0)); //initially zero
 	bvector block;
 
@@ -189,9 +190,6 @@ int privkey::decrypt (const bvector & in, bvector & out)
 	return decrypt (in, out, tmp_errors);
 }
 
-#include <vector>
-#include <list>
-
 int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 {
 	uint i, j;
@@ -208,7 +206,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 	 * probabilistic decoding!
 	 */
 
-	vector<dcx> synd_diag, tmp, Htmp;
+	std::vector<dcx> synd_diag, tmp, Htmp;
 	synd_diag.resize (bs, dcx (0, 0));
 
 	//precompute the syndrome
@@ -225,7 +223,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 	fft (synd_diag, syndrome);
 
 	//precompute sparse matrix indexes
-	vector<list<uint> > Hsp;
+	std::vector<std::list<uint> > Hsp;
 	Hsp.resize (blocks);
 	for (i = 0; i < blocks; ++i)
 		for (j = 0; j < bs; ++j)
@@ -242,7 +240,7 @@ int privkey::decrypt (const bvector & in_orig, bvector & out, bvector & errors)
 	 * FFT would be a cool candidate.
 	 */
 
-	vector<unsigned> unsat, round_unsat;
+	std::vector<unsigned> unsat, round_unsat;
 	unsat.resize (cs, 0);
 
 	for (uint blk = 0; blk < blocks; ++blk)

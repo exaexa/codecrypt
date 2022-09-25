@@ -22,7 +22,6 @@
 
 #include <algorithm>
 #include <cctype> //for tolower()
-using namespace std;
 
 bool algorithm_name_matches (const std::string& search,
                              const std::string&name)
@@ -34,7 +33,7 @@ bool algorithm_name_matches (const std::string& search,
 	return true;
 }
 
-bool matches_icase (string name, string s)
+bool matches_icase (std::string name, std::string s)
 {
 	transform (name.begin(), name.end(), name.begin(), ::tolower);
 	transform (s.begin(), s.end(), s.begin(), ::tolower);
